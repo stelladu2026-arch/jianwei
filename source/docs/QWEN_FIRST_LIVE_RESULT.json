@@ -1,0 +1,31 @@
+{
+  "tested_at": "2026-10-04T09:56:08.317Z",
+  "project_id": "d6ca6977-7238-4de8-822a-219f9f924a04",
+  "run_id": "5312c56c-3b6d-41f4-84bb-997c1d9fb02f",
+  "model": "qwen3.7-plus",
+  "status": "completed",
+  "generation_requests": 1,
+  "automatic_retries": 0,
+  "model_step_elapsed_ms": 15531,
+  "usage": {
+    "input_tokens": 1217,
+    "output_tokens": 741
+  },
+  "request_id": "47ac26d4-cdfa-984e-a575-433a7fa77263",
+  "input_kind": "synthetic",
+  "paid_budget_cny": 0,
+  "actual_cost_cny": null,
+  "checks": [
+    "provider_response_received",
+    "structured_output_valid",
+    "reference_ids_within_project",
+    "local_checks_completed",
+    "draft_persisted"
+  ],
+  "quality_limits": [
+    "single synthetic case only",
+    "not a market conclusion",
+    "not a semantic accuracy evaluation",
+    "billing not independently verified"
+  ]
+}

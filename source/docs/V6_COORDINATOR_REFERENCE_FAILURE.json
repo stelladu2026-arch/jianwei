@@ -1,0 +1,84 @@
+{
+  "project_id": "07902449-b861-4db8-b1eb-cb4a21fc5d83",
+  "workflow_id": "596a9737-8c04-421d-b25a-dcf2d1ced2d2",
+  "created": "2026-10-05T05:00:36.392Z",
+  "status": "failed",
+  "stage": "synthesis",
+  "error": "INVALID_MODEL_REFERENCE",
+  "budget": {
+    "modelLimit": 4,
+    "modelAttempts": 4,
+    "sourceLimit": 30,
+    "sourceAttempts": 0,
+    "searchLimit": 3,
+    "searches": 0
+  },
+  "records": [
+    {
+      "stage": "needs",
+      "role": null,
+      "status": null,
+      "error": "",
+      "usage": {
+        "input_tokens": 8731,
+        "output_tokens": 862
+      },
+      "outputIssues": null,
+      "elapsedMs": 19237
+    },
+    {
+      "stage": "commercial",
+      "role": null,
+      "status": null,
+      "error": "",
+      "usage": {
+        "input_tokens": 9099,
+        "output_tokens": 676
+      },
+      "outputIssues": null,
+      "elapsedMs": 13634
+    },
+    {
+      "stage": "verifier",
+      "role": null,
+      "status": null,
+      "error": "",
+      "usage": {
+        "input_tokens": 8738,
+        "output_tokens": 828
+      },
+      "outputIssues": null,
+      "elapsedMs": 17214
+    },
+    {
+      "stage": "synthesis",
+      "role": null,
+      "status": null,
+      "error": "INVALID_MODEL_REFERENCE",
+      "usage": {
+        "input_tokens": 10325,
+        "output_tokens": 1281
+      },
+      "outputIssues": [
+        "data.checks.2.anchors.0.evidence_id:not_in_claim"
+      ],
+      "elapsedMs": 24847
+    }
+  ],
+  "total_usage": {
+    "input_tokens": 36893,
+    "output_tokens": 3647
+  },
+  "rejected_output_retained": false,
+  "complete_four_role_report": false,
+  "new_live_model_calls_for_fix": 0,
+  "fix": {
+    "provider_schema": "review_v3_*",
+    "wire_format": "claim-anchors/1",
+    "review_protocol": "evidence-review/2",
+    "claim_refs": "derived only from anchors of matching targets",
+    "legacy_mismatch": "still rejected",
+    "full_live_validation": "pending"
+  },
+  "offline_checks": 202
+}

@@ -1,0 +1,95 @@
+{
+  "version": "v0.6",
+  "date": "2026-10-04",
+  "tested_source_commit": "744d5b2a48a841ccdd51341e0535cfe4499962d3",
+  "project_id": "07902449-b861-4db8-b1eb-cb4a21fc5d83",
+  "workflow_id": "1a2eb062-62e5-468f-92ad-d4bb1b0ae6f0",
+  "status": "failed",
+  "stopped_stage": "verifier",
+  "error": "INVALID_EVIDENCE_QUOTE",
+  "completed_roles": [
+    "needs",
+    "commercial"
+  ],
+  "unfinished_roles": [
+    "verifier",
+    "coordinator"
+  ],
+  "actual_generation_attempts": 3,
+  "maximum_authorized_attempts": 4,
+  "automatic_retries": 0,
+  "explicit_retries": 0,
+  "additional_source_requests": 0,
+  "public_originals_in_project": 13,
+  "frozen_originals_analyzed": 12,
+  "synthetic_evidence": false,
+  "baseline_run_id": "2d05bc6c-e32d-4850-9267-30d32c1cde53",
+  "input_fingerprints_match": true,
+  "verifier_prior_results_count": 0,
+  "verifier_memories_count": 0,
+  "located_claim_checks": 4,
+  "located_literal_quotes": 8,
+  "semantic_quality_verified": false,
+  "completed_four_role_report": false,
+  "human_comparison_saved": false,
+  "formal_opportunities_current": 1,
+  "formal_reports_current": 0,
+  "automatic_formal_opportunity_writes": 0,
+  "receipts": [
+    {
+      "stage": "needs",
+      "state": "done",
+      "error": "",
+      "elapsed_ms": 14912,
+      "usage": {
+        "input_tokens": 5037,
+        "output_tokens": 734
+      },
+      "request_id": "cd512842-1bd7-94c5-94aa-95c65d5f864b",
+      "output_issues": []
+    },
+    {
+      "stage": "commercial",
+      "state": "done",
+      "error": "",
+      "elapsed_ms": 15350,
+      "usage": {
+        "input_tokens": 5413,
+        "output_tokens": 796
+      },
+      "request_id": "f300608c-b005-9dbe-8057-72e2f8962c9b",
+      "output_issues": []
+    },
+    {
+      "stage": "verifier",
+      "state": "failed",
+      "error": "INVALID_EVIDENCE_QUOTE",
+      "elapsed_ms": 16659,
+      "usage": {
+        "input_tokens": 5047,
+        "output_tokens": 871
+      },
+      "request_id": "334a9c57-acb1-9519-a401-d97075cfc8e3",
+      "output_issues": []
+    }
+  ],
+  "tokens": {
+    "input": 15497,
+    "output": 2401
+  },
+  "paid_budget_cny": 0,
+  "actual_cost_cny": null,
+  "free_tier_protection": "user-confirmed, not queried by application",
+  "post_acceptance_fix": {
+    "literal_quote_choices": "provider Schema now enumerates literal fragments derived from the frozen originals; failed quotes are still rejected, never repaired",
+    "safe_diagnostics": "quote failure field path/code recorded without raw rejected values",
+    "workflow_reflection": "four-role failures recommend preserving checkpoint, not retrying in this round",
+    "live_revalidation": "not run; authorized round stopped after failure"
+  },
+  "limitations": [
+    "This is a partial real acceptance, not a completed four-role loop.",
+    "Literal location does not establish semantic support; accepted role judgments may still overstate population, causal effects, or purchaser/user distinctions.",
+    "The cached single-role baseline remains; no architecture winner was assigned.",
+    "Browser clicks, visual and mobile interaction have not been verified."
+  ]
+}

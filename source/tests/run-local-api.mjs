@@ -1,0 +1,30 @@
+// Runs the real route handlers with an in-memory SQLite D1-compatible boundary.
+// No browser, live site or external model is used.
+import {DatabaseSync} from 'node:sqlite';
+import {registerHooks} from 'node:module';
+import {existsSync,readFileSync} from 'node:fs';
+import {fileURLToPath,pathToFileURL} from 'node:url';
+const root=fileURLToPath(new URL('../',import.meta.url));
+const sqlite=new DatabaseSync(':memory:');
+sqlite.exec(readFileSync(new URL('../drizzle/0000_stormy_archangel.sql',import.meta.url),'utf8'));
+globalThis.__testEnv={DB:{prepare(sql){let args=[];return {bind(...v){args=v;return this},async first(){return sqlite.prepare(sql).get(...args)||null},async all(){return {results:sqlite.prepare(sql).all(...args)}},async run(){const r=sqlite.prepare(sql).run(...args);return {meta:{changes:Number(r.changes)}}}}}}};
+registerHooks({resolve(specifier,context,next){if(specifier==='cloudflare:workers')return {url:'data:text/javascript,export const env=globalThis.__testEnv;',shortCircuit:true};if(specifier==='next/server')return {url:pathToFileURL(root+'node_modules/next/server.js').href,shortCircuit:true};if(specifier.startsWith('@/'))return {url:pathToFileURL(root+specifier.slice(2)+'.ts').href,shortCircuit:true};if(specifier.startsWith('.')&&context.parentURL?.endsWith('.ts')){const u=new URL(specifier+'.ts',context.parentURL);if(existsSync(u))return {url:u.href,shortCircuit:true}}return next(specifier,context)}});
+const modelStatus=await import('../app/api/model-status/route.ts');
+const projects=await import('../app/api/projects/route.ts');
+const project=await import('../app/api/projects/[id]/route.ts');
+const context=await import('../app/api/projects/[id]/context/route.ts');
+const run=await import('../app/api/projects/[id]/run/route.ts');
+const workflow=await import('../app/api/projects/[id]/workflow/route.ts');
+const search=await import('../app/api/search/route.ts');
+globalThis.__externalScenario='success';
+globalThis.fetch=async(url)=>{if(globalThis.__externalScenario==='failure')throw new Error('test source offline');if(String(url).startsWith('https://hn.algolia.com/api/'))return Response.json({hits:[{objectID:'123456'}]});if(String(url).startsWith('https://hacker-news.firebaseio.com/v0/item/'))return Response.json({id:123456,title:'Synthetic connector test only',by:'test-user',time:1700000000,text:'Synthetic fixture for API tests; not market evidence.'});throw new Error('Unapproved test endpoint')};
+globalThis.__apiTestFetch=async(url,init)=>{const req=new Request(url,init);const parsed=new URL(url);if(parsed.pathname==='/api/model-status')return modelStatus[req.method](req);if(parsed.pathname==='/api/search')return search.POST(req);if(parsed.pathname==='/api/projects')return projects[req.method](req);const id=parsed.pathname.split('/')[3];if(parsed.pathname.endsWith('/workflow'))return workflow[req.method](req,{params:Promise.resolve({id})});if(parsed.pathname.endsWith('/run'))return run[req.method](req,{params:Promise.resolve({id})});if(parsed.pathname.endsWith('/context'))return context.POST(req,{params:Promise.resolve({id})});return project[req.method](req,{params:Promise.resolve({id})})};
+await import('./api-smoke.mjs');
+await import('./execution-smoke.mjs');
+await import('./qwen-smoke.mjs');
+await import('./workflow-smoke.mjs');
+await import('./collaboration-smoke.mjs');
+await import('./model-configuration-smoke.mjs');
+await import('./recovery-smoke.mjs');
+await import('./review-schema-smoke.mjs');
+sqlite.close();

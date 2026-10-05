@@ -1,0 +1,39 @@
+{
+  "generated_at_beijing": "2026-10-05",
+  "title": "见微 Cursor 完整源码与开发交接",
+  "source_commit": "6d8f00c73d44e329708c6e625d75382f0145ee7e",
+  "source_snapshot": "all 175 git tracked files, exported without .git history",
+  "deployment": {
+    "status": "succeeded",
+    "url": "https://opportunity-research-lab.stelladu2026.chatgpt.site",
+    "id": "appgdep_6ac331add6bc8191a38d136422e798b4"
+  },
+  "verified": {
+    "offline_checks": 202,
+    "type_check": "passed",
+    "hosted_production_build": "passed",
+    "new_actual_model_calls": 0
+  },
+  "pending": [
+    "Cursor machine dependency install/start/browser verification",
+    "review_v3 actual provider output",
+    "complete real four-role workflow",
+    "human semantic review and comparison"
+  ],
+  "runtime": {
+    "tested_node": "24.19.0",
+    "pnpm": "11.25.0",
+    "framework": "Vinext / React / TypeScript / Cloudflare Workers",
+    "database": "D1 SQLite"
+  },
+  "excludes": [
+    "API keys",
+    "auth or repository credentials",
+    "production project database/export",
+    "node_modules",
+    "untracked build output/runtime cache",
+    "git history"
+  ],
+  "local_configuration_example": "local-config/.dev.vars.example (blank key, protection false)",
+  "tracked_generated_metadata": "source/tsconfig.tsbuildinfo retained to preserve exact commit snapshot; can be regenerated"
+}

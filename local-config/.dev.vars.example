@@ -1,0 +1,4 @@
+# Example only: copy to the appropriate local Wrangler configuration directory.
+# Keep actual .dev.vars files out of Git and exported archives.
+DASHSCOPE_API_KEY=
+QWEN_FREE_TIER_ONLY_CONFIRMED=false

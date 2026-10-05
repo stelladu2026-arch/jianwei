@@ -1,0 +1,78 @@
+{
+  "tested_at_utc": "2026-10-04T17:20:13.965Z",
+  "tested_source_commit": "3d03d356ee2375f7f1eeaeed154ec509d4519965",
+  "project_id": "07902449-b861-4db8-b1eb-cb4a21fc5d83",
+  "workflow_id": "d8143c16-20de-4fd0-b67a-85c4e3145992",
+  "scope": "real Qwen four-role round 2, current real HN evidence; not full semantic evaluation",
+  "model": "qwen3.7-plus",
+  "status": "failed",
+  "stopped_stage": "verifier",
+  "error": "INVALID_REVIEW_COVERAGE",
+  "request_limit": 4,
+  "requests_attempted": 3,
+  "automatic_retries": 0,
+  "source_requests": 0,
+  "searches": 0,
+  "input_tokens_confirmed": 20507,
+  "output_tokens_confirmed": 2137,
+  "model_elapsed_ms": 44585,
+  "roles": [
+    {
+      "role": "needs",
+      "status": "done",
+      "error": "",
+      "elapsed_ms": 14109,
+      "usage": {
+        "input_tokens": 6729,
+        "output_tokens": 623
+      },
+      "accepted_claim_checks": 2,
+      "located_quotes": 3,
+      "safe_field_issues": []
+    },
+    {
+      "role": "commercial",
+      "status": "done",
+      "error": "",
+      "elapsed_ms": 17490,
+      "usage": {
+        "input_tokens": 7037,
+        "output_tokens": 875
+      },
+      "accepted_claim_checks": 2,
+      "located_quotes": 4,
+      "safe_field_issues": []
+    },
+    {
+      "role": "verifier",
+      "status": "failed",
+      "error": "INVALID_REVIEW_COVERAGE",
+      "elapsed_ms": 12986,
+      "usage": {
+        "input_tokens": 6741,
+        "output_tokens": 639
+      },
+      "accepted_claim_checks": 0,
+      "located_quotes": 0,
+      "safe_field_issues": []
+    }
+  ],
+  "frozen_evidence_count": 12,
+  "baseline_run_id": "2d05bc6c-e32d-4850-9267-30d32c1cde53",
+  "baseline_input_matched": true,
+  "independent_verifier_has_prior_conclusions": false,
+  "independent_verifier_has_memories": false,
+  "coordinator_executed": false,
+  "complete_report_saved": false,
+  "human_comparison_saved": false,
+  "new_formal_opportunities": 0,
+  "new_formal_reports": 0,
+  "paid_budget_yuan": 0,
+  "actual_cost_yuan": null,
+  "notes": [
+    "Previous failed round archived atomically with its spent budget and receipts retained.",
+    "Verifier failed strict review coverage validation. This historical receipt does not identify the precise failing field; no rejected output is retained.",
+    "Subsequent offline UX and field-diagnostic fixes are not evidence of live model success.",
+    "No additional real model requests until free quota restoration is confirmed."
+  ]
+}

@@ -1,0 +1,167 @@
+{
+  "verified_at": "2026-10-04T10:56:35.351Z",
+  "source_commit": "ac005c855449138254e3e2b03b0032eeab42f384",
+  "project_id": "07902449-b861-4db8-b1eb-cb4a21fc5d83",
+  "project_title": "公开资料自动研究验收 · 小团队客户支持 · 短关键词版",
+  "provider_model": "qwen3.7-plus",
+  "current": {
+    "workflow_id": "3d610f76-27ba-42e3-aaff-c546bb531723",
+    "workflow_version": "opportunity-workflow/1",
+    "status": "completed",
+    "model_attempts": 3,
+    "model_limit": 4,
+    "source_requests": 20,
+    "searches": 2,
+    "queries": [
+      "customer support",
+      "help desk"
+    ],
+    "receipts": [
+      {
+        "stage": "plan",
+        "state": "done",
+        "error": "",
+        "elapsedMs": 3999,
+        "usage": {
+          "input_tokens": 832,
+          "output_tokens": 143
+        },
+        "requestId": "43d0c1d5-b494-9f48-bc56-8f25336e5c78"
+      },
+      {
+        "stage": "analyze",
+        "state": "done",
+        "error": "",
+        "elapsedMs": 21696,
+        "usage": {
+          "input_tokens": 4909,
+          "output_tokens": 1195
+        },
+        "requestId": "82627a97-01b5-9bdc-978d-77df15ad4a6e"
+      },
+      {
+        "stage": "gap",
+        "state": "done",
+        "error": "",
+        "elapsedMs": 4650,
+        "usage": {
+          "input_tokens": 1663,
+          "output_tokens": 164
+        },
+        "requestId": "20282058-9deb-9693-bec5-a829f6661da7"
+      }
+    ],
+    "known_input_tokens": 7404,
+    "known_output_tokens": 1502,
+    "report_saved": true
+  },
+  "evidence": {
+    "total": 13,
+    "public": 13,
+    "synthetic": 0,
+    "comments": 11,
+    "threads": 6,
+    "known_author_labels": 13,
+    "independent_customer_count": null
+  },
+  "gap_decision": "STOP",
+  "gap_explanation": [
+    "小团队对AI辅助支持工具的具体支付意愿（WTP）无法通过公开检索验证，需访谈。",
+    "不同电商平台集成的实际开发复杂度与维护成本属于内部工程数据，公开搜索无法获取真实账单或代码库维护记录。",
+    "AI错误回答对品牌声誉影响的量化指标属于特定业务数据，公开讨论多为定性描述，无法提供可验证的统计证据。"
+  ],
+  "previous_rounds_in_project": [
+    {
+      "workflow_id": "943fec6a-6380-4929-a322-d40e4030a257",
+      "workflow_version": "opportunity-workflow/1",
+      "status": "cancelled",
+      "model_attempts": 4,
+      "model_limit": 4,
+      "source_requests": 20,
+      "searches": 2,
+      "queries": [
+        "customer support",
+        "help desk"
+      ],
+      "receipts": [
+        {
+          "stage": "plan",
+          "state": "done",
+          "error": "",
+          "elapsedMs": 4194,
+          "usage": {
+            "input_tokens": 629,
+            "output_tokens": 149
+          },
+          "requestId": "fdcd7938-08ac-9881-b460-d52bd28c7364"
+        },
+        {
+          "stage": "analyze",
+          "state": "failed",
+          "error": "INVALID_MODEL_OUTPUT",
+          "elapsedMs": 4293,
+          "usage": {
+            "input_tokens": 4205,
+            "output_tokens": 135
+          },
+          "requestId": "4c2ef41d-3925-9aad-8d95-81cc7419d7a0"
+        },
+        {
+          "stage": "analyze",
+          "state": "failed",
+          "error": "INVALID_MODEL_REFERENCE",
+          "elapsedMs": 17942,
+          "usage": {
+            "input_tokens": 4517,
+            "output_tokens": 959
+          },
+          "requestId": "1c59d29b-5763-963c-8ba4-b9f560ad4133"
+        },
+        {
+          "stage": "analyze",
+          "state": "failed",
+          "error": "INVALID_MODEL_REFERENCE",
+          "elapsedMs": 23892,
+          "usage": {
+            "input_tokens": 4544,
+            "output_tokens": 1226
+          },
+          "requestId": "cc2471c9-c0af-9838-bd8d-e0932b09f640",
+          "outputIssues": [
+            "refs:outside_input"
+          ]
+        }
+      ],
+      "known_input_tokens": 13895,
+      "known_output_tokens": 2469,
+      "report_saved": false
+    }
+  ],
+  "initial_zero_hit_round": {
+    "project_id": "bf19f072-3179-40e6-92f4-d41078b48ab8",
+    "workflow_id": "bbd48a6f-685e-44d9-a915-99935fb44c93",
+    "status": "partial",
+    "model_attempts": 1,
+    "source_requests": 2,
+    "known_input_tokens": 596,
+    "known_output_tokens": 165,
+    "error": "NO_USABLE_EVIDENCE"
+  },
+  "acceptance_total_model_attempts": 8,
+  "acceptance_total_known_input_tokens": 21895,
+  "acceptance_total_known_output_tokens": 4136,
+  "automatic_retries": 0,
+  "explicit_retries_in_failed_round": 2,
+  "formal_opportunities_saved": 0,
+  "formal_reports_saved": 0,
+  "paid_budget_yuan": 0,
+  "actual_cost_yuan": null,
+  "semantic_quality": null,
+  "browser_interaction_verified": false,
+  "semantic_cautions": [
+    "模型假设中存在“被证明”等确定性措辞，未进行语义支持度验证。",
+    "草稿中的 10–20 美元/月仅为模型提出的测试价格假设，不是市场报价或客户付费承诺。",
+    "6 个讨论线程和 13 个作者标识不等于独立目标客户数；来源仅 Hacker News。"
+  ],
+  "scope": "线上接口端到端完成，不包含浏览器点击、多角色真实对照或商业假设验证。"
+}

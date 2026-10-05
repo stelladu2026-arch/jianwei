@@ -1,0 +1,35 @@
+import {NextResponse} from 'next/server';
+import {z} from 'zod';
+import {get,save,db} from '@/lib/research/store';
+import {demoOpportunities,invalidate,log,report,type Opportunity} from '@/lib/research/domain';
+import {applyGovernanceAction} from '@/lib/research/governance-actions';
+import {scanReflections} from '@/lib/research/governance';
+import {invalidateRun} from '@/lib/research/execution';
+import {activeWorkflow,controlWorkflow} from '@/lib/research/workflow';
+import {controlRun} from '@/lib/research/execution-controls';
+const text=z.string().max(8000);
+const bodySchema=z.object({version:z.number().int().positive(),callId:z.string().uuid(),action:z.enum(['brief','confirm','step','pause','resume','cancel','archive','evidence','removeEvidence','import','opportunity','removeOpportunity','report','finish','memory','confirmMemory','removeMemory','reflection','scanReflections','resolveReflection','removeReflection']),data:z.any().optional()});
+const imported=z.object({title:z.string().trim().min(1).max(200),text:z.string().trim().min(1).max(8000),source:z.string().trim().min(1).max(200),date:z.string().max(30),author:z.string().max(100).default(''),thread:z.string().max(200).default(''),url:z.string().max(1000).default(''),stance:z.enum(['support','counter','context']).default('context')});
+export async function PATCH(req:Request,ctx:{params:Promise<{id:string}>}){try{
+if(req.headers.get('sec-fetch-site')==='cross-site')return NextResponse.json({error:'请求来源不正确'},{status:403});
+const {id}=await ctx.params;const b=bodySchema.parse(await req.json());const p=await get(id);if(!p)return NextResponse.json({error:'项目不存在'},{status:404});if(p.actions.includes(b.callId))return NextResponse.json({project:p});if(p.version!==b.version)throw new Error('VERSION_CONFLICT');const d=b.data;
+if(b.action==='brief'){const v=z.object({title:z.string().trim().min(1).max(100),audience:text,region:text,period:text,exclusions:text,decision:text}).parse(d);Object.assign(p,v);p.revision++;p.confirmed=false;p.status='draft';p.step=0;p.budget={searches:0,requests:0,modelCalls:0};p.mode='manual';invalidate(p);log(p,'修改研究范围，旧结论已标记待复核');}
+if(b.action==='confirm'){if(!p.audience.trim()||!p.decision.trim())throw new Error('请先补充目标人群和预期决策。');p.confirmed=true;p.status='collecting';log(p,'已人工确认研究范围');}
+if(b.action==='step'){if(!p.confirmed||['paused','cancelled','completed'].includes(p.status))throw new Error('请先确认范围或恢复研究。');if(p.mode!=='replay')throw new Error('尚未接入文本模型。可以采集与导入证据、手动创建机会卡；自动分析将在接入后开放。');p.step=Math.min(4,p.step+1);p.status=['collecting','analyzing','reviewing','awaiting_decision','completed'][p.step];if(p.step===3)p.opportunities=demoOpportunities(p);log(p,['','演示回放：需求角色读取虚构资料','演示回放：替代研究与独立反证检查','演示回放：协调角色汇总条件性判断','演示回放完成；没有真实模型调用'][p.step]);}
+if(b.action==='pause'){if(activeWorkflow(p))controlWorkflow(p,'pause');if(!['collecting','analyzing','reviewing','awaiting_decision','partial'].includes(p.status))throw new Error('当前状态不能暂停。');if(p.run&&['ready','running','failed'].includes(p.run.status))controlRun(p,'pause');p.resume=p.status;p.status='paused';log(p,'暂停研究，保留进度');}
+if(b.action==='resume'){if(p.status!=='paused')throw new Error('当前没有暂停的研究。');p.status=p.resume||'collecting';log(p,'从保存进度继续');}
+if(b.action==='cancel'){if(p.run&&!['completed','cancelled'].includes(p.run.status))controlRun(p,'cancel');if(activeWorkflow(p))controlWorkflow(p,'cancel');p.status='cancelled';log(p,'已取消研究，已有资料保留');}
+if(b.action==='archive'){p.archived=!p.archived;log(p,p.archived?'归档项目':'恢复项目');}
+if(b.action==='import'){if(p.mode==='replay')throw new Error('演示项目仅保留虚构资料，请新建真实研究项目导入。');if(p.evidence.length>=100)throw new Error('本版每个项目最多 100 条资料。');const rows=z.array(imported).min(1).max(30).parse(d);for(const r of rows){if(p.evidence.length>=100)break;if(r.url&&!/^https?:\/\//i.test(r.url))throw new Error('来源链接只支持 http 或 https。');if(p.evidence.some(e=>e.text.trim()===r.text.trim()&&e.source===r.source))continue;const eid=crypto.randomUUID().slice(0,8);p.evidence.push({...r,id:eid,thread:r.thread||eid,kind:'imported',excluded:false,truncated:false,fetched:new Date().toISOString()});}invalidate(p);log(p,'导入用户资料；来源性质待人工核实，旧判断待复核');}
+if(b.action==='evidence'){const v=z.object({id:z.string(),excluded:z.boolean(),stance:z.enum(['support','counter','context'])}).parse(d);const e=p.evidence.find(x=>x.id===v.id);if(!e)throw new Error('证据不存在');Object.assign(e,v);invalidate(p);log(p,'更新证据采纳或正反证标记，结论待复核');}
+if(b.action==='removeEvidence'){const eid=z.string().parse(d);p.evidence=p.evidence.filter(e=>e.id!==eid);invalidate(p);log(p,'删除资料，关联结论待复核');}
+if(b.action==='opportunity'){const o=z.object({id:z.string(),title:z.string().trim().min(1).max(200),problem:text,audience:text,alternative:text,conclusion:text,decision:z.enum(['validate','evidence','pause']),payment:z.enum(['none','weak','medium','strong']),refs:z.array(z.string()).max(30),counter:text,unknowns:text,plan:text}).parse(d);if(o.refs.some(ref=>!p.evidence.some(e=>e.id===ref&&!e.excluded)))throw new Error('引用必须来自本项目未排除的资料。');if(o.payment==='strong')throw new Error('本版未接入可核实的交易资料，不支持标记为强付费信号。');const item:Opportunity={...o,id:o.id||crypto.randomUUID(),stale:false,revision:p.revision};const i=p.opportunities.findIndex(x=>x.id===item.id);if(i<0)p.opportunities.push(item);else p.opportunities[i]=item;log(p,'保存人工机会判断；不代表已验证事实');}
+if(b.action==='removeOpportunity'){p.opportunities=p.opportunities.filter(x=>x.id!==z.string().parse(d));log(p,'删除机会卡');}
+if(b.action==='finish'){if(!p.confirmed||!p.opportunities.length||p.opportunities.some(o=>o.stale||!o.plan.trim()))throw new Error('请先确认范围、复核机会判断并补齐验证计划。');p.status='completed';log(p,'人工确认本次研究交付完成；不代表商业机会成立');}
+if(b.action==='report'){p.reports.unshift({at:new Date().toISOString(),revision:p.revision,body:report(p)});p.reports=p.reports.slice(0,10);log(p,'保存报告快照');}
+applyGovernanceAction(p,b.action,d);
+if(['memory','confirmMemory','removeMemory'].includes(b.action)){invalidateRun(p);if(p.workflow&&p.workflow.status!=='cancelled'){p.workflow.status='stale';p.workflow.lease=undefined;}}
+if(['brief','import','evidence','removeEvidence','opportunity','removeOpportunity'].includes(b.action))scanReflections(p);
+p.actions=[...p.actions.slice(-49),b.callId];return NextResponse.json({project:await save(p,b.version)});
+}catch(e){const msg=e instanceof Error?e.message:'';return NextResponse.json({error:msg==='VERSION_CONFLICT'?'其他操作已更新项目，请刷新后重试。':e instanceof z.ZodError?'数据格式不正确，请检查输入。':msg||'保存失败，请重试。'},{status:msg==='VERSION_CONFLICT'?409:400})}}
+export async function DELETE(req:Request,ctx:{params:Promise<{id:string}>}){try{if(req.headers.get('sec-fetch-site')==='cross-site')return NextResponse.json({error:'请求来源不正确'},{status:403});const {id}=await ctx.params;const v=Number(new URL(req.url).searchParams.get('version'));const r=await db().prepare('DELETE FROM research_projects WHERE id=? AND version=?').bind(id,v).run();if(!r.meta.changes)return NextResponse.json({error:'项目已改变，请刷新后再删除。'},{status:409});return NextResponse.json({ok:true})}catch{return NextResponse.json({error:'删除失败，请重试'},{status:503})}}

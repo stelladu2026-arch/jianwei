@@ -1,0 +1,210 @@
+PASS read projects
+PASS create explicit synthetic fixture
+PASS same author and thread are not extra samples
+PASS scope confirmation gate
+PASS pause checkpoint
+PASS paused run cannot advance
+PASS resume saved state
+PASS duplicate call id is idempotent
+PASS stale version cannot overwrite
+PASS replay produces labeled artifacts with zero model calls
+PASS deleting evidence invalidates judgments
+PASS snapshot discloses stale and synthetic state
+PASS scope revision invalidates and preserves old snapshot
+PASS incomplete study cannot finish
+PASS duplicate import and injection remain source text
+PASS cross project reference rejected
+PASS unverified strong payment rejected
+PASS manual judgment saves with project citations
+PASS excluded evidence cannot be cited
+PASS unconfigured model does not fake analysis
+PASS archive state survives reads
+PASS cancelled run cannot advance
+PASS role cannot request database writes
+PASS role context rejects foreign evidence
+PASS role context rejects old scope
+PASS role context rejects stale project version
+PASS memory rejects foreign citations
+PASS candidate experience stays out of role context
+PASS experience confirmation requires verification record
+PASS confirmed scoped experience can be read
+PASS memory follows selected evidence boundary
+PASS verifier first pass is blind to conclusions and memories
+PASS evidence changes invalidate interpretive memory
+PASS evidence mutation creates structural reflection
+PASS repeated rule scan deduplicates same issues
+PASS unfixed issue cannot be marked resolved
+PASS fixed rule requires explicit recorded verification
+PASS invalid memory cannot silently regain confirmed status
+PASS editing experience resets candidate status with current provenance
+PASS expired memory rejected on save
+PASS expiry is checked at retrieval time
+PASS manual reflection remains an unverified hypothesis
+PASS memory deletion persists
+PASS scope revision invalidates even explicit project preferences
+PASS public connector validates item and counts requests
+PASS source failure preserves prior evidence and records partial
+PASS concurrent search reserves one version without overwrite
+PASS search budget stops additional requests
+{"passed":48,"model_calls":0,"scope":"local API and domain invariants; not live model or visual QA"}
+PASS unconfigured provider rejects before reservation
+PASS single role plan and local checks persist
+PASS active run cannot be replaced
+PASS advance call id does not double execute
+PASS stale advance cannot overwrite checkpoint
+PASS paused execution cannot advance
+PASS single run preserves explicit simulation draft and manual workspace
+PASS new run archives previous immutable draft
+PASS four role dependency plan completes within budget
+PASS malformed output is not persisted and produces reflection
+PASS failed execution reflection cannot be falsely closed
+PASS explicit retry retains failed attempt and completes
+PASS recovered execution reflection can be closed with a record
+PASS model output foreign citation is rejected
+PASS repeated bad output reaches bounded retry stop
+PASS budget stops the next model step before execution
+PASS evidence change invalidates run provenance
+PASS project pause freezes active execution too
+PASS execution cannot resume before its project
+PASS unexpired lease cannot be stolen
+PASS pause discards late result without unpausing
+PASS interrupted step resumes with reserved attempt accounted
+PASS concurrent advances reserve only one attempt
+PASS scope edit during execution preserves edit and rejects old output
+PASS fixed evaluation persists complete structural results
+PASS expired persisted lease recovers as uncertain failed attempt
+PASS recovered lease can finish without resetting spent budget
+PASS memory edits invalidate unfinished input provenance
+PASS future adapters cannot bypass output revision checks
+PASS strong payment claims are outside the output contract
+PASS counter priority survives original archive ordering and clipping
+PASS oversized brief fails instead of silently dropping scope
+PASS adapter input mutation cannot expand validation authority
+PASS timeout works even if adapter ignores abort
+{"execution_checks":34,"actual_model_calls":0,"scope":"real routes and deterministic simulation contracts, not semantic model quality"}
+PASS transport probe sends no credentials or model input
+PASS browser cannot override server free-tier protection gate
+PASS auth probe cannot generate and discards private provider messages
+PASS zero paid budget requires explicit free-tier protection confirmation
+PASS browser header cannot supply or override the server secret
+PASS configuration status exposes booleans and public metadata only
+PASS opaque credentials permit printable punctuation but reject header injection
+PASS first Qwen test cannot exceed four attempts
+PASS fault injection is restricted to simulation
+PASS single Qwen run defaults to one attempt and starts without HTTP
+PASS removed server credentials block advance without consuming budget
+PASS HTTP request stays idempotent and keeps trusted usage metadata
+PASS local checks and report need no key or additional model calls
+PASS Qwen constrains IDs in schema and completes redundant declarations only for unchanged allowed nested refs
+PASS four roles share Qwen while verifier remains independent
+PASS Qwen redirect stops once, sanitizes errors and preserves available usage
+PASS Qwen foreign stops once, sanitizes errors and preserves available usage
+PASS Qwen json stops once, sanitizes errors and preserves available usage
+PASS Qwen truncated stops once, sanitizes errors and preserves available usage
+PASS Qwen no_usage stops once, sanitizes errors and preserves available usage
+PASS Qwen quota stops once, sanitizes errors and preserves available usage
+PASS Qwen auth stops once, sanitizes errors and preserves available usage
+PASS Qwen rate stops once, sanitizes errors and preserves available usage
+PASS Qwen network stops once, sanitizes errors and preserves available usage
+PASS pause discards late Qwen output and marks request usage as uncertain
+PASS fixed fourteen evaluations remain synthetic when Qwen is selected
+PASS provider credential guard never includes key in error text
+PASS Qwen adapter ignoring abort cannot bypass executor timeout
+{"qwen_http_checks":28,"actual_model_calls":0,"scope":"mocked provider HTTP, not live connectivity or semantic model quality"}
+PASS workflow cannot override server free-quota protection
+PASS workflow requires server credentials before reservation
+PASS synthetic material cannot silently become real automated research
+PASS creating workflow makes no external request and fixes total budget
+PASS planning response and repeat request are idempotent
+PASS manual search and model execution cannot race active workflow
+PASS collection retains original comments, dates and same-thread attribution
+PASS baseline completes collection through analysis, local checks and persisted report
+PASS changing evidence invalidates completed workflow and keeps old report
+PASS unsearchable gaps stop without needless additional collection or analysis
+PASS searchable gap runs one supplement and reanalysis within four model calls
+PASS zero results produce partial delivery without an invented opportunity
+PASS source failures retain reservations and explicit limitations
+PASS titles without original bodies cannot drive model analysis
+PASS quota failure stops once and cannot bypass total request budget
+PASS invalid planner output never becomes an arbitrary network request
+PASS overlong keyword phrases stop before wasting source requests
+PASS explicit planner retries cannot reset four-request budget
+PASS invalid output exposes field paths and codes without private values
+PASS foreign proposal references stop before a report or opportunity is saved
+PASS pause rejects late model output and conservatively keeps spent attempts
+PASS resume requires explicit retry for interrupted requests and keeps original budget
+PASS late collection cannot write evidence after pause or refund uncertain attempts
+PASS scope edits win over an in-flight automatic research step
+PASS source reservation cannot exceed absolute external-request cap
+PASS expired workflow lease preserves uncertain local attempt and stops
+PASS explicit local checkpoint retry resumes without another model request
+PASS invalid zero time windows fall back without NaN date filters
+PASS source identity mismatches cannot enter evidence
+PASS source redirects stop without following unapproved destinations
+{"workflow_checks":30,"actual_model_calls":0,"scope":"real workflow routes, synthetic provider/source HTTP; no semantic quality claim"}
+PASS four-role research cannot start without usable originals
+PASS four-role start freezes baseline input without extra generation or collection
+PASS role reservation is idempotent and retains frozen input
+PASS independent verifier sees originals with no prior conclusions or memory
+PASS coordinator reads all three bounded role summaries and same evidence
+PASS four-role loop delivers report and comparison within exactly four calls
+PASS quote locations match immutable source slices without asserting semantic truth
+PASS cached comparison shows actual analysis usage, not planning calls or accuracy
+PASS human comparison rejects incomplete claim coverage without generation
+PASS complete human comparison saves locally without model secret or request
+PASS missing baseline never triggers a hidden extra model call
+PASS four-role quote stops once and preserves spent budget
+PASS four-role coverage stops once and preserves spent budget
+PASS four-role anchorless stops once and preserves spent budget
+PASS four-role foreign stops once and preserves spent budget
+PASS four-role quota stops once and preserves spent budget
+PASS four-role unexpected_refs stops once and preserves spent budget
+PASS restart requires new-round quota confirmation before altering failure history
+PASS stale restart cannot overwrite a newer project
+PASS restart atomically archives the old spent round and creates a fresh four-role checkpoint
+PASS duplicate restart is idempotent without adding a round or model call
+PASS ready or running rounds cannot be replaced by restart
+PASS explicit new round still has only four model calls and retains prior failed usage
+PASS pause discards late role output and preserves unknown usage
+PASS expired frozen memory cannot reach a role after its validity changes
+PASS four-role cap blocks a fifth request before HTTP
+PASS evidence changes invalidate frozen collaboration and comparison
+PASS coordinator cannot fabricate duplicate role agreement
+{"collaboration_checks":28,"actual_model_calls":0,"scope":"real routes, SQLite and strict quote provenance; synthetic HTTP and human judgments, not semantic quality"}
+PASS browser status entry distinguishes absent configuration from transport failure
+PASS authenticated project entry returns ready status without D1 or provider calls
+PASS client retains only public configuration booleans
+PASS authorization failures report status without exposing raw errors or requesting a key
+PASS HTML sign-in responses cannot become a ready model
+PASS status redirects stop without following another origin
+PASS malformed and inconsistent configuration fails closed
+PASS network failures have an actionable safe message
+PASS explicit refresh recovers without hidden retries or cached error state
+{"model_configuration_checks":9,"status_reads":3,"actual_model_calls":0,"scope":"real read-only routes and browser request/error contracts; not user-session browser QA"}
+PASS authentication HTML gives recovery guidance without showing page contents
+PASS write network failure does not replay a possibly accepted mutation
+PASS version conflicts retain actionable server guidance
+PASS manual refresh safely recovers after an incomplete response
+PASS exhausted standalone retries are blocked consistently in UI and server
+PASS spent model budget does not prevent eligible local-step recovery
+PASS insufficient collection reservation blocks retry before any source call
+PASS four-role model failure stays stopped even with unused total budget
+PASS anchorless supported claims produce a safe precise failure path
+PASS forbidden role fields are diagnosed without storing rejected text
+{"recovery_checks":10,"actual_model_calls":0,"scope":"browser response handling, shared retry guards and safe rejection diagnostics; no visual or live-model claims"}
+PASS needs schema rejects anchorless supports, partial and contradicts before downstream validation
+PASS needs accepts insufficient without inventing a quotation and accepts cited judgments
+PASS commercial schema rejects anchorless supports, partial and contradicts before downstream validation
+PASS commercial accepts insufficient without inventing a quotation and accepts cited judgments
+PASS verifier schema rejects anchorless supports, partial and contradicts before downstream validation
+PASS verifier accepts insufficient without inventing a quotation and accepts cited judgments
+PASS coordinator schema rejects anchorless supports, partial and contradicts before downstream validation
+PASS coordinator accepts insufficient without inventing a quotation and accepts cited judgments
+PASS literal quote and reference restrictions remain enforced by provider schema
+PASS historical safe field path renders a specific Chinese explanation
+PASS claim refs and proposal refs are derived from matching anchor targets without loss
+PASS new wire rejects redundant old citation lists and unknown format instead of repairing them
+PASS legacy internal claim reference mismatch remains rejected with the original field path
+PASS missing, duplicate and unknown targets are not rescued by reference derivation
+PASS a literal quotation from another source still fails source-specific location
+{"review_schema_checks":15,"actual_model_calls":0,"scope":"independent JSON Schema validation plus actual strict application validators; provider compatibility and model quality still need live verification"}
