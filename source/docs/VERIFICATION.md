@@ -141,3 +141,9 @@ restart 为原子版本化操作：只接受已失败的四角色流程，检查
 本地 D1 已用占位库执行 `drizzle/0000_stormy_archangel.sql`。这台 Windows Server 2016 最初缺少 `VCRUNTIME140_1.dll`，workerd 无法启动；安装微软 Visual C++ 2015–2022 运行库后 workerd 可运行。安装程序返回 3010，建议稍后重启，但当前预览已在重启前启动。预览地址 `http://127.0.0.1:8787`。页面点击验证了：加载虚构演示、确认范围、回放一步、模拟四角色推进、暂停后出现“恢复执行”、恢复后连续推进至草稿已保存。草稿标明模拟模型、真实调用 0。这不是真实四角色验收，也不是人工语义对照。
 
 真实四角色新轮尚未执行。开始前需要用户确认百炼免费额度仍有效、免费额度用完即停已生效，并把服务端 Key 放到本地 Worker 配置；最多 4 次，失败即停。
+
+## 2026-10-05 重复 target 与重复分歧角色的发送约束
+
+上一则记录留下的缺口是：检查条数正确时，Schema 仍允许两条检查共用一个 target。协调分歧的 `roles` 也允许同一角色出现两次，而 `locateChecks` 会拒绝。这次没有改用 `prefixItems` 或元组 `items`。发送 Schema 在长度已经等于目标个数时，为每个 target 增加一条 `contains`，使重复 target 在发送端失败；分歧角色按 2 个或 3 个不重复组合做同样约束。顺序仍然合法。解码不合并、不补造引用，应用继续用 `data.checks.target:duplicate` 和 `data.disagreements.N.roles:duplicate` 拒绝绕过 Schema 的输出。历史失败轮 `596a9737-8c04-421d-b25a-dcf2d1ced2d2` 保持 `INVALID_MODEL_REFERENCE` / `data.checks.2.anchors.0.evidence_id:not_in_claim`，没有被改成通过。
+
+本机 Node 24.19.0 离线检查 204 项通过（此前 203 项，加上 1 项重复 target / 重复分歧角色回归），`tsc --noEmit` 通过，`pnpm run build` 通过。新增真实模型调用 0，公开采集调用 0。提供方是否接受 `contains` 未验证，不能把这次离线通过写成真实四角色完成或市场结论正确。

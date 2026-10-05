@@ -10,6 +10,8 @@ export function describeReviewIssue(issue:string){
   if(quote)return `第 ${Number(quote[1])+1} 个核查条目的第 ${Number(quote[2])+1} 段引文，无法在对应输入原文中逐字定位。`;
   if(issue==='data.checks:claim_count_mismatch')return '主张数量与核查条目数量不一致，有主张未核查或有多余条目。';
   if(issue==='data.checks.target:duplicate')return '同一主张被重复核查，不能覆盖其他主张。';
+  const duplicateRoles=issue.match(/^data\.disagreements\.(\d+)\.roles:duplicate$/);
+  if(duplicateRoles)return `第 ${Number(duplicateRoles[1])+1} 条分歧把同一角色列了多次，不能当成多份独立意见。`;
   if(issue==='data.checks:required')return '模型没有返回逐条核查结果。';
   if(issue==='data.notes:too_many')return '模型返回的笔记超过本轮两条上限。';
   if(issue.endsWith(':not_allowed_for_role'))return '模型返回了当前角色不允许生成的字段。';
