@@ -2,6 +2,7 @@ import type {Project,Evidence} from './domain';
 import type {ModelTask,ModelResult} from './model-port';
 import {buildTask,makeRun,reserve,failTask,type Run,type Analysis} from './execution';
 import {collaborationReport,type FrozenInput,type Comparison,type LocatedCheck} from './collaboration';
+import {sourceCoverage} from './source-coverage';
 import type {Collection} from './collection';
 export const WORKFLOW_VERSION='opportunity-workflow/2';
 export const workflowStages={plan:'规划检索',collect:'采集公开资料',analyze:'归纳机会与反证',gap:'判断证据缺口',supplement:'补充检索',reanalyze:'复核机会判断',check:'校验引用与结构',deliver:'保存研究草稿',needs:'需求分析',commercial:'替代与商业分析',verifier:'独立反证核查',synthesis:'协调汇总与核查'};
@@ -85,9 +86,10 @@ function interrupt(w:ResearchWorkflow){
   const r=w.analysisRun;if(r?.lease){const task=r.tasks.find(t=>t.id===r.lease?.taskId);if(task)failTask(r,task,record.error,r.lease.callId,record.elapsedMs);}
 }
 export function workflowReport(p:Project,w:ResearchWorkflow){
-  const selected=p.evidence.filter(e=>(w.usableIds.includes(e.id)||w.mode!=='four'&&e.kind==='imported')&&!e.excluded),threads=new Set(selected.map(e=>e.thread)),authors=new Set(selected.map(e=>e.author).filter(Boolean));
+  const selected=p.evidence.filter(e=>(w.usableIds.includes(e.id)||w.mode!=='four'&&e.kind==='imported')&&!e.excluded);
+  const coverage=sourceCoverage(w.frozen?.evidence||selected);
   const sources=w.records.filter(r=>r.collection).map(r=>{const c=r.collection!;return `- ${r.stage==='supplement'?'补搜':'初搜'}「${c.query}」：新增 ${c.added} 条正文；重复 ${c.duplicate} 条；无可分析正文 ${c.titleOnly} 条；请求失败 ${c.failed} 次。`}).join('\n');
   const usage=w.records.filter(r=>r.kind==='model'&&r.usage).map(r=>r.usage!);
-  const directory=selected.slice(0,30).map(e=>`### [${e.id}] ${e.title}\n资料日期：${e.date||'未知'}；讨论线程：${e.thread}；${e.truncated?'原文已裁剪':'已保存正文'}\n\n${e.text}\n\n${e.url}`).join('\n\n');
-  return `# 一键研究草稿：${p.title}\n\n**公开资料与模型推断，待人工核查；不代表市场或付费已验证。**\n研究版本：${p.revision}；资料版本：${p.evidenceVersion||0}；流程：${w.version}；模式：${w.mode==='four'?'四角色复核':'单角色研究'}\n模型请求尝试：${w.budget.modelAttempts} / ${w.budget.modelLimit}；有用量回执 ${usage.length} 次；输入 / 输出词元 ${usage.reduce((n,u)=>n+u.input_tokens,0)} / ${usage.reduce((n,u)=>n+u.output_tokens,0)}。缺失回执的用量未知。付费预算 ¥0，实际费用待百炼账单核对。\n\n## 来源覆盖\n${selected.filter(e=>e.kind==='public').length} 条公开正文；${selected.filter(e=>e.kind==='imported').length} 条导入资料；${threads.size} 个讨论线程；${authors.size} 个已知作者标识。这些计数不是独立客户数。\n时间过滤：${w.mode==='four'?'本轮未检索，沿用已有资料；请核查原始日期与采集记录':w.since===null?'未使用日期过滤':new Date(w.since*1000).toISOString().slice(0,10)+' 以后'}\n\n${sources}\n\n## 机会与反证\n${w.analysisRun?.report||'未生成分析草稿。'}\n\n## 补证决策\n${w.records.filter(r=>r.stage==='gap').flatMap(r=>r.output?.gaps||[]).map(x=>'- '+x).join('\n')||'本轮未启用自动补证或预算不足。'}${collaborationReport(w)}\n\n## 已知限制与下一步\n${w.limitations.map(x=>'- '+x).join('\n')}\n- 引用标识通过不等于原文支持程度已验证；付款、市场规模及访谈缺口需要另行核查。\n- 本草稿未自动写入人工机会卡或正式报告。\n\n## 证据目录\n${directory}\n`;
+  const directory=selected.slice(0,30).map(e=>`### [${e.id}] ${e.title}\n资料日期：${e.date||'未知'}；抓取时间：${e.fetched||'未知'}；讨论线程：${e.thread}；${e.truncated?'原文已裁剪':'已保存正文'}\n\n${e.text}\n\n${e.url}`).join('\n\n');
+  return `# 一键研究草稿：${p.title}\n\n**公开资料与模型推断，待人工核查；不代表市场或付费已验证。**\n研究版本：${p.revision}；资料版本：${p.evidenceVersion||0}；流程：${w.version}；模式：${w.mode==='four'?'四角色复核':'单角色研究'}\n模型请求尝试：${w.budget.modelAttempts} / ${w.budget.modelLimit}；有用量回执 ${usage.length} 次；输入 / 输出词元 ${usage.reduce((n,u)=>n+u.input_tokens,0)} / ${usage.reduce((n,u)=>n+u.output_tokens,0)}。缺失回执的用量未知。付费预算 ¥0，实际费用待百炼账单核对。\n\n## 来源覆盖\n${coverage.publicCount} 条公开正文；${coverage.importedCount} 条导入资料；${coverage.threadCount} 个讨论线程；${coverage.authorCount} 个已知作者标识；独立样本 ${coverage.independentSamples} 个。同线程或同作者已合并，这些计数不是独立客户数。裁剪正文 ${coverage.truncated} 条。\n${coverage.qualification.map(x=>'- '+x).join('\n')}\n时间过滤：${w.mode==='four'?'本轮未检索，沿用已有资料；请核查原始日期与采集记录':w.since===null?'未使用日期过滤':new Date(w.since*1000).toISOString().slice(0,10)+' 以后'}\n\n${sources}\n\n## 机会与反证\n${w.analysisRun?.report||'未生成分析草稿。'}\n\n## 补证决策\n${w.records.filter(r=>r.stage==='gap').flatMap(r=>r.output?.gaps||[]).map(x=>'- '+x).join('\n')||'本轮未启用自动补证或预算不足。'}${collaborationReport(w)}\n\n## 已知限制与下一步\n${w.limitations.map(x=>'- '+x).join('\n')}\n- 引用标识通过不等于原文支持程度已验证；付款、市场规模及访谈缺口需要另行核查。\n- 本草稿未自动写入人工机会卡或正式报告。\n\n## 证据目录\n${directory}\n`;
 }

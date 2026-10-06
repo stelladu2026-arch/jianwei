@@ -5,6 +5,7 @@ import {roleContext} from './governance';
 import {buildTask,makeRun,reserve,validateResult,type Analysis,type Run,type Proposal} from './execution';
 import type {ModelTask,ModelResult,Role} from './model-port';
 import type {ResearchWorkflow} from './workflow';
+import {sourceCoverage} from './source-coverage';
 export const REVIEW_VERSION='evidence-review/2';
 import {judgments,judgmentLabels,type ClaimCheck,type LocatedCheck} from './review-contract';
 export {judgments,judgmentLabels,targetLabels} from './review-contract';
@@ -37,6 +38,7 @@ export async function initializeFour(p:Project,w:ResearchWorkflow){
   w.comparison={baseline,matched:!!baseline&&baseline.fingerprint===hash&&baseline.model==='qwen3.7-plus',candidateFingerprint:hash,reason:baseline?baseline.fingerprint===hash?'复用单角色的同一范围、资料片段和有效记忆；角色提示及前序摘要为本次干预。':'有效记忆与旧基线不同，保留报告供参考，不能作为严格同输入对照。':'没有可复用的真实单角色基线，未自动增加生成请求。'};
   const r=makeRun({...p,run:undefined,evidence},'four','normal',4);r.adapter='qwen';r.model='qwen3.7-plus';r.simulation=false;r.paidBudget=0;r.freeTierOnlyConfirmed=true;r.reviewProtocol=REVIEW_VERSION;w.analysisRun=r;
   w.limitations.push('本轮复用已有原文，四角色各一次，最多 4 次生成；不追加规划、采集或自动补搜。','片段位置由代码核对；支持程度是模型判断，待人工核查。','同标识模型在不同时间生成，缓存基线对照不是随机实验或准确率评测。');
+  for(const line of sourceCoverage(evidence).qualification)if(!w.limitations.includes(line))w.limitations.push(line);
 }
 function priorSummary(data:Analysis){
   const compact={notes:data.notes.slice(0,2).map(n=>({...n,claim:n.claim.slice(0,120),refs:n.refs.slice(0,3)})),checks:(data.checks||[]).slice(0,2).map(c=>({target:c.target,judgment:c.judgment,reason:c.reason.slice(0,90),anchors:c.anchors.slice(0,1).map(a=>({evidence_id:a.evidence_id,quote:a.quote.slice(0,60)}))}))};
