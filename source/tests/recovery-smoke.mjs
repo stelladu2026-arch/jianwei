@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {requestJSON} from '../lib/research/browser-api.ts';
 import {runRetryBlockReason,controlRun} from '../lib/research/execution-controls.ts';
-import {workflowRetryBlockReason,controlWorkflow} from '../lib/research/workflow.ts';
+import {workflowRetryBlockReason,controlWorkflow,failureDiagnostics} from '../lib/research/workflow.ts';
 import {locateChecks} from '../lib/research/collaboration.ts';
 let passed=0;
 async function check(label,fn){await fn();passed++;console.log('PASS '+label)}
@@ -32,6 +32,11 @@ await check('insufficient collection reservation blocks retry before any source 
 });
 await check('four-role model failure stays stopped even with unused total budget',()=>{
   const p={revision:1,evidenceVersion:0,budget:{searches:0},workflow:{...structuredClone(workflow),mode:'four',stage:'verifier'}};assert.match(workflowRetryBlockReason(p),/本轮不能追加重试/);assert.throws(()=>controlWorkflow(p,'retry'),/本轮不能追加重试/);
+});
+await check('failure diagnostics keep protocol, evidence version, tokens and request id without rejected text',()=>{
+  const record={id:'c',stage:'verifier',kind:'model',state:'failed',started:'',elapsedMs:1,error:'INVALID_MODEL_REFERENCE',usage:{input_tokens:12,output_tokens:3},requestId:'safe-req-1',outputIssues:['data.checks.0.anchors.0.evidence_id:not_in_claim'],output:{data:{notes:[{claim:'rejected claim text'}]}}};
+  const diag=failureDiagnostics({stage:'verifier',evidenceVersion:4,revision:2,records:[record],analysisRun:{reviewProtocol:'evidence-review/2'}});
+  assert.equal(diag.protocol,'evidence-review/2');assert.equal(diag.evidenceVersion,4);assert.equal(diag.inputTokens,12);assert.equal(diag.outputTokens,3);assert.equal(diag.requestId,'safe-req-1');assert.deepEqual(diag.fields,['data.checks.0.anchors.0.evidence_id:not_in_claim']);assert.equal(JSON.stringify(diag).includes('rejected claim text'),false);
 });
 const output={evidence_ids:['E1'],data:{notes:[{claim:'Synthetic claim',refs:['E1']}],checks:[{target:'note:0',judgment:'supports',anchors:[]}]}},input={role:'verifier',evidence:[]};
 await check('anchorless supported claims produce a safe precise failure path',()=>{

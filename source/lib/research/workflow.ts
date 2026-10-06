@@ -11,6 +11,10 @@ export type WorkflowStage=keyof typeof workflowStages;
 export type WorkflowRecord={id:string;stage:WorkflowStage;kind:'model'|'source'|'local';state:'running'|'done'|'failed';started:string;elapsedMs:number;error:string;supportChecks?:LocatedCheck[];outputIssues?:string[];normalizations?:string[];usage?:ModelResult['usage'];requestId?:string;input?:ModelTask;output?:ModelResult;collection?:Omit<Collection,'evidence'> & {added:number;duplicate:number;titleOnly:number}};
 export type ResearchWorkflow={mode?:'single'|'four';frozen?:FrozenInput;comparison?:Comparison;id:string;version:string;revision:number;evidenceVersion:number;created:string;status:'ready'|'running'|'paused'|'failed'|'completed'|'partial'|'cancelled'|'stale';stage:WorkflowStage;allowSupplement:boolean;queries:{query:string;purpose:'initial'|'supplement';reason:string}[];collectIndex:number;usableIds:string[];freshIds:string[];limitations:string[];records:WorkflowRecord[];budget:{modelLimit:2|4;modelAttempts:number;sourceLimit:30;sourceAttempts:number;searchLimit:3;searches:number};lease?:{callId:string;expires:string};analysisRun?:Run;initialAnalysis?:Run;error:string;needsRetry:boolean;report:string;since:number|null};
 export function activeWorkflow(p:Project){return !!p.workflow&&['ready','running','paused','failed'].includes(p.workflow.status);}
+export function failureDiagnostics(w:Pick<ResearchWorkflow,'stage'|'evidenceVersion'|'revision'|'records'|'analysisRun'>){
+  const failed=[...w.records].reverse().find(r=>r.state==='failed');
+  return {stage:w.stage,protocol:w.analysisRun?.reviewProtocol||'',evidenceVersion:w.evidenceVersion,revision:w.revision,inputTokens:failed?.usage?.input_tokens??null,outputTokens:failed?.usage?.output_tokens??null,requestId:failed?.requestId||'',fields:failed?.outputIssues||[]};
+}
 export function sinceForPeriod(period:string,now=Date.now()){
   const normalized=period.trim();if(/不限|全部|所有时间/.test(normalized))return null;
   const match=normalized.match(/近\s*(\d+|一|三|六|半)\s*(年|个月|月|天)/);
