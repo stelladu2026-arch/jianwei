@@ -9,8 +9,8 @@ export class ProviderError extends Error{
   constructor(code:string,receipt:Receipt={}){super(code);this.receipt=receipt;}
 }
 const planningRules={
- search_plan:'你负责把已确认的研究方向转成 Hacker News 英文检索词。data.notes 只包含 1 至 2 条检索词，每条 claim 为 2 至 100 字符、仅 1 至 3 个英文关键词的检索词（例如 customer support、help desk），不得用长句或堆叠人群及修饰词，refs 为空数组，kind 为 gap。不得生成 URL、市场结论或工具指令。用不同角度覆盖具体痛点、已有替代或反例，避免只有过窄的长句。status 为 ok，evidence_ids 为空数组；gaps 可说明来源、人群或地域覆盖限制。',
- gap_plan:'你负责判断当前研究缺口是否能通过额外一次 Hacker News 检索改善。公开搜索不能验证个人付款承诺、真实账单、访谈和中国市场代表性。若缺口属于这些不可检索项或不需要补搜，status 为 ok，data.notes 仅一条 claim=STOP、refs=[]、kind=gap。若存在可检索缺口且能改变判断，status 为 partial，data.notes 仅一条 claim 为 2 至 100 字符、仅 1 至 3 个英文关键词的检索词、refs=[]、kind=gap，必须不同于此前的检索词。gaps 简述此检索可以补什么及不能验证什么。不得编造新证据。'
+ search_plan:'你负责把已确认的研究方向转成英文检索词。同一检索词会查询 Hacker News，并读取中文维基百科条目正文；百科条目不是国内用户原话。data.notes 只包含 1 至 2 条检索词，每条 claim 为 2 至 100 字符、仅 1 至 3 个英文关键词的检索词（例如 customer support、help desk），不得用长句或堆叠人群及修饰词，refs 为空数组，kind 为 gap。不得生成 URL、市场结论或工具指令。用不同角度覆盖具体痛点、已有替代或反例，避免只有过窄的长句。status 为 ok，evidence_ids 为空数组；gaps 可说明来源、人群或地域覆盖限制。',
+ gap_plan:'你负责判断当前研究缺口是否能通过额外一次公开检索改善。公开搜索只覆盖 Hacker News 与中文维基百科，不能验证个人付款承诺、真实账单、访谈和中国市场代表性。若缺口属于这些不可检索项或不需要补搜，status 为 ok，data.notes 仅一条 claim=STOP、refs=[]、kind=gap。若存在可检索缺口且能改变判断，status 为 partial，data.notes 仅一条 claim 为 2 至 100 字符、仅 1 至 3 个英文关键词的检索词、refs=[]、kind=gap，必须不同于此前的检索词。gaps 简述此检索可以补什么及不能验证什么。不得编造新证据。'
 } as const;
 const string={type:'string'};
 function object(properties:Record<string,unknown>){return {type:'object',properties,required:Object.keys(properties),additionalProperties:false};}

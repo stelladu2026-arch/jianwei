@@ -7,7 +7,7 @@ import {scanReflections} from '@/lib/research/governance';
 import {QwenModel} from '@/lib/research/qwen-model';
 import {qwenCredentials} from '@/lib/research/qwen-settings';
 import {QWEN_TIMEOUT_MS} from '@/lib/research/provider-config';
-import {collectHN,SOURCE_REQUEST_CAP,type Collection} from '@/lib/research/collection';
+import {collectPublic,SOURCE_REQUEST_CAP,type Collection} from '@/lib/research/collection';
 import {executeModel,validateResult,completeTask,failTask,localStep,reserve,invalidateRun,errorLabels,type Analysis} from '@/lib/research/execution';
 import {makeWorkflow,currentWorkflow,controlWorkflow,plannerTask,planningQueries,analysisTask,stopWithoutEvidence,workflowReport,workflowStages,type WorkflowRecord} from '@/lib/research/workflow';
 import type {ModelTask,ModelResult} from '@/lib/research/model-port';
@@ -57,7 +57,7 @@ export async function POST(request:Request,context:{params:Promise<{id:string}>}
   const reserved=await save(p,b.version),started=Date.now();let output:(ModelResult&{data:Analysis})|undefined,collection:Collection|undefined,error='',outputIssues:string[]=[];const adapter=key?new QwenModel(key):undefined;
   try{
     if(adapter&&task){output=validateResult(await executeModel(task,adapter,QWEN_TIMEOUT_MS),task,issues=>{outputIssues=issues});if(stage==='plan'||stage==='gap')planningQueries(output,w);if(w.mode==='four')locateChecks(output,task,issue=>{outputIssues.push(issue)});}
-    else if(isSource)collection=await collectHN(w.queries[w.collectIndex].query,w.since);
+    else if(isSource)collection=await collectPublic(w.queries[w.collectIndex].query,w.since);
     else{const r=w.analysisRun!,t=r.tasks.find(t=>t.id===stage)!;if(w.mode==='four'&&stage==='check')checkFour(w);localStep(p,r,t);}
   }catch(e){error=safeError((e as Error).message);}
   const current=await get(id);if(!current)return NextResponse.json({error:'项目已删除，结果未写入。'},{status:409});
