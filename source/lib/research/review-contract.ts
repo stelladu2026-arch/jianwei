@@ -14,6 +14,14 @@ export function describeReviewIssue(issue:string){
   if(duplicateRoles)return `第 ${Number(duplicateRoles[1])+1} 条分歧把同一角色列了多次，不能当成多份独立意见。`;
   if(issue==='data.checks:required')return '模型没有返回逐条核查结果。';
   if(issue==='data.notes:too_many')return '模型返回的笔记超过本轮两条上限。';
+  if(issue==='data.notes:count')return '规划检索词条数不符合约定：初次规划为 1 至 2 条，补搜判断为 1 条。';
+  if(issue==='status:not_ok')return '初次规划的 status 必须为 ok。';
+  if(issue==='data.notes.0.claim:not_stop')return '不需要补搜时，唯一一条 claim 必须是 STOP。';
+  if(issue.endsWith(':keyword_length'))return '检索词长度不在 2 至 100 字符。';
+  if(issue.endsWith(':keyword_count'))return '检索词超过 3 个英文关键词。';
+  if(issue.endsWith(':keyword_charset'))return '检索词必须是 1 至 3 个英文关键词，不能是中文、长句或网址。';
+  if(issue.endsWith(':not_gap'))return '规划检索词的 kind 必须为 gap。';
+  if(issue.endsWith('.refs:not_empty')||issue==='evidence_ids:not_empty'||issue==='data.proposal:forbidden')return '规划结果不能包含引用、证据编号或草稿。';
   if(issue.endsWith(':not_allowed_for_role'))return '模型返回了当前角色不允许生成的字段。';
   if(issue==='data.disagreements:required_for_coordinator')return '协调角色没有返回约定的分歧核查字段。';
   if(issue.endsWith('.target:unknown_claim'))return '核查条目指向不存在的主张。';

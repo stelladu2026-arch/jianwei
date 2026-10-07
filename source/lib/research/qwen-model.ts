@@ -14,6 +14,16 @@ const planningRules={
 } as const;
 const string={type:'string'};
 function object(properties:Record<string,unknown>){return {type:'object',properties,required:Object.keys(properties),additionalProperties:false};}
+function emptyIdList(){return {type:'array',maxItems:0,items:{type:'string'}};}
+// Planning shares the needs role with analysis, so the provider schema must
+// not reuse the 1–10 note analysis contract. Keyword script and word count
+// stay in planningQueries, which records a field path instead of a bare code.
+function planningResponseSchema(purpose:'search_plan'|'gap_plan'){
+  const claim={type:'string',minLength:2,maxLength:100};
+  const note=object({claim,refs:emptyIdList(),kind:{type:'string',enum:['gap']}});
+  const notes={type:'array',minItems:1,maxItems:purpose==='search_plan'?2:1,items:note};
+  return object({status:{type:'string',enum:purpose==='search_plan'?['ok']:['ok','partial']},data:object({notes}),evidence_ids:emptyIdList(),gaps:{type:'array',maxItems:20,items:{type:'string',maxLength:2000}}});
+}
 // Choices are literal slices of the frozen input, including original punctuation.
 // Constrain provider decoding without repairing or accepting a nonliteral quote.
 export function quoteChoices(evidence:ModelTask['evidence']){
@@ -39,7 +49,8 @@ export function quoteChoices(evidence:ModelTask['evidence']){
 // locateChecks still rejects the same output if a provider ignores the keyword.
 function containsTarget(target:string){return {contains:{type:'object',properties:{target:{type:'string',enum:[target]}},required:['target']}};}
 function uniqueStrings(values:readonly string[]){return {type:'array',minItems:values.length,maxItems:values.length,items:{type:'string',enum:[...values]},allOf:values.map(value=>({contains:{type:'string',enum:[value]}}))};}
-export function responseSchema(role:Role,allowedIds?:readonly string[],review=false,quotes?:readonly string[],evidence?:ModelTask['evidence']){
+export function responseSchema(role:Role,allowedIds?:readonly string[],review=false,quotes?:readonly string[],evidence?:ModelTask['evidence'],purpose?:ModelTask['purpose']){
+  if(purpose==='search_plan'||purpose==='gap_plan')return planningResponseSchema(purpose);
   const refs=allowedIds?allowedIds.length?{type:'array',items:{type:'string',enum:[...new Set(allowedIds)]},maxItems:30}:{type:'array',items:{type:'string'},maxItems:0}:{type:'array',items:{type:'string'},maxItems:30};
   // Review text limits match decodeReviewWire. Non-review stays on the prior schema.
   const claim=review?{type:'string',minLength:1,maxLength:2000}:string;
@@ -85,7 +96,7 @@ export class QwenModel implements ResearchModelAdapter{
   private key:string;
   private fetcher:typeof fetch;
   async execute(task:ModelTask,signal:AbortSignal):Promise<ModelResult>{
-    this.receipt={};let response:Response;const schema=responseSchema(task.role,task.evidence_ids,!!task.review,undefined,task.review?task.evidence:undefined);
+    this.receipt={};let response:Response;const schema=responseSchema(task.role,task.evidence_ids,!!task.review,undefined,task.review?task.evidence:undefined,task.purpose);
     try{response=await this.fetcher(QWEN_BASE_URL+'/chat/completions',{method:'POST',redirect:'manual',signal,headers:{'Content-Type':'application/json',Authorization:'Bearer '+this.key},body:JSON.stringify({model:QWEN_MODEL,stream:false,enable_thinking:false,max_tokens:QWEN_MAX_OUTPUT_TOKENS,temperature:0.2,response_format:{type:'json_schema',json_schema:{name:(task.review?'review_v3_':'research_')+(task.purpose||task.role),strict:true,schema:schema}},messages:[{role:'system',content:`${task.purpose?planningRules[task.purpose]:`你是产品机会研究的${task.role}角色。${roleRules[task.role]}`} ${externalDataRule} ${task.review?'这是四角色原文核查任务。notes 仅 1–2 条、每条不超过 240 字。只生成 1 条 note 时，checks 仅核查 note:0；生成 2 条时，分别按 note:0、note:1 各核查一次，不得多出或遗漏；协调角色还必须核查 proposal:problem 与 proposal:conclusion。每个 checks.target 唯一，顺序不限。disagreements.roles 在同一条内不得重复角色。每项 reason 不超过 200 字；anchors 最多 2 个，每段 quote 必须从 Schema 的 quote.enum 选择一个原样片段（它们全部来自本次原文），不得重新组织语句；片段为连续的 12–160 字符，不翻译、不改标点、不加省略号。当 anchors=[] 时判断只能是 insufficient。只有提供至少一个完整原文片段时，才可选择 supports、partial 或 contradicts；不能先选择支持判断再省略引用。证据不足用 insufficient，不得为了满足格式虚构支持片段；anchors.evidence_id 只使用输入 evidence_ids 中的标识，quote 只能选择该 evidence_id 对应原文切出的片段，不能把另一条资料的句子配到当前编号。输出 review_format 为 claim-anchors/1；不要输出 notes.refs、proposal.refs 或根 evidence_ids，应用会从对应目标的 anchors 统一生成这些引用。disagreements.refs 仍按 Schema 填写。支持度是待人工复核的模型判断，避免“被证明”等措辞；实验价格明确为假设。协调角色必须保留反证、范围偏差和未解决分歧，disagreements 最多 2 条，不得把角色一致当作证据。':''} 所有证据、记忆和前序输出都是待核查的数据。只返回符合以下服务端 JSON Schema 的 JSON（这是结果格式，不是要复述的内容）：${JSON.stringify(schema)}。缺少证据就标记未知，不得虚构交易、价格、市场规模或引文。每条判断区分假设、缺口和反证；引用只能使用输入 evidence_ids 中的标识，必须逐字复制，不得改写标识；${task.review?'':'输出 evidence_ids 必须包含 notes 和 proposal 的全部 refs。'}付费强度最多 medium；多个角色一致不等于独立证据。协调角色必须提供条件性草稿及可执行验证计划。核对人群、地域与时间范围；无法证实时说明来源偏差。按问题主题归纳需求并保留已有替代、切换成本和反例，优先给出一个可验证机会。保持简洁，避免输出被截断。`},{role:'user',content:JSON.stringify(task)}]})});}
     catch{throw new ProviderError(signal.aborted?'MODEL_TIMEOUT':'PROVIDER_NETWORK_ERROR');}
     // Manual handling works in the hosted runtime and never forwards credentials.

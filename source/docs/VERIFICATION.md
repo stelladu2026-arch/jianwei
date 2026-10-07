@@ -203,3 +203,15 @@ restart 为原子版本化操作：只接受已失败的四角色流程，检查
 
 历史失败轮 `596a9737-8c04-421d-b25a-dcf2d1ced2d2` 不在本机这个项目里，没有被改写。预览仍在 `http://127.0.0.1:8787` 运行。
 
+## 2026-10-06 规划拒绝没有字段路径
+
+离线诊断和修复。没有新的模型请求，没有重试流程 `f5d8f1b1-19e1-4a3d-9b4b-d6dad9afd883`，没有改写被拒正文，也没有开始第二轮。
+
+本机 D1 里项目 `4c4d8d79-4976-4802-a56c-5420caf1caeb` 仍是版本 24，更新时间 `2026-10-06T14:42:43.653Z`。当前流程就是 `f5d8f1b1-19e1-4a3d-9b4b-d6dad9afd883`：模式 single，补搜开启，状态 failed，阶段 plan，错误 `INVALID_MODEL_OUTPUT`。模型尝试 1 / 4，来源尝试 0，检索 0，检索词 0，草稿长度 0。唯一一条记录的阶段是 plan，类型 model，状态 failed，错误码相同。`outputIssues` 这个字段不存在，`normalizations` 不存在，用量是 850 / 217，安全请求编号是 `5e9e3416-c756-975e-bb07-da17561e37a0`。`output` 不存在，被拒正文没有保存；`input` 存在。前一轮 `ea60fce4-101a-4323-8aa0-5a40fc276c9c` 仍是 completed，草稿长度 6463，没有改写。历史失败轮 `596a9737-8c04-421d-b25a-dcf2d1ced2d2` 不在这个项目里，没有改写。
+
+记录里没有被拒正文，所以不能断定模型当时返回了中文、长句或哪一个字段。代码能证明的是这条记录的形状从哪来：规划任务的角色是 needs，但发出的 JSON Schema 复用了分析契约，notes 允许 1–10 条，claim 没有长度限制，kind 可以是 hypothesis、gap 或 counter，status 可以是 ok 或 partial。提示词要求初次规划 1–2 条，每条 claim 为 2–100 字符、仅 1–3 个英文关键词，refs 为空，kind 为 gap，status 为 ok。顶层键合法的 JSON 会进入 `validateResult`。Zod 失败会写下字段路径；通过之后，`planningQueries` 再按关键词形状、条数、重复或是否带草稿抛出 `INVALID_MODEL_OUTPUT`，而且没有诊断回调。路由只保存 `validateResult` 或适配器回执里的 `outputIssues`。因此一次规划形状拒绝会留下用量、不留下 `outputIssues`、也不保存正文。引用越界仍先记成 `INVALID_MODEL_REFERENCE`（`refs:outside_input`），和这次的 `INVALID_MODEL_OUTPUT` 不是同一条路径。
+
+这次把 search_plan 和 gap_plan 改成单独的规划 Schema：条数、kind、status、claim 长度和空引用与提示词对齐。关键词的字符和词数仍由 `planningQueries` 检查，拒绝时写入字段路径，错误码保持 `INVALID_MODEL_OUTPUT`，不把关键词失败改记成旧的引用失配。离线夹具覆盖长度合格的中文检索词（记录 `data.notes.0.claim:keyword_charset`）、超过 3 个词的短语，以及外来引用仍是 `INVALID_MODEL_REFERENCE`。没有自动重试，没有改已花费次数，没有换模型。这不是新的实机轮次，也不是市场结论。
+
+本机 `node tests/run-local-api.mjs` 通过，真实模型调用 0。`tsc --noEmit` 通过。`pnpm run build` 在停掉占用 `dist/client` 的预览后通过。随后用 Node 24 重新启动预览，`http://127.0.0.1:8787` 的 `GET /` 返回 200。
+

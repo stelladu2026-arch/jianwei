@@ -54,9 +54,9 @@ export async function POST(request:Request,context:{params:Promise<{id:string}>}
   if(!isModel&&!isSource){const r=w.analysisRun;if(!r)throw new Error('MISSING_PROPOSAL');reserve({...p,run:r},b.callId);}
   const record:WorkflowRecord={id:b.callId,stage,kind:isModel?'model':isSource?'source':'local',state:'running',started:new Date().toISOString(),elapsedMs:0,error:'',...(task?{input:structuredClone(task)}:{})};
   w.records.push(record);w.status='running';w.lease={callId:b.callId,expires:new Date(Date.now()+75000).toISOString()};addAction(p,b.callId);
-  const reserved=await save(p,b.version),started=Date.now();let output:(ModelResult&{data:Analysis})|undefined,collection:Collection|undefined,error='',outputIssues:string[]=[];const adapter=key?new QwenModel(key):undefined;
+  const reserved=await save(p,b.version),started=Date.now();let output:(ModelResult&{data:Analysis})|undefined,collection:Collection|undefined,error='',outputIssues:string[]=[],planned:string[]|undefined;const adapter=key?new QwenModel(key):undefined;
   try{
-    if(adapter&&task){output=validateResult(await executeModel(task,adapter,QWEN_TIMEOUT_MS),task,issues=>{outputIssues=issues});if(stage==='plan'||stage==='gap')planningQueries(output,w);if(w.mode==='four')locateChecks(output,task,issue=>{outputIssues.push(issue)});}
+    if(adapter&&task){output=validateResult(await executeModel(task,adapter,QWEN_TIMEOUT_MS),task,issues=>{outputIssues=issues});if(stage==='plan'||stage==='gap')planned=planningQueries(output,w,issues=>{outputIssues=issues});if(w.mode==='four')locateChecks(output,task,issue=>{outputIssues.push(issue)});}
     else if(isSource)collection=await collectPublic(w.queries[w.collectIndex].query,w.since);
     else{const r=w.analysisRun!,t=r.tasks.find(t=>t.id===stage)!;if(w.mode==='four'&&stage==='check')checkFour(w);localStep(p,r,t);}
   }catch(e){error=safeError((e as Error).message);}
@@ -78,9 +78,9 @@ export async function POST(request:Request,context:{params:Promise<{id:string}>}
   if(output){
     cr.output=output;
     if(stage==='plan'){
-      cw.queries=planningQueries(output,cw).map(query=>({query,purpose:'initial',reason:'根据已确认的研究方向规划'}));cw.limitations.push(...output.gaps.slice(0,4));cw.stage='collect';
+      cw.queries=planned!.map(query=>({query,purpose:'initial',reason:'根据已确认的研究方向规划'}));cw.limitations.push(...output.gaps.slice(0,4));cw.stage='collect';
     }else if(stage==='gap'){
-      const queries=planningQueries(output,cw);
+      const queries=planned!;
       if(queries.length){cw.queries.push({query:queries[0],purpose:'supplement',reason:output.gaps.join('；').slice(0,1000)});cw.initialAnalysis=cw.analysisRun;cw.stage='supplement';}
       else{cw.limitations.push(...output.gaps.slice(0,4));cw.stage='check';}
     }else{

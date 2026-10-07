@@ -1,0 +1,70 @@
+{
+  "intended": {
+    "status": "ok",
+    "data": {
+      "notes": [
+        {"claim": "customer support", "refs": [], "kind": "gap"},
+        {"claim": "help desk", "refs": [], "kind": "gap"}
+      ]
+    },
+    "evidence_ids": [],
+    "gaps": ["Synthetic source coverage limit."]
+  },
+  "charset": {
+    "issues": ["data.notes.0.claim:keyword_charset"],
+    "status": "ok",
+    "data": {
+      "notes": [
+        {"claim": "小团队客户支持重复劳动", "refs": [], "kind": "gap"}
+      ]
+    },
+    "evidence_ids": [],
+    "gaps": ["Synthetic fixture, not an unsaved provider body."]
+  },
+  "sentence": {
+    "issues": ["data.notes.0.claim:keyword_count"],
+    "status": "ok",
+    "data": {
+      "notes": [
+        {"claim": "small teams repeat customer support work", "refs": [], "kind": "gap"}
+      ]
+    },
+    "evidence_ids": [],
+    "gaps": []
+  },
+  "looseCount": {
+    "issues": ["data.notes:count"],
+    "status": "ok",
+    "data": {
+      "notes": [
+        {"claim": "customer support", "refs": [], "kind": "gap"},
+        {"claim": "help desk", "refs": [], "kind": "gap"},
+        {"claim": "ticket queue", "refs": [], "kind": "gap"}
+      ]
+    },
+    "evidence_ids": [],
+    "gaps": []
+  },
+  "wrongKind": {
+    "issues": ["data.notes.0.kind:not_gap"],
+    "status": "ok",
+    "data": {
+      "notes": [
+        {"claim": "customer support", "refs": [], "kind": "hypothesis"}
+      ]
+    },
+    "evidence_ids": [],
+    "gaps": []
+  },
+  "partialStatus": {
+    "issues": ["status:not_ok"],
+    "status": "partial",
+    "data": {
+      "notes": [
+        {"claim": "customer support", "refs": [], "kind": "gap"}
+      ]
+    },
+    "evidence_ids": [],
+    "gaps": []
+  }
+}

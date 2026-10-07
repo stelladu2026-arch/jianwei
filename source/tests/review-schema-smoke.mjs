@@ -1,10 +1,13 @@
 import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
 import {createRequire} from 'node:module';
 import {responseSchema} from '../lib/research/qwen-model.ts';
 import {locateChecks} from '../lib/research/collaboration.ts';
 import {validateResult} from '../lib/research/execution.ts';
 import {decodeReviewWire} from '../lib/research/review-wire.ts';
 import {describeReviewIssue} from '../lib/research/review-contract.ts';
+import {planningQueries} from '../lib/research/workflow.ts';
+const planningFixture=JSON.parse(readFileSync(new URL('./fixtures/planning-wire.json',import.meta.url),'utf8'));
 // Reuse the JSON Schema validator installed with the declared ESLint toolchain.
 const require=createRequire(import.meta.url),Ajv=createRequire(require.resolve('eslint'))('ajv'),ajv=new Ajv({allErrors:true});
 let passed=0;
@@ -138,6 +141,31 @@ check('provider schema rejects duplicate targets and disagreement roles while ap
   let roleIssue;assert.throws(()=>{const result=validateResult({...decodedRoles,revision:1,errors:[],usage:{input_tokens:0,output_tokens:0},model:'synthetic'},coordinatorTask);locateChecks(result,coordinatorTask,x=>roleIssue=x);},/INVALID_MODEL_OUTPUT/);
   assert.equal(roleIssue,'data.disagreements.0.roles:duplicate');
   assert.match(describeReviewIssue(roleIssue),/第 1 条分歧/);
+});
+check('planning schema matches the prompt wire and keyword failures keep their own field path',()=>{
+  const plan=w=>({stage:w,queries:[]});
+  const wire=item=>{const {issues:_issues,...body}=item;return body;};
+  const search=ajv.compile(responseSchema('needs',[],false,undefined,undefined,'search_plan'));
+  const gap=ajv.compile(responseSchema('needs',[],false,undefined,undefined,'gap_plan'));
+  const analysis=ajv.compile(responseSchema('needs',[],false));
+  assert.equal(search(wire(planningFixture.intended)),true,JSON.stringify(search.errors));
+  assert.deepEqual(planningQueries(wire(planningFixture.intended),plan('plan')),['customer support','help desk']);
+  assert.equal(search(wire(planningFixture.charset)),true,JSON.stringify(search.errors));
+  assert.equal(analysis(wire(planningFixture.looseCount)),true);
+  assert.equal(search(wire(planningFixture.looseCount)),false);
+  assert.equal(search(wire(planningFixture.wrongKind)),false);
+  assert.equal(search(wire(planningFixture.partialStatus)),false);
+  assert.equal(search({...wire(planningFixture.intended),data:{notes:[{claim:'a'.repeat(101),refs:[],kind:'gap'}]}}),false);
+  assert.equal(gap({status:'ok',data:{notes:[{claim:'STOP',refs:[],kind:'gap'}]},evidence_ids:[],gaps:['Synthetic']}),true,JSON.stringify(gap.errors));
+  assert.equal(gap({status:'partial',data:{notes:[{claim:'switching support tools',refs:[],kind:'gap'}]},evidence_ids:[],gaps:['Synthetic']}),true,JSON.stringify(gap.errors));
+  assert.deepEqual(planningQueries({status:'ok',data:{notes:[{claim:'STOP',refs:[],kind:'gap'}]},evidence_ids:[],gaps:[]},plan('gap')),[]);
+  for(const name of ['charset','sentence','looseCount','wrongKind','partialStatus']){
+    const item=planningFixture[name];let seen;assert.throws(()=>planningQueries(wire(item),plan('plan'),issues=>{seen=issues}),/INVALID_MODEL_OUTPUT/);assert.deepEqual(seen,item.issues);assert.doesNotMatch(item.issues.join(','),/outside_input|INVALID_MODEL_REFERENCE/);
+  }
+  assert.match(describeReviewIssue(planningFixture.charset.issues[0]),/英文关键词/);
+  const foreign={status:'ok',data:{notes:[{claim:'customer support',refs:['FOREIGN'],kind:'gap'}]},evidence_ids:['FOREIGN'],gaps:[],errors:[],revision:1,usage:{input_tokens:1,output_tokens:1},model:'synthetic'};
+  let reference;assert.throws(()=>validateResult(foreign,{role:'needs',revision:1,evidence_ids:[],evidence:[]},issues=>{reference=issues}),/INVALID_MODEL_REFERENCE/);
+  assert.deepEqual(reference,['refs:outside_input']);
 });
 check('a literal quotation from another source still fails source-specific location',()=>{
   const decoded=decodeReviewWire(fixture('needs','partial',[{evidence_id:'E2',quote}]),'needs');

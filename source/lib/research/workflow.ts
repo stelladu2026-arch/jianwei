@@ -39,16 +39,34 @@ export function plannerTask(p:Project,w:ResearchWorkflow,id:string):ModelTask{
   const task:ModelTask={project_id:p.id,run_id:w.id,revision:p.revision,call_id:id,role:'needs',purpose:w.stage==='gap'?'gap_plan':'search_plan',brief:{...b,previous_queries:JSON.stringify(w.queries.map(q=>q.query)),known_gaps:JSON.stringify(previous?.gaps||[])},evidence_ids:[],evidence:[],context:{rules:[],memories:[],prior_results:previous?[{task_id:'first_analysis',role:'coordinator',data:previous.data}]:[],simulation:false,attempt:w.budget.modelAttempts+1,scenario:'normal'}};
   if(JSON.stringify(task).length>16000)throw new Error('CONTEXT_LIMIT');return task;
 }
-export function planningQueries(output:ModelResult&{data:Analysis},w:ResearchWorkflow){
-  if(output.evidence_ids.length||output.data.notes.some(n=>n.refs.length)||output.data.proposal)throw new Error('INVALID_MODEL_OUTPUT');
+export function planningQueries(output:ModelResult&{data:Analysis},w:ResearchWorkflow,diagnose?:(issues:string[])=>void){
+  const issues:string[]=[];
+  const fail=()=>{if(!issues.length)return;diagnose?.(issues.slice(0,20));throw new Error('INVALID_MODEL_OUTPUT');};
+  if(output.evidence_ids.length)issues.push('evidence_ids:not_empty');
+  if(output.data.proposal)issues.push('data.proposal:forbidden');
+  const limit=w.stage==='gap'?1:2;
+  if(output.data.notes.length>limit)issues.push('data.notes:count');
+  output.data.notes.forEach((n,i)=>{
+    if(n.refs.length)issues.push(`data.notes.${i}.refs:not_empty`);
+    if(n.kind!=='gap')issues.push(`data.notes.${i}.kind:not_gap`);
+  });
   if(w.stage==='gap'&&output.status==='ok'){
-    if(output.data.notes.length!==1||output.data.notes[0].claim!=='STOP')throw new Error('INVALID_MODEL_OUTPUT');return [];
+    if(output.data.notes.length===1&&output.data.notes[0].claim!=='STOP')issues.push('data.notes.0.claim:not_stop');
+    fail();return [];
   }
-  const notes=output.data.notes;if(notes.length>(w.stage==='gap'?1:2)||w.stage==='gap'&&output.status!=='partial')throw new Error('INVALID_MODEL_OUTPUT');
-  const queries=notes.map(n=>n.claim.trim());
-  if(queries.some(q=>q.length<2||q.length>100||q.split(/\s+/).length>3||!/[A-Za-z]/.test(q)||/[^\x20-\x7E]|https?:|www\.|@/.test(q)))throw new Error('INVALID_MODEL_OUTPUT');
+  if(w.stage==='gap'){if(output.status!=='partial')issues.push('status:not_partial');}
+  else if(output.status!=='ok')issues.push('status:not_ok');
   const normalize=(q:string)=>q.toLowerCase().replace(/\s+/g,' ');
-  if(new Set(queries.map(normalize)).size!==queries.length||queries.some(q=>w.queries.some(old=>normalize(old.query)===normalize(q))))throw new Error('INVALID_MODEL_OUTPUT');return queries;
+  const queries=output.data.notes.map(n=>n.claim.trim());
+  queries.forEach((q,i)=>{
+    if(w.stage==='gap'&&q==='STOP')issues.push(`data.notes.${i}.claim:not_keyword`);
+    else if(q.length<2||q.length>100)issues.push(`data.notes.${i}.claim:keyword_length`);
+    else if(q.split(/\s+/).length>3)issues.push(`data.notes.${i}.claim:keyword_count`);
+    else if(!/[A-Za-z]/.test(q)||/[^\x20-\x7E]|https?:|www\.|@/.test(q))issues.push(`data.notes.${i}.claim:keyword_charset`);
+  });
+  if(new Set(queries.map(normalize)).size!==queries.length)issues.push('data.notes:duplicate');
+  queries.forEach((q,i)=>{if(w.queries.some(old=>normalize(old.query)===normalize(q)))issues.push(`data.notes.${i}.claim:repeated`);});
+  fail();return queries;
 }
 function analysisEvidence(p:Project,w:ResearchWorkflow){
   const allowed=new Set([...w.usableIds,...p.evidence.filter(e=>e.kind==='imported').map(e=>e.id)]),fresh=new Set(w.freshIds);
