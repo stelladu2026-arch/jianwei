@@ -23,6 +23,7 @@ await import('./api-smoke.mjs');
 await import('./execution-smoke.mjs');
 await import('./qwen-smoke.mjs');
 await import('./workflow-smoke.mjs');
+await import('./agent-loop-smoke.mjs');
 await import('./collaboration-smoke.mjs');
 await import('./model-configuration-smoke.mjs');
 await import('./recovery-smoke.mjs');

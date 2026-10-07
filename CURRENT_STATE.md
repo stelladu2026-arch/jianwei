@@ -52,4 +52,4 @@
 | `build/`, `vite.config.ts`, `scripts/` | Vinext/Workers 构建与本地预览适配 |
 | `tests/` | 实际 API 路由、内存 SQLite、模拟 HTTP 和独立 Schema 校验 |
 
-实际实现为 React/TypeScript + Vinext + Cloudflare Workers + D1。原设计中的 Python/FastAPI/LangGraph 尚未接入，不能把它们写成现有架构。存储目前是单用户空间，授权由原托管站点控制面保障；应用数据库尚未实现多人资源隔离。
+实际实现为 React/TypeScript + Vinext + Cloudflare Workers + D1。单角色模型步骤使用 LangGraph.js 的 web 构建做工具循环；Python/FastAPI 没有接入，不能写成后端。存储目前是单用户空间，授权由原托管站点控制面保障；应用数据库尚未实现多人资源隔离。

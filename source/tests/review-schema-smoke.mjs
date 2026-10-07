@@ -151,13 +151,16 @@ check('planning schema matches the prompt wire and keyword failures keep their o
   assert.equal(search(wire(planningFixture.intended)),true,JSON.stringify(search.errors));
   assert.deepEqual(planningQueries(wire(planningFixture.intended),plan('plan')),['customer support','help desk']);
   assert.equal(search(wire(planningFixture.charset)),true,JSON.stringify(search.errors));
-  assert.equal(analysis(wire(planningFixture.looseCount)),true);
+  const analysisWire=structuredClone(wire(planningFixture.looseCount));
+  delete analysisWire.data.framing;
+  assert.equal(analysis(analysisWire),true,JSON.stringify(analysis.errors));
   assert.equal(search(wire(planningFixture.looseCount)),false);
   assert.equal(search(wire(planningFixture.wrongKind)),false);
   assert.equal(search(wire(planningFixture.partialStatus)),false);
   assert.equal(search({...wire(planningFixture.intended),data:{notes:[{claim:'a'.repeat(101),refs:[],kind:'gap'}]}}),false);
-  assert.equal(gap({status:'ok',data:{notes:[{claim:'STOP',refs:[],kind:'gap'}]},evidence_ids:[],gaps:['Synthetic']}),true,JSON.stringify(gap.errors));
-  assert.equal(gap({status:'partial',data:{notes:[{claim:'switching support tools',refs:[],kind:'gap'}]},evidence_ids:[],gaps:['Synthetic']}),true,JSON.stringify(gap.errors));
+  assert.equal(gap({status:'ok',data:{notes:[{claim:'STOP',refs:[],kind:'gap'}]},evidence_ids:[],gaps:['Synthetic'],tool_calls:[]}),true,JSON.stringify(gap.errors));
+  assert.equal(gap({status:'partial',data:{notes:[{claim:'switching support tools',refs:[],kind:'gap'}]},evidence_ids:[],gaps:['Synthetic'],tool_calls:[]}),true,JSON.stringify(gap.errors));
+  let missingFraming;assert.throws(()=>planningQueries({status:'ok',data:{notes:[{claim:'customer support',refs:[],kind:'gap'}]},evidence_ids:[],gaps:[]},plan('plan'),issues=>{missingFraming=issues}),/INVALID_MODEL_OUTPUT/);assert.deepEqual(missingFraming,['data.framing:required']);
   assert.deepEqual(planningQueries({status:'ok',data:{notes:[{claim:'STOP',refs:[],kind:'gap'}]},evidence_ids:[],gaps:[]},plan('gap')),[]);
   for(const name of ['charset','sentence','looseCount','wrongKind','partialStatus']){
     const item=planningFixture[name];let seen;assert.throws(()=>planningQueries(wire(item),plan('plan'),issues=>{seen=issues}),/INVALID_MODEL_OUTPUT/);assert.deepEqual(seen,item.issues);assert.doesNotMatch(item.issues.join(','),/outside_input|INVALID_MODEL_REFERENCE/);

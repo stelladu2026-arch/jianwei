@@ -215,3 +215,17 @@ restart 为原子版本化操作：只接受已失败的四角色流程，检查
 
 本机 `node tests/run-local-api.mjs` 通过，真实模型调用 0。`tsc --noEmit` 通过。`pnpm run build` 在停掉占用 `dist/client` 的预览后通过。随后用 Node 24 重新启动预览，`http://127.0.0.1:8787` 的 `GET /` 返回 200。
 
+## 2026-10-06 单角色 LangGraph.js 工具循环
+
+离线改动，真实模型调用 0。没有重试流程 `f5d8f1b1-19e1-4a3d-9b4b-d6dad9afd883`，没有改写项目 `4c4d8d79-4976-4802-a56c-5420caf1caeb`、已完成流程 `ea60fce4-101a-4323-8aa0-5a40fc276c9c` 或历史失败轮 `596a9737-8c04-421d-b25a-dcf2d1ced2d2`。没有放松引用检查，没有修补被拒输出，没有绕过预算，没有把假设改成已核实事实。
+
+单角色模型步骤改为 `@langchain/langgraph` 1.4.18 的 web 构建（`@langchain/core` 1.2.13）。图是模型节点到工具节点。模型在最终 JSON 里带上的 `tool_calls` 会执行；只有工具、没有最终正文时，才在剩余模型额度内再调用一次模型。额度用尽记 `MODEL_BUDGET`，不把失败重试塞进这个循环。四角色仍调用原来的模型适配器，不跑工具图。没有同时接入 Vercel AI SDK。没有 Python/FastAPI 重写。LangSmith 追踪在该运行时关闭。
+
+应用只执行四个工具：`hacker_news_search`、`hacker_news_read`、`zh_wikipedia_extract`、`retrieve_project_evidence`。前三个仍用 `collection.ts` 的固定主机和 `redirect: manual`；标题、空正文和重定向桩不能当可用证据。`retrieve_project_evidence` 只在本次传入的当前项目资料上做词面重叠，排除虚构、已排除和过短正文，把命中片段注入后续模型上下文。这是项目语料检索，不是语义检索质量，测试里没有嵌入接口，也没有外部向量服务。
+
+规划 Schema 要求 `data.framing`（目标用户、场景、1 至 3 个研究问题）和最多 2 个白名单 `tool_calls`。缺 framing 时 `planningQueries` 记录 `data.framing:required` 并拒绝，不开始采集。主张 kind 仍只有 hypothesis、counter、gap；事实和观察会被 `validateResult` 拒绝。带引用的主张必须是 `literalQuoteStart` 能在对应正文里找到的切片，找不到记 `INVALID_EVIDENCE_QUOTE`，不改写引文。付款、账单、访谈、地域代表性在发请求前拒绝。新草稿渲染谁／问题／影响／当前变通、机会草稿和验证计划；模型没给需求便签时写明缺失，不编造访谈记录，不自动保存机会卡。
+
+离线回归 6 项：白名单检索会执行，来源上限用尽后第二次公开检索拒绝且不再请求；付款、账单、访谈和地域代表性不搜索；不是原文切片的引文被拒绝，真实切片保留；检索上下文只有当前项目资料；模型额度用尽后不再跟进；未知工具和“事实／观察”标签被拒绝。同一套 `node tests/run-local-api.mjs` 共 221 项通过（49 项研究/治理 + 34 项执行/评测 + 28 项 Qwen HTTP + 38 项一键研究 + 6 项智能体工具循环 + 28 项四角色核查 + 9 项配置读取 + 11 项通用恢复 + 18 项核查格式）。真实模型调用 0。提供方是否接受 framing 与 `tool_calls` Schema 没有用真实模型验证。这不是四角色完成，也不是市场结论。
+
+`tsc --noEmit` 通过。`pnpm run build` 通过；当时没有预览占用 `dist`。构建后把 `.dev.vars` 复制到 `dist/server/.dev.vars`，没有打印内容。用 Node 24 重新启动预览后，`GET http://127.0.0.1:8787/` 返回 200，`GET /api/projects/4c4d8d79-4976-4802-a56c-5420caf1caeb/workflow` 也返回 200，只读取检查点，没有推进，也没有模型请求。浏览器标签在本环境打不开，所以没有做点击验收；客户端构建产物里有“LangGraph 工具循环”和“这不是市场结论”。这仍不是四角色完成，也不是市场结论。
+

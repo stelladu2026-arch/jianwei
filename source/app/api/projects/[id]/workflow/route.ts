@@ -8,8 +8,9 @@ import {QwenModel} from '@/lib/research/qwen-model';
 import {qwenCredentials} from '@/lib/research/qwen-settings';
 import {QWEN_TIMEOUT_MS} from '@/lib/research/provider-config';
 import {collectPublic,SOURCE_REQUEST_CAP,type Collection} from '@/lib/research/collection';
-import {executeModel,validateResult,completeTask,failTask,localStep,reserve,invalidateRun,errorLabels,type Analysis} from '@/lib/research/execution';
-import {makeWorkflow,currentWorkflow,controlWorkflow,plannerTask,planningQueries,analysisTask,stopWithoutEvidence,workflowReport,workflowStages,type WorkflowRecord} from '@/lib/research/workflow';
+import {executeModel,completeTask,failTask,localStep,reserve,errorLabels,type Analysis} from '@/lib/research/execution';
+import {makeWorkflow,currentWorkflow,controlWorkflow,plannerTask,planningQueries,analysisTask,stopWithoutEvidence,workflowReport,workflowStages,mergeCollected,skipFetchedQueries,normalizeQuery,type WorkflowRecord} from '@/lib/research/workflow';
+import {acceptAgentFinal,AgentStepFailure,AgentToolCalls,AGENT_RUNTIME,runSingleRoleAgent,type AgentSpend} from '@/lib/research/agent-loop';
 import type {ModelTask,ModelResult} from '@/lib/research/model-port';
 const input=z.object({version:z.number().int().positive(),callId:z.string().uuid(),action:z.enum(['start','restart','advance','pause','resume','cancel','retry','recover','review']),mode:z.enum(['single','four']).default('single'),review:reviewInput.optional(),freeTierOnlyConfirmed:z.boolean().default(false),allowSupplement:z.boolean().default(true)}).strict();
 const response=(p:Project)=>NextResponse.json({project:p});
@@ -54,12 +55,22 @@ export async function POST(request:Request,context:{params:Promise<{id:string}>}
   if(!isModel&&!isSource){const r=w.analysisRun;if(!r)throw new Error('MISSING_PROPOSAL');reserve({...p,run:r},b.callId);}
   const record:WorkflowRecord={id:b.callId,stage,kind:isModel?'model':isSource?'source':'local',state:'running',started:new Date().toISOString(),elapsedMs:0,error:'',...(task?{input:structuredClone(task)}:{})};
   w.records.push(record);w.status='running';w.lease={callId:b.callId,expires:new Date(Date.now()+75000).toISOString()};addAction(p,b.callId);
-  const reserved=await save(p,b.version),started=Date.now();let output:(ModelResult&{data:Analysis})|undefined,collection:Collection|undefined,error='',outputIssues:string[]=[],planned:string[]|undefined;const adapter=key?new QwenModel(key):undefined;
+  const reserved=await save(p,b.version),started=Date.now();let output:(ModelResult&{data:Analysis})|undefined,collection:Collection|undefined,error='',outputIssues:string[]=[],planned:string[]|undefined,agentSpend:AgentSpend|undefined;const adapter=key?new QwenModel(key):undefined;
+  const emptySpend=():AgentSpend=>({extraModelCalls:0,sourceAttempts:0,searches:0,trace:[],collections:[],retrieval:[],fetchedQueries:[]});
   try{
-    if(adapter&&task){output=validateResult(await executeModel(task,adapter,QWEN_TIMEOUT_MS),task,issues=>{outputIssues=issues});if(stage==='plan'||stage==='gap')planned=planningQueries(output,w,issues=>{outputIssues=issues});if(w.mode==='four')locateChecks(output,task,issue=>{outputIssues.push(issue)});}
+    if(adapter&&task){
+      if(w.mode==='four'){output=acceptAgentFinal(await executeModel(task,adapter,QWEN_TIMEOUT_MS),task,issues=>{outputIssues=issues});locateChecks(output,task,issue=>{outputIssues.push(issue)});}
+      else{
+        const agent=await runSingleRoleAgent({task,evidence:p.evidence,since:w.since,allowFollowUp:w.budget.modelAttempts<w.budget.modelLimit,budget:{modelLimit:w.budget.modelLimit,modelAttempts:w.budget.modelAttempts,sourceLimit:w.budget.sourceLimit,sourceAttempts:w.budget.sourceAttempts,searchLimit:w.budget.searchLimit,searches:w.budget.searches,paidBudget:0},invoke:async next=>{try{const result=await executeModel(next,adapter,QWEN_TIMEOUT_MS);return {final:result,toolCalls:(result as ModelResult&{agentToolCalls?:AgentSpend['trace']}).agentToolCalls?((result as unknown as {agentToolCalls:{name:string;arguments:{query:string;id:string}}[]}).agentToolCalls):[]};}catch(err){if(err instanceof AgentToolCalls)return {final:null,toolCalls:err.calls};throw err;}}});
+        agentSpend=agent.spend;
+        if(!agent.final)throw new Error('INVALID_MODEL_OUTPUT');
+        output=acceptAgentFinal(agent.final,task,issues=>{outputIssues=issues});
+        if(stage==='plan'||stage==='gap')planned=planningQueries(output,w,issues=>{outputIssues=issues});
+      }
+    }
     else if(isSource)collection=await collectPublic(w.queries[w.collectIndex].query,w.since);
     else{const r=w.analysisRun!,t=r.tasks.find(t=>t.id===stage)!;if(w.mode==='four'&&stage==='check')checkFour(w);localStep(p,r,t);}
-  }catch(e){error=safeError((e as Error).message);}
+  }catch(e){if(e instanceof AgentStepFailure)agentSpend=e.spend;error=safeError((e as Error).message);}
   const current=await get(id);if(!current)return NextResponse.json({error:'项目已删除，结果未写入。'},{status:409});
   if(current.version!==reserved.version||current.workflow?.id!==w.id||current.workflow?.lease?.callId!==b.callId){
     // User edits/pause/cancel win. Never replace their newer state with late output.
@@ -68,6 +79,24 @@ export async function POST(request:Request,context:{params:Promise<{id:string}>}
   }
   const cw=current.workflow!,cr=cw.records.find(r=>r.id===b.callId)!;cr.elapsedMs=Date.now()-started;
   if(adapter){cr.usage=adapter.receipt.usage;cr.requestId=adapter.receipt.requestId;cr.normalizations=adapter.receipt.normalizations;cr.outputIssues=outputIssues.length?outputIssues:adapter.receipt.outputIssues;}
+  if(w.mode!=='four'&&isModel){
+    const spend=agentSpend||emptySpend();
+    cr.agentRuntime=AGENT_RUNTIME;
+    if(spend.trace.length)cr.agentTools=spend.trace;
+    cw.budget.modelAttempts+=spend.extraModelCalls;current.budget.modelCalls+=spend.extraModelCalls;
+    cw.budget.sourceAttempts+=spend.sourceAttempts;current.budget.requests+=spend.sourceAttempts;
+    cw.budget.searches+=spend.searches;current.budget.searches+=spend.searches;
+    if(!error){
+      if(spend.collections.length){
+        const ids:string[]=[],usableIds:string[]=[];let added=0,duplicate=0,titleOnly=0,requests=0,failed=0,skipped=0;
+        for(const item of spend.collections){const merged=mergeCollected(current,cw,item);ids.push(...merged.newIds);usableIds.push(...item.usableIds);added+=merged.added;duplicate+=merged.duplicate;titleOnly+=merged.titleOnly;requests+=item.requests;failed+=item.failed;skipped+=item.skipped;}
+        if(ids.length)cw.freshIds=ids;
+        cr.collection={query:spend.fetchedQueries.join('；')||'agent',requests,failed,skipped,limited:spend.collections.some(item=>item.limited),since:cw.since,added,duplicate,titleOnly,usableIds};
+        cw.agentFetchedQueries=[...new Set([...(cw.agentFetchedQueries||[]),...spend.fetchedQueries])];
+      }
+      if(spend.retrieval.length)cw.retrieval=spend.retrieval.filter(hit=>current.evidence.some(item=>item.id===hit.id&&!item.excluded));
+    }
+  }
   cw.lease=undefined;
   if(error){
     cr.state='failed';cr.error=error;cw.status='failed';cw.error=error;cw.needsRetry=true;
@@ -78,31 +107,28 @@ export async function POST(request:Request,context:{params:Promise<{id:string}>}
   if(output){
     cr.output=output;
     if(stage==='plan'){
-      cw.queries=planned!.map(query=>({query,purpose:'initial',reason:'根据已确认的研究方向规划'}));cw.limitations.push(...output.gaps.slice(0,4));cw.stage='collect';
+      cw.queries=planned!.map(query=>({query,purpose:'initial',reason:'根据已确认的研究方向规划'}));cw.framing=output.data.framing;cw.limitations.push(...output.gaps.slice(0,4));skipFetchedQueries(cw);
+      if(cw.collectIndex<cw.queries.length)cw.stage='collect';else if(cw.usableIds.length||current.evidence.some(e=>e.kind==='imported'&&!e.excluded))cw.stage='analyze';else stopWithoutEvidence(current,cw);
     }else if(stage==='gap'){
       const queries=planned!;
-      if(queries.length){cw.queries.push({query:queries[0],purpose:'supplement',reason:output.gaps.join('；').slice(0,1000)});cw.initialAnalysis=cw.analysisRun;cw.stage='supplement';}
+      if(queries.length){
+        cw.queries.push({query:queries[0],purpose:'supplement',reason:output.gaps.join('；').slice(0,1000)});cw.initialAnalysis=cw.analysisRun;
+        if((cw.agentFetchedQueries||[]).some(query=>normalizeQuery(query)===normalizeQuery(queries[0]))){cw.collectIndex=cw.queries.length;if(cw.freshIds.length)cw.stage='reanalyze';else{cw.limitations.push('补搜未取得可分析的新正文，保留原判断和证据缺口，未追加模型分析。');cw.stage='check';}}
+        else cw.stage='supplement';
+      }
       else{cw.limitations.push(...output.gaps.slice(0,4));cw.stage='check';}
     }else{
       const r=cw.analysisRun!,t=r.tasks.find(t=>cw.mode==='four'?t.id===stage:t.role==='coordinator')!;if(cw.mode==='four')cr.supportChecks=locateChecks(output,task!);t.output=output;completeTask(r,t,b.callId,cr.elapsedMs);const call=t.calls.at(-1)!;call.usage=cr.usage;call.requestId=cr.requestId;call.outputIssues=cr.outputIssues;call.normalizations=cr.normalizations;if(cw.mode==='four')cw.stage=r.tasks.find(t=>t.status==='pending'&&t.deps.every(id=>r.tasks.find(x=>x.id===id)?.status==='done'))!.id as typeof cw.stage;else afterAnalyze(current);
     }
   }
   if(collection){
-    const usable=new Set(collection.usableIds),newIds:string[]=[];let added=0,duplicate=0;
-    for(const e of collection.evidence.filter(e=>usable.has(e.id))){
-      const old=current.evidence.find(x=>x.id===e.id||x.source===e.source&&x.thread===e.thread&&x.author===e.author&&x.text.trim()===e.text.trim());
-      if(old){duplicate++;if(!old.excluded&&old.kind!=='synthetic'&&!cw.usableIds.includes(old.id))cw.usableIds.push(old.id);continue;}
-      if(current.evidence.length>=100){collection.limited=true;break;}
-      current.evidence.push(e);newIds.push(e.id);added++;
-    }
-    cw.usableIds=[...new Set([...cw.usableIds,...newIds])];cw.freshIds=newIds;
-    if(added){invalidateRun(current);current.evidenceVersion=(current.evidenceVersion||0)+1;current.opportunities.forEach(o=>o.stale=true);cw.evidenceVersion=current.evidenceVersion;}
+    const merged=mergeCollected(current,cw,collection);cw.freshIds=merged.newIds;
     cw.budget.sourceAttempts-=SOURCE_REQUEST_CAP-collection.requests;current.budget.requests-=SOURCE_REQUEST_CAP-collection.requests;
-    const {evidence:_,...meta}=collection;cr.collection={...meta,added,duplicate,titleOnly:collection.evidence.length-usable.size};
+    const {evidence:_,...meta}=collection;cr.collection={...meta,added:merged.added,duplicate:merged.duplicate,titleOnly:merged.titleOnly};
     if(collection.failed)cw.limitations.push(`检索「${collection.query}」有 ${collection.failed} 次来源请求失败，已有正文保留。`);
     cw.collectIndex++;
     if(stage==='supplement'){
-      if(newIds.length)cw.stage='reanalyze';else{cw.limitations.push('补搜未取得可分析的新正文，保留原判断和证据缺口，未追加模型分析。');cw.stage='check';}
+      if(merged.newIds.length)cw.stage='reanalyze';else{cw.limitations.push('补搜未取得可分析的新正文，保留原判断和证据缺口，未追加模型分析。');cw.stage='check';}
     }else if(cw.collectIndex<cw.queries.length)cw.stage='collect';else if(cw.usableIds.length||current.evidence.some(e=>e.kind==='imported'&&!e.excluded))cw.stage='analyze';else stopWithoutEvidence(current,cw);
     scanReflections(current);
   }

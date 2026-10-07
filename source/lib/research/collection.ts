@@ -54,6 +54,21 @@ export async function collectHN(query:string,since:number|null,cap=SOURCE_REQUES
   }
   return out;
 }
+// One fixed item URL. The id is the only model input; hosts and redirects stay in publicJSON.
+export async function readHNItem(id:string,since:number|null):Promise<Collection>{
+  const out=blank(id,since);
+  if(!/^\d{1,12}$/.test(id)){out.skipped++;return out;}
+  const signal=AbortSignal.timeout(25000);
+  let item:any;
+  try{out.requests++;item=await publicJSON('https://hacker-news.firebaseio.com/v0/item/'+id+'.json',signal);}catch{out.failed++;return out;}
+  if(!item||String(item.id)!==id||item.deleted||item.dead||(item.type!=='story'&&item.type!=='comment')){out.skipped++;return out;}
+  if(item.type==='comment'&&!/^\d{1,12}$/.test(String(item.parent))){out.skipped++;return out;}
+  if(typeof item.time!=='number'||!Number.isFinite(item.time)||item.time<0||item.time>Date.now()/1000+300||(since!==null&&item.time<since)){out.skipped++;return out;}
+  const title=plainSource(typeof item.title==='string'?item.title:'无标题讨论'),text=plainSource(typeof item.text==='string'?item.text:''),author=typeof item.by==='string'?item.by:'',root=item.type==='comment'?String(item.parent):id;
+  const e:Evidence={id:'HN'+id,title:(item.type==='comment'?'评论 · ':'')+title.slice(0,180),text:text.slice(0,5000)||'该帖子只有标题和外链，未取得正文；不能据此形成需求结论。',source:'Hacker News',date:new Date(item.time*1000).toISOString().slice(0,10),fetched:new Date().toISOString(),author:await anonAuthor(author),thread:root,url:'https://news.ycombinator.com/item?id='+id,kind:'public',stance:'context',excluded:false,truncated:!text||text.length>5000,contentType:item.type==='comment'?'comment':'story'};
+  out.evidence.push(e);if(text.length>=40)out.usableIds.push(e.id);
+  return out;
+}
 function wikiUrl(params:Record<string,string>){const url=new URL('https://zh.wikipedia.org/w/api.php');for(const [key,value] of Object.entries(params))url.searchParams.set(key,value);return url.toString();}
 export async function collectZhWiki(query:string,since:number|null,cap=WIKI_MAX_REQUESTS):Promise<Collection>{
   const out=blank(query,since),limit=Math.min(cap,WIKI_MAX_REQUESTS);

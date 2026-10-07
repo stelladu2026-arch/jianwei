@@ -1,6 +1,6 @@
 请接手本文件同目录的“见微 · 产品机会研究 Agent”项目。完整源码在 source/，这是已经发布的版本 6d8f00c73d44e329708c6e625d75382f0145ee7e。
 
-先阅读 START_HERE.md、CURRENT_STATE.md、LOCAL_SETUP.md、ROADMAP.md、ATTENTION.md、AGENTS.md，以及 source/docs/ORIGINAL_DESIGN.md、VERIFICATION.md、MULTI_AGENT_REVIEW.md 的最新日期条目。当前实现是 React/TypeScript + Vinext + Workers + D1，并没有 Python/LangGraph。
+先阅读 START_HERE.md、CURRENT_STATE.md、LOCAL_SETUP.md、ROADMAP.md、ATTENTION.md、AGENTS.md，以及 source/docs/ORIGINAL_DESIGN.md、VERIFICATION.md、MULTI_AGENT_REVIEW.md 的最新日期条目。当前实现是 React/TypeScript + Vinext + Workers + D1。单角色步骤使用 LangGraph.js；没有 Python/FastAPI 后端。
 
 本轮目标：建立本地可运行、可测试的开发环境，审查新 review_v3 引用格式与应用校验一致性，准备一次可审计的真实四角色验收。不要先扩展 Agent 数量、换模型或大改架构。
 

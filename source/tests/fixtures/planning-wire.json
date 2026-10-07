@@ -5,8 +5,14 @@
       "notes": [
         {"claim": "customer support", "refs": [], "kind": "gap"},
         {"claim": "help desk", "refs": [], "kind": "gap"}
-      ]
+      ],
+      "framing": {
+        "target_user": "Independent software teams",
+        "scenario": "Repeated setup questions after a release",
+        "questions": ["Which setup steps are repeated?"]
+      }
     },
+    "tool_calls": [],
     "evidence_ids": [],
     "gaps": ["Synthetic source coverage limit."]
   },
@@ -16,8 +22,14 @@
     "data": {
       "notes": [
         {"claim": "小团队客户支持重复劳动", "refs": [], "kind": "gap"}
-      ]
+      ],
+      "framing": {
+        "target_user": "Independent software teams",
+        "scenario": "Repeated setup questions after a release",
+        "questions": ["Which setup steps are repeated?"]
+      }
     },
+    "tool_calls": [],
     "evidence_ids": [],
     "gaps": ["Synthetic fixture, not an unsaved provider body."]
   },
@@ -27,8 +39,14 @@
     "data": {
       "notes": [
         {"claim": "small teams repeat customer support work", "refs": [], "kind": "gap"}
-      ]
+      ],
+      "framing": {
+        "target_user": "Independent software teams",
+        "scenario": "Repeated setup questions after a release",
+        "questions": ["Which setup steps are repeated?"]
+      }
     },
+    "tool_calls": [],
     "evidence_ids": [],
     "gaps": []
   },
@@ -40,8 +58,14 @@
         {"claim": "customer support", "refs": [], "kind": "gap"},
         {"claim": "help desk", "refs": [], "kind": "gap"},
         {"claim": "ticket queue", "refs": [], "kind": "gap"}
-      ]
+      ],
+      "framing": {
+        "target_user": "Independent software teams",
+        "scenario": "Repeated setup questions after a release",
+        "questions": ["Which setup steps are repeated?"]
+      }
     },
+    "tool_calls": [],
     "evidence_ids": [],
     "gaps": []
   },
@@ -51,8 +75,14 @@
     "data": {
       "notes": [
         {"claim": "customer support", "refs": [], "kind": "hypothesis"}
-      ]
+      ],
+      "framing": {
+        "target_user": "Independent software teams",
+        "scenario": "Repeated setup questions after a release",
+        "questions": ["Which setup steps are repeated?"]
+      }
     },
+    "tool_calls": [],
     "evidence_ids": [],
     "gaps": []
   },
@@ -62,8 +92,14 @@
     "data": {
       "notes": [
         {"claim": "customer support", "refs": [], "kind": "gap"}
-      ]
+      ],
+      "framing": {
+        "target_user": "Independent software teams",
+        "scenario": "Repeated setup questions after a release",
+        "questions": ["Which setup steps are repeated?"]
+      }
     },
+    "tool_calls": [],
     "evidence_ids": [],
     "gaps": []
   }

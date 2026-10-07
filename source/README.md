@@ -36,13 +36,13 @@ v0.6 首轮真实四角色验收部分通过：需求与商业角色完成，独
 
 ## 尚未实现
 
-系统性语义质量评测、动态多角色编排、LangGraph 检查点、语义需求聚类、独立校准的语义引用核验、跨项目偏好与经验复用、模型反思、版本逐条差异、完整评论树采集和真实用户/模型质量评测。
+系统性语义质量评测、动态多角色编排、LangGraph 检查点、语义需求聚类、独立校准的语义引用核验、跨项目偏好与经验复用、模型反思、版本逐条差异、完整评论树采集和真实用户/模型质量评测。单角色已使用 LangGraph.js 做白名单工具循环和项目语料词面检索；这不是检查点持久化，也不是语义检索。
 
 固定角色回放和模拟编排不构成真实多智能体推理；v0.6 的真实模式逐角色调用同一个 Qwen 模型，角色分工与读取权限受服务端约束。流程评测通过率不能称为模型准确率；模拟耗时不能用于模型选型。资料计数不是独立客户数。目前的显式记忆只限当前项目，不能当作跨项目长期学习；经验确认是人工验证记录，不代表事实被模型或系统证实。
 
 ## 在线架构调整
 
-原设计 React + Python/FastAPI + LangGraph + SQLite 为可本地部署方案。当前在线平台运行在 Cloudflare Workers，所以使用 React/TypeScript（Vinext）+ 服务端 API + D1 SQLite 持久化。保留 `project_id / revision / call_id` 和模型角色接口，但不伪装已经运行 Python/LangGraph。后续可选择接入独立 Python 编排服务，或实现 Worker 兼容的编排器；后续多角色对照继续以真实单 Agent 首测作为起点。
+原设计 React + Python/FastAPI + LangGraph + SQLite 为可本地部署方案。当前在线平台运行在 Cloudflare Workers，使用 React/TypeScript（Vinext）+ 服务端 API + D1 SQLite。单角色模型步骤使用 LangGraph.js 的 web 构建；Python/FastAPI 没有接入。保留 `project_id / revision / call_id` 和模型角色接口。后续多角色对照继续以真实单 Agent 首测作为起点。
 
 站点当前仅所有者私有，访问授权由平台负责。当前数据库为单用户工作空间；未来开放多人时必须先补用户归属和读写授权，不能仅放宽站点分享权限。
 

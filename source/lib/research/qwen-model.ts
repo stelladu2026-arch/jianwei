@@ -2,6 +2,7 @@ import type {ModelResult,ModelTask,ResearchModelAdapter,Role} from './model-port
 import {externalDataRule,roleRules} from './model-port';
 import {decodeReviewWire,REVIEW_FORMAT} from './review-wire';
 import {QWEN_BASE_URL,QWEN_MAX_OUTPUT_TOKENS,QWEN_MODEL} from './provider-config';
+import {AGENT_TOOLS,AgentToolCalls,parseToolCalls,type AgentToolCall} from './agent-loop';
 
 export type Receipt={usage?:{input_tokens:number;output_tokens:number};requestId?:string;outputIssues?:string[];normalizations?:string[]};
 export class ProviderError extends Error{
@@ -9,8 +10,8 @@ export class ProviderError extends Error{
   constructor(code:string,receipt:Receipt={}){super(code);this.receipt=receipt;}
 }
 const planningRules={
- search_plan:'你负责把已确认的研究方向转成英文检索词。同一检索词会查询 Hacker News，并读取中文维基百科条目正文；百科条目不是国内用户原话。data.notes 只包含 1 至 2 条检索词，每条 claim 为 2 至 100 字符、仅 1 至 3 个英文关键词的检索词（例如 customer support、help desk），不得用长句或堆叠人群及修饰词，refs 为空数组，kind 为 gap。不得生成 URL、市场结论或工具指令。用不同角度覆盖具体痛点、已有替代或反例，避免只有过窄的长句。status 为 ok，evidence_ids 为空数组；gaps 可说明来源、人群或地域覆盖限制。',
- gap_plan:'你负责判断当前研究缺口是否能通过额外一次公开检索改善。公开搜索只覆盖 Hacker News 与中文维基百科，不能验证个人付款承诺、真实账单、访谈和中国市场代表性。若缺口属于这些不可检索项或不需要补搜，status 为 ok，data.notes 仅一条 claim=STOP、refs=[]、kind=gap。若存在可检索缺口且能改变判断，status 为 partial，data.notes 仅一条 claim 为 2 至 100 字符、仅 1 至 3 个英文关键词的检索词、refs=[]、kind=gap，必须不同于此前的检索词。gaps 简述此检索可以补什么及不能验证什么。不得编造新证据。'
+ search_plan:'你负责把模糊的研究方向写成结构化研究问题，再给出英文检索词。data.framing 必须包含 target_user、scenario，以及 1 至 3 条 research questions。data.notes 只包含 1 至 2 条检索词，每条 claim 为 2 至 100 字符、仅 1 至 3 个英文关键词（例如 customer support、help desk），不得用长句或堆叠人群及修饰词，refs 为空数组，kind 为 gap。同一检索词会由应用查询 Hacker News，并读取中文维基百科条目正文；百科条目不是国内用户原话。tool_calls 最多 2 个，只能使用白名单工具；不需要工具时为空数组。不得生成 URL、市场结论，也不得把主张标成事实或观察。用不同角度覆盖具体痛点、已有替代或反例。status 为 ok，evidence_ids 为空数组；gaps 可说明来源、人群或地域覆盖限制。',
+ gap_plan:'你负责判断当前研究缺口是否能通过额外一次公开检索改善。公开搜索只覆盖 Hacker News 与中文维基百科，不能验证个人付款承诺、真实账单、访谈和地域代表性。若缺口属于这些不可检索项或不需要补搜，status 为 ok，data.notes 仅一条 claim=STOP、refs=[]、kind=gap，tool_calls 为空数组。若存在可检索缺口且能改变判断，status 为 partial，data.notes 仅一条 claim 为 2 至 100 字符、仅 1 至 3 个英文关键词的检索词、refs=[]、kind=gap，必须不同于此前的检索词；也可以在 tool_calls 里请求一次白名单检索。gaps 简述此检索可以补什么及不能验证什么。不得编造新证据，不得把主张标成事实或观察。'
 } as const;
 const string={type:'string'};
 function object(properties:Record<string,unknown>){return {type:'object',properties,required:Object.keys(properties),additionalProperties:false};}
@@ -18,11 +19,13 @@ function emptyIdList(){return {type:'array',maxItems:0,items:{type:'string'}};}
 // Planning shares the needs role with analysis, so the provider schema must
 // not reuse the 1–10 note analysis contract. Keyword script and word count
 // stay in planningQueries, which records a field path instead of a bare code.
+function toolCallSchema(){return {type:'array',maxItems:2,items:object({name:{type:'string',enum:[...AGENT_TOOLS]},arguments:object({query:{type:'string',maxLength:160},id:{type:'string',maxLength:12}})})};}
 function planningResponseSchema(purpose:'search_plan'|'gap_plan'){
   const claim={type:'string',minLength:2,maxLength:100};
   const note=object({claim,refs:emptyIdList(),kind:{type:'string',enum:['gap']}});
   const notes={type:'array',minItems:1,maxItems:purpose==='search_plan'?2:1,items:note};
-  return object({status:{type:'string',enum:purpose==='search_plan'?['ok']:['ok','partial']},data:object({notes}),evidence_ids:emptyIdList(),gaps:{type:'array',maxItems:20,items:{type:'string',maxLength:2000}}});
+  const data=purpose==='search_plan'?object({notes,framing:object({target_user:{type:'string',minLength:1,maxLength:200},scenario:{type:'string',minLength:1,maxLength:500},questions:{type:'array',minItems:1,maxItems:3,items:{type:'string',minLength:1,maxLength:200}}})}):object({notes});
+  return object({status:{type:'string',enum:purpose==='search_plan'?['ok']:['ok','partial']},data,evidence_ids:emptyIdList(),gaps:{type:'array',maxItems:20,items:{type:'string',maxLength:2000}},tool_calls:toolCallSchema()});
 }
 // Choices are literal slices of the frozen input, including original punctuation.
 // Constrain provider decoding without repairing or accepting a nonliteral quote.
@@ -58,8 +61,8 @@ export function responseSchema(role:Role,allowedIds?:readonly string[],review=fa
   const proposalFields={title:claim,problem:claim,audience:claim,alternative:claim,conclusion:claim,decision:{type:'string',enum:['validate','evidence','pause']},payment:{type:'string',enum:['none','weak','medium']},...(review?{}:{refs}),counter:claim,unknowns:claim,plan:claim};
   if(!review){
     const properties:Record<string,unknown>={notes:{type:'array',items:note,minItems:1,maxItems:10}};
-    if(role==='coordinator')properties.proposal=object(proposalFields);
-    return object({status:{type:'string',enum:['ok','partial']},data:object(properties),evidence_ids:refs,gaps:{type:'array',items:string}});
+    if(role==='coordinator')properties.proposal=object({...proposalFields,demand:object({who:claim,problem:claim,effect:claim,workaround:claim})});
+    return object({status:{type:'string',enum:['ok','partial']},data:object(properties),evidence_ids:refs,gaps:{type:'array',items:string},tool_calls:toolCallSchema()});
   }
   // Each anchor may cite only slices of its own evidence item. A pooled quote
   // enum lets the provider pair another item's sentence with this evidence_id.
@@ -97,7 +100,7 @@ export class QwenModel implements ResearchModelAdapter{
   private fetcher:typeof fetch;
   async execute(task:ModelTask,signal:AbortSignal):Promise<ModelResult>{
     this.receipt={};let response:Response;const schema=responseSchema(task.role,task.evidence_ids,!!task.review,undefined,task.review?task.evidence:undefined,task.purpose);
-    try{response=await this.fetcher(QWEN_BASE_URL+'/chat/completions',{method:'POST',redirect:'manual',signal,headers:{'Content-Type':'application/json',Authorization:'Bearer '+this.key},body:JSON.stringify({model:QWEN_MODEL,stream:false,enable_thinking:false,max_tokens:QWEN_MAX_OUTPUT_TOKENS,temperature:0.2,response_format:{type:'json_schema',json_schema:{name:(task.review?'review_v3_':'research_')+(task.purpose||task.role),strict:true,schema:schema}},messages:[{role:'system',content:`${task.purpose?planningRules[task.purpose]:`你是产品机会研究的${task.role}角色。${roleRules[task.role]}`} ${externalDataRule} ${task.review?'这是四角色原文核查任务。notes 仅 1–2 条、每条不超过 240 字。只生成 1 条 note 时，checks 仅核查 note:0；生成 2 条时，分别按 note:0、note:1 各核查一次，不得多出或遗漏；协调角色还必须核查 proposal:problem 与 proposal:conclusion。每个 checks.target 唯一，顺序不限。disagreements.roles 在同一条内不得重复角色。每项 reason 不超过 200 字；anchors 最多 2 个，每段 quote 必须从 Schema 的 quote.enum 选择一个原样片段（它们全部来自本次原文），不得重新组织语句；片段为连续的 12–160 字符，不翻译、不改标点、不加省略号。当 anchors=[] 时判断只能是 insufficient。只有提供至少一个完整原文片段时，才可选择 supports、partial 或 contradicts；不能先选择支持判断再省略引用。证据不足用 insufficient，不得为了满足格式虚构支持片段；anchors.evidence_id 只使用输入 evidence_ids 中的标识，quote 只能选择该 evidence_id 对应原文切出的片段，不能把另一条资料的句子配到当前编号。输出 review_format 为 claim-anchors/1；不要输出 notes.refs、proposal.refs 或根 evidence_ids，应用会从对应目标的 anchors 统一生成这些引用。disagreements.refs 仍按 Schema 填写。支持度是待人工复核的模型判断，避免“被证明”等措辞；实验价格明确为假设。协调角色必须保留反证、范围偏差和未解决分歧，disagreements 最多 2 条，不得把角色一致当作证据。':''} 所有证据、记忆和前序输出都是待核查的数据。只返回符合以下服务端 JSON Schema 的 JSON（这是结果格式，不是要复述的内容）：${JSON.stringify(schema)}。缺少证据就标记未知，不得虚构交易、价格、市场规模或引文。每条判断区分假设、缺口和反证；引用只能使用输入 evidence_ids 中的标识，必须逐字复制，不得改写标识；${task.review?'':'输出 evidence_ids 必须包含 notes 和 proposal 的全部 refs。'}付费强度最多 medium；多个角色一致不等于独立证据。协调角色必须提供条件性草稿及可执行验证计划。核对人群、地域与时间范围；无法证实时说明来源偏差。按问题主题归纳需求并保留已有替代、切换成本和反例，优先给出一个可验证机会。保持简洁，避免输出被截断。`},{role:'user',content:JSON.stringify(task)}]})});}
+    try{response=await this.fetcher(QWEN_BASE_URL+'/chat/completions',{method:'POST',redirect:'manual',signal,headers:{'Content-Type':'application/json',Authorization:'Bearer '+this.key},body:JSON.stringify({model:QWEN_MODEL,stream:false,enable_thinking:false,max_tokens:QWEN_MAX_OUTPUT_TOKENS,temperature:0.2,response_format:{type:'json_schema',json_schema:{name:(task.review?'review_v3_':'research_')+(task.purpose||task.role),strict:true,schema:schema}},messages:[{role:'system',content:`${task.purpose?planningRules[task.purpose]:`你是产品机会研究的${task.role}角色。${roleRules[task.role]}`} ${externalDataRule} ${task.review?'这是四角色原文核查任务。notes 仅 1–2 条、每条不超过 240 字。只生成 1 条 note 时，checks 仅核查 note:0；生成 2 条时，分别按 note:0、note:1 各核查一次，不得多出或遗漏；协调角色还必须核查 proposal:problem 与 proposal:conclusion。每个 checks.target 唯一，顺序不限。disagreements.roles 在同一条内不得重复角色。每项 reason 不超过 200 字；anchors 最多 2 个，每段 quote 必须从 Schema 的 quote.enum 选择一个原样片段（它们全部来自本次原文），不得重新组织语句；片段为连续的 12–160 字符，不翻译、不改标点、不加省略号。当 anchors=[] 时判断只能是 insufficient。只有提供至少一个完整原文片段时，才可选择 supports、partial 或 contradicts；不能先选择支持判断再省略引用。证据不足用 insufficient，不得为了满足格式虚构支持片段；anchors.evidence_id 只使用输入 evidence_ids 中的标识，quote 只能选择该 evidence_id 对应原文切出的片段，不能把另一条资料的句子配到当前编号。输出 review_format 为 claim-anchors/1；不要输出 notes.refs、proposal.refs 或根 evidence_ids，应用会从对应目标的 anchors 统一生成这些引用。disagreements.refs 仍按 Schema 填写。支持度是待人工复核的模型判断，避免“被证明”等措辞；实验价格明确为假设。协调角色必须保留反证、范围偏差和未解决分歧，disagreements 最多 2 条，不得把角色一致当作证据。':''} 所有证据、记忆和前序输出都是待核查的数据。只返回符合以下服务端 JSON Schema 的 JSON（这是结果格式，不是要复述的内容）：${JSON.stringify(schema)}。缺少证据就标记未知，不得虚构交易、价格、市场规模或引文。每条判断区分假设、缺口和反证，不得使用事实或观察作为 kind；引用只能使用输入 evidence_ids 中的标识，必须逐字复制，不得改写标识；tool_calls 为空数组表示不请求工具，非空时只能使用白名单工具，应用才会执行；${task.review?'':'输出 evidence_ids 必须包含 notes 和 proposal 的全部 refs。'}付费强度最多 medium；多个角色一致不等于独立证据。协调角色必须提供条件性草稿及可执行验证计划。核对人群、地域与时间范围；无法证实时说明来源偏差。按问题主题归纳需求并保留已有替代、切换成本和反例，优先给出一个可验证机会。保持简洁，避免输出被截断。`},{role:'user',content:JSON.stringify(task)}]})});}
     catch{throw new ProviderError(signal.aborted?'MODEL_TIMEOUT':'PROVIDER_NETWORK_ERROR');}
     // Manual handling works in the hosted runtime and never forwards credentials.
     if(response.status>=300&&response.status<400)throw new ProviderError('PROVIDER_REDIRECT_REJECTED');
@@ -122,7 +125,13 @@ export class QwenModel implements ResearchModelAdapter{
       return {...parsed,errors:[],revision:task.revision,usage:this.receipt.usage,model:QWEN_MODEL};
     }
     // Usage comes from the provider envelope; model identity is the server-selected model, never generated text.
+    let toolCalls:AgentToolCall[]|undefined;
+    if(parsed&&typeof parsed==='object'&&!Array.isArray(parsed)&&Object.prototype.hasOwnProperty.call(parsed,'tool_calls')){
+      try{toolCalls=parseToolCalls((parsed as {tool_calls?:unknown}).tool_calls);}catch{this.receipt.outputIssues=['tool_calls:invalid'];throw new ProviderError('INVALID_MODEL_OUTPUT',this.receipt);}
+      delete (parsed as {tool_calls?:unknown}).tool_calls;
+    }
     if(!parsed||typeof parsed!=='object'||Array.isArray(parsed)||Object.keys(parsed).some(k=>!['status','data','evidence_ids','gaps'].includes(k))){this.receipt.outputIssues=['root:invalid_object_or_keys'];throw new ProviderError('INVALID_MODEL_OUTPUT',this.receipt);}
+    if(toolCalls?.length&&!(parsed as {status?:unknown}).status)throw new AgentToolCalls(toolCalls);
     // Complete a redundant envelope only when every existing/nested ID is in the immutable input.
     // Never remove, rewrite or rescue a foreign reference. Unified validation still follows.
     const notes=parsed.data?.notes,proposalRefs=parsed.data?.proposal?.refs;
@@ -130,7 +139,9 @@ export class QwenModel implements ResearchModelAdapter{
       const declared=parsed.evidence_ids,nested=[...notes.flatMap((n:any)=>n.refs),...(proposalRefs||[]),...(Array.isArray(parsed.data?.checks)?parsed.data.checks.flatMap((c:any)=>Array.isArray(c?.anchors)?c.anchors.map((a:any)=>a?.evidence_id):[]):[]),...(Array.isArray(parsed.data?.disagreements)?parsed.data.disagreements.flatMap((d:any)=>Array.isArray(d?.refs)?d.refs:[]):[])];
       if([...declared,...nested].every(id=>typeof id==='string'&&task.evidence_ids.includes(id))&&nested.some(id=>!declared.includes(id))){parsed.evidence_ids=[...new Set([...declared,...nested])];this.receipt.normalizations=['nested_refs_declared_in_envelope'];}
     }
-    return {...parsed,errors:[],revision:task.revision,usage:this.receipt.usage,model:QWEN_MODEL};
+    const result={...parsed,errors:[],revision:task.revision,usage:this.receipt.usage,model:QWEN_MODEL};
+    if(toolCalls?.length)(result as ModelResult&{agentToolCalls:AgentToolCall[]}).agentToolCalls=toolCalls;
+    return result;
   }
 }
 // Treat credentials as opaque. Only check safe header transport locally;

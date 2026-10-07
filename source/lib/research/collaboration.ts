@@ -55,6 +55,8 @@ export function fourTask(p:Project,w:ResearchWorkflow,id:string){
   if(JSON.stringify(task).length>16000)throw new Error('CONTEXT_LIMIT');
   t.context={characters:JSON.stringify(task).length,evidenceIds:task.evidence_ids,omittedIds:p.evidence.filter(e=>!e.excluded&&!task.evidence_ids.includes(e.id)).map(e=>e.id),truncatedIds:frozen.evidence.filter(e=>e.truncated).map(e=>e.id),priorIds:prior.map(x=>x.task_id),omittedMemoryIds:(p.memories||[]).filter(m=>!task.context!.memories.some(x=>x.id===m.id)).map(m=>m.id)};t.inputSnapshot=structuredClone(task);return task;
 }
+// Same indexOf rule locateChecks uses. A miss stays a miss; the quote is not repaired.
+export function literalQuoteStart(text:string|undefined,quote:string){return typeof text==='string'?text.indexOf(quote):-1;}
 export function locateChecks(output:ModelResult&{data:Analysis},task:ModelTask,onIssue?:(issue:string)=>void):LocatedCheck[]{
   function reject(code:string,issue:string):never{onIssue?.(issue);throw new Error(code)}
   const data=output.data,targets=claims(data),checks=data.checks;
@@ -70,7 +72,7 @@ export function locateChecks(output:ModelResult&{data:Analysis},task:ModelTask,o
   return checks.map((c,checkIndex)=>{
     const target=targets.find(x=>x.target===c.target);if(!target)reject('INVALID_REVIEW_COVERAGE',`data.checks.${checkIndex}.target:unknown_claim`);
     if(c.judgment!=='insufficient'&&!c.anchors.length)reject('INVALID_REVIEW_COVERAGE',`data.checks.${checkIndex}.anchors:required_for_judgment`);
-    const anchors=c.anchors.map((a,anchorIndex)=>{if(!target.refs.includes(a.evidence_id)||!output.evidence_ids.includes(a.evidence_id))reject('INVALID_MODEL_REFERENCE',`data.checks.${checkIndex}.anchors.${anchorIndex}.evidence_id:not_in_claim`);const source=(task.evidence as Evidence[]).find(e=>e.id===a.evidence_id);const start=source?.text.indexOf(a.quote)??-1;if(start<0)reject('INVALID_EVIDENCE_QUOTE',`data.checks.${checkIndex}.anchors.${anchorIndex}.quote:not_in_input`);return {...a,start,end:start+a.quote.length};});
+    const anchors=c.anchors.map((a,anchorIndex)=>{if(!target.refs.includes(a.evidence_id)||!output.evidence_ids.includes(a.evidence_id))reject('INVALID_MODEL_REFERENCE',`data.checks.${checkIndex}.anchors.${anchorIndex}.evidence_id:not_in_claim`);const source=(task.evidence as Evidence[]).find(e=>e.id===a.evidence_id);const start=literalQuoteStart(source?.text,a.quote);if(start<0)reject('INVALID_EVIDENCE_QUOTE',`data.checks.${checkIndex}.anchors.${anchorIndex}.quote:not_in_input`);return {...a,start,end:start+a.quote.length};});
     return {...c,claim:target.claim,anchors};
   });
 }
