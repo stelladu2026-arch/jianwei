@@ -1,3 +1,4 @@
+import {saveOpportunityDraft} from '@/lib/research/opportunity-drafts';
 import {NextResponse} from 'next/server';
 import {z} from 'zod';
 import {get,save} from '@/lib/research/store';
@@ -45,7 +46,7 @@ export async function POST(req:Request,ctx:{params:Promise<{id:string}>}){try{
     }
     const cr=currentRun(current),ct=cr.tasks.find(x=>x.id===t.id)!;
     if(error){failTask(cr,ct,error,b.callId,Date.now()-start);scanReflections(current);log(current,`研究执行失败：${errorLabels[error]}；可以查看检查点`);}
-    else{if(output)ct.output=output;else if(t.id==='deliver')cr.report=r.report;completeTask(cr,ct,b.callId,Date.now()-start);log(current,`研究执行：${ct.label}完成；${cr.simulation?'模拟结果':'待人工核查的模型草稿'}`);}
+    else{if(output)ct.output=output;else if(t.id==='deliver')cr.report=r.report;completeTask(cr,ct,b.callId,Date.now()-start);if(t.id==='deliver')saveOpportunityDraft(current,cr);log(current,`研究执行：${ct.label}完成；${cr.simulation?'模拟结果':'待人工核查的模型草稿'}`);}
     if(adapter instanceof QwenModel){const receipt=adapter.receipt,call=ct.calls.find(c=>c.id===b.callId);if(call){call.usage=receipt.usage;call.requestId=receipt.requestId;call.outputIssues=outputIssues.length?outputIssues:receipt.outputIssues;call.normalizations=receipt.normalizations;}}
     return response(await save(current,current.version));
   }

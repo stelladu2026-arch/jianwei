@@ -28,4 +28,5 @@ await import('./collaboration-smoke.mjs');
 await import('./model-configuration-smoke.mjs');
 await import('./recovery-smoke.mjs');
 await import('./review-schema-smoke.mjs');
+await import('./capability-gaps-smoke.mjs');
 sqlite.close();

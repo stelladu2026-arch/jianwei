@@ -35,5 +35,16 @@
     "git history"
   ],
   "local_configuration_example": "local-config/.dev.vars.example (blank key, protection false)",
-  "tracked_generated_metadata": "source/tsconfig.tsbuildinfo retained to preserve exact commit snapshot; can be regenerated"
+  "tracked_generated_metadata": "source/tsconfig.tsbuildinfo retained to preserve exact commit snapshot; can be regenerated",
+  "update_20261013": {
+    "base_commit": "0463674af822955de7e3af1d7d69f8be0ebccd85",
+    "offline_checks": 236,
+    "type_check": "passed",
+    "production_build": "passed",
+    "real_model_calls": 0,
+    "real_embedding_calls": 0,
+    "deployed": false,
+    "github_write": "authorized at 2026-10-13 22:02 Asia/Shanghai; branch codex/research-capability-gaps created",
+    "details": "source/docs/CAPABILITY_GAPS_20261013.md"
+  }
 }

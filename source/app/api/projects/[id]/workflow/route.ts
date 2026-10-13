@@ -1,3 +1,6 @@
+import {env} from 'cloudflare:workers';
+import {QwenEmbedding,retrieveSemanticEvidence} from '@/lib/research/semantic-retrieval';
+import {saveOpportunityDraft} from '@/lib/research/opportunity-drafts';
 import {initializeFour,fourTask,locateChecks,checkFour,saveHumanReview,reviewInput} from '@/lib/research/collaboration';
 import {NextResponse} from 'next/server';
 import {z} from 'zod';
@@ -57,14 +60,27 @@ export async function POST(request:Request,context:{params:Promise<{id:string}>}
   w.records.push(record);w.status='running';w.lease={callId:b.callId,expires:new Date(Date.now()+75000).toISOString()};addAction(p,b.callId);
   const reserved=await save(p,b.version),started=Date.now();let output:(ModelResult&{data:Analysis})|undefined,collection:Collection|undefined,error='',outputIssues:string[]=[],planned:string[]|undefined,agentSpend:AgentSpend|undefined;const adapter=key?new QwenModel(key):undefined;
   const emptySpend=():AgentSpend=>({extraModelCalls:0,sourceAttempts:0,searches:0,trace:[],collections:[],retrieval:[],fetchedQueries:[]});
+  let expectedVersion=reserved.version,reservedExtraModels=0,reservedToolRequests=0,reservedToolSearches=0;
+  const modelReceipts:{usage?:ModelResult['usage'];requestId?:string}[]=[];
+  const embedding=env.SEMANTIC_RETRIEVAL_ENABLED==='true'?new QwenEmbedding(key||'',env.EMBEDDING_FREE_TIER_ONLY_CONFIRMED==='true'):undefined;
+  async function reserveExtra(kind:'model'|'source'|'embedding',amount=1){
+    const live=await get(id);
+    if(!live||live.version!==expectedVersion||live.workflow?.id!==w.id||live.workflow.lease?.callId!==b.callId||live.workflow.status!=='running'||Date.parse(live.workflow.lease.expires)<=Date.now())throw new Error('EXECUTION_INTERRUPTED');
+    const bw=live.workflow.budget;
+    if(kind==='model'){if(bw.modelAttempts>=bw.modelLimit)throw new Error('MODEL_BUDGET');bw.modelAttempts++;live.budget.modelCalls++;reservedExtraModels++;if(live.workflow.analysisRun)live.workflow.analysisRun.budget.requests=(live.workflow.analysisRun.budget.requests||0)+1;}
+    if(kind==='source'){if(bw.sourceAttempts+amount>bw.sourceLimit||bw.searches>=bw.searchLimit||live.budget.searches>=6)throw new Error('SOURCE_BUDGET');bw.sourceAttempts+=amount;bw.searches++;live.budget.requests+=amount;live.budget.searches++;reservedToolRequests+=amount;reservedToolSearches++;}
+    if(kind==='embedding'){if((bw.embeddingAttempts||0)>=2)throw new Error('EMBEDDING_BUDGET');bw.embeddingAttempts=(bw.embeddingAttempts||0)+1;}
+    live.workflow.lease.expires=new Date(Date.now()+75000).toISOString();
+    const saved=await save(live,expectedVersion);expectedVersion=saved.version;
+  }
   try{
     if(adapter&&task){
       if(w.mode==='four'){output=acceptAgentFinal(await executeModel(task,adapter,QWEN_TIMEOUT_MS),task,issues=>{outputIssues=issues});locateChecks(output,task,issue=>{outputIssues.push(issue)});}
       else{
-        const agent=await runSingleRoleAgent({task,evidence:p.evidence,since:w.since,allowFollowUp:w.budget.modelAttempts<w.budget.modelLimit,budget:{modelLimit:w.budget.modelLimit,modelAttempts:w.budget.modelAttempts,sourceLimit:w.budget.sourceLimit,sourceAttempts:w.budget.sourceAttempts,searchLimit:w.budget.searchLimit,searches:w.budget.searches,paidBudget:0},invoke:async next=>{try{const result=await executeModel(next,adapter,QWEN_TIMEOUT_MS);return {final:result,toolCalls:(result as ModelResult&{agentToolCalls?:AgentSpend['trace']}).agentToolCalls?((result as unknown as {agentToolCalls:{name:string;arguments:{query:string;id:string}}[]}).agentToolCalls):[]};}catch(err){if(err instanceof AgentToolCalls)return {final:null,toolCalls:err.calls};throw err;}}});
+        const agent=await runSingleRoleAgent({task,evidence:p.evidence,since:w.since,allowFollowUp:w.budget.modelAttempts<w.budget.modelLimit,beforeModel:()=>reserveExtra('model'),beforeTool:(_name,count)=>reserveExtra('source',count),...(embedding?{retrieve:async(evidence:typeof p.evidence,query:string)=>{if(env.EMBEDDING_FREE_TIER_ONLY_CONFIRMED!=='true')throw new Error('EMBEDDING_NOT_CONFIGURED');await reserveExtra('embedding');return retrieveSemanticEvidence(evidence,query,embedding);}}:{}),budget:{modelLimit:w.budget.modelLimit,modelAttempts:w.budget.modelAttempts,sourceLimit:w.budget.sourceLimit,sourceAttempts:w.budget.sourceAttempts,searchLimit:w.budget.searchLimit,searches:w.budget.searches,paidBudget:0},invoke:async next=>{try{const result=await executeModel(next,adapter,QWEN_TIMEOUT_MS);return {final:result,toolCalls:(result as ModelResult&{agentToolCalls?:AgentSpend['trace']}).agentToolCalls?((result as unknown as {agentToolCalls:{name:string;arguments:{query:string;id:string}}[]}).agentToolCalls):[]};}catch(err){if(err instanceof AgentToolCalls)return {final:null,toolCalls:err.calls};throw err;}finally{modelReceipts.push({requestId:adapter.receipt.requestId,usage:adapter.receipt.usage?{...adapter.receipt.usage}:undefined});}}});
         agentSpend=agent.spend;
-        if(!agent.final)throw new Error('INVALID_MODEL_OUTPUT');
-        output=acceptAgentFinal(agent.final,task,issues=>{outputIssues=issues});
+        if(!agent.final)throw new Error(agent.spend.trace.some(t=>t.reason==='MODEL_BUDGET')?'MODEL_BUDGET':'INVALID_MODEL_OUTPUT');
+        task=agent.finalTask;output=acceptAgentFinal(agent.final,task,issues=>{outputIssues=issues});
         if(stage==='plan'||stage==='gap')planned=planningQueries(output,w,issues=>{outputIssues=issues});
       }
     }
@@ -72,7 +88,7 @@ export async function POST(request:Request,context:{params:Promise<{id:string}>}
     else{const r=w.analysisRun!,t=r.tasks.find(t=>t.id===stage)!;if(w.mode==='four'&&stage==='check')checkFour(w);localStep(p,r,t);}
   }catch(e){if(e instanceof AgentStepFailure)agentSpend=e.spend;error=safeError((e as Error).message);}
   const current=await get(id);if(!current)return NextResponse.json({error:'项目已删除，结果未写入。'},{status:409});
-  if(current.version!==reserved.version||current.workflow?.id!==w.id||current.workflow?.lease?.callId!==b.callId){
+  if(current.version!==expectedVersion||current.workflow?.id!==w.id||current.workflow?.lease?.callId!==b.callId){
     // User edits/pause/cancel win. Never replace their newer state with late output.
     if(current.workflow?.id===w.id&&current.workflow.lease?.callId===b.callId){const cw=current.workflow,cr=cw.records.find(r=>r.id===b.callId)!;cr.state='failed';cr.error='EXECUTION_INTERRUPTED';cw.status='failed';cw.error=cr.error;cw.needsRetry=true;cw.lease=undefined;try{await save(current,current.version)}catch{}}
     return NextResponse.json({error:'研究状态已改变，迟到结果未写入；请刷新检查点。'},{status:409});
@@ -80,12 +96,17 @@ export async function POST(request:Request,context:{params:Promise<{id:string}>}
   const cw=current.workflow!,cr=cw.records.find(r=>r.id===b.callId)!;cr.elapsedMs=Date.now()-started;
   if(adapter){cr.usage=adapter.receipt.usage;cr.requestId=adapter.receipt.requestId;cr.normalizations=adapter.receipt.normalizations;cr.outputIssues=outputIssues.length?outputIssues:adapter.receipt.outputIssues;}
   if(w.mode!=='four'&&isModel){
+    cr.agentModelReceipts=modelReceipts;
+    const known=modelReceipts.filter(r=>r.usage);
+    cr.usage=known.length?known.reduce((sum,r)=>({input_tokens:sum.input_tokens+r.usage!.input_tokens,output_tokens:sum.output_tokens+r.usage!.output_tokens}),{input_tokens:0,output_tokens:0}):undefined;
+    if(embedding?.receipt.requests)cr.embeddingReceipt={...embedding.receipt};
+    if(task)cr.input=structuredClone(task);
     const spend=agentSpend||emptySpend();
     cr.agentRuntime=AGENT_RUNTIME;
     if(spend.trace.length)cr.agentTools=spend.trace;
-    cw.budget.modelAttempts+=spend.extraModelCalls;current.budget.modelCalls+=spend.extraModelCalls;
-    cw.budget.sourceAttempts+=spend.sourceAttempts;current.budget.requests+=spend.sourceAttempts;
-    cw.budget.searches+=spend.searches;current.budget.searches+=spend.searches;
+    cw.budget.modelAttempts+=spend.extraModelCalls-reservedExtraModels;current.budget.modelCalls+=spend.extraModelCalls-reservedExtraModels;
+    cw.budget.sourceAttempts+=spend.sourceAttempts-reservedToolRequests;current.budget.requests+=spend.sourceAttempts-reservedToolRequests;
+    cw.budget.searches+=spend.searches-reservedToolSearches;current.budget.searches+=spend.searches-reservedToolSearches;
     if(!error){
       if(spend.collections.length){
         const ids:string[]=[],usableIds:string[]=[];let added=0,duplicate=0,titleOnly=0,requests=0,failed=0,skipped=0;
@@ -118,7 +139,7 @@ export async function POST(request:Request,context:{params:Promise<{id:string}>}
       }
       else{cw.limitations.push(...output.gaps.slice(0,4));cw.stage='check';}
     }else{
-      const r=cw.analysisRun!,t=r.tasks.find(t=>cw.mode==='four'?t.id===stage:t.role==='coordinator')!;if(cw.mode==='four')cr.supportChecks=locateChecks(output,task!);t.output=output;completeTask(r,t,b.callId,cr.elapsedMs);const call=t.calls.at(-1)!;call.usage=cr.usage;call.requestId=cr.requestId;call.outputIssues=cr.outputIssues;call.normalizations=cr.normalizations;if(cw.mode==='four')cw.stage=r.tasks.find(t=>t.status==='pending'&&t.deps.every(id=>r.tasks.find(x=>x.id===id)?.status==='done'))!.id as typeof cw.stage;else afterAnalyze(current);
+      const r=cw.analysisRun!,t=r.tasks.find(t=>cw.mode==='four'?t.id===stage:t.role==='coordinator')!;if(cw.mode==='four')cr.supportChecks=locateChecks(output,task!);t.output=output;if(task)t.inputSnapshot=structuredClone(task);completeTask(r,t,b.callId,cr.elapsedMs);const call=t.calls.at(-1)!;call.usage=cr.usage;call.requestId=cr.requestId;call.outputIssues=cr.outputIssues;call.normalizations=cr.normalizations;if(cw.mode==='four')cw.stage=r.tasks.find(t=>t.status==='pending'&&t.deps.every(id=>r.tasks.find(x=>x.id===id)?.status==='done'))!.id as typeof cw.stage;else afterAnalyze(current);
     }
   }
   if(collection){
@@ -136,7 +157,7 @@ export async function POST(request:Request,context:{params:Promise<{id:string}>}
     const r=cw.analysisRun!,t=r.tasks.find(t=>t.id===stage)!;if(stage==='deliver')r.report=w.analysisRun!.report;completeTask(r,t,b.callId,cr.elapsedMs);
     if(stage==='check')cw.stage='deliver';else{
       if(current.run)current.runHistory=[current.run,...(current.runHistory||[])].slice(0,3);
-      current.run=r;cw.status='completed';cw.report=workflowReport(current,cw);current.status='awaiting_decision';
+      saveOpportunityDraft(current,r);current.run=r;cw.status='completed';cw.report=workflowReport(current,cw);current.status='awaiting_decision';
     }
   }
   log(current,`一键研究：${workflowStages[stage]}完成${cw.status==='completed'?'；草稿已保存，等待人工判断':''}`);

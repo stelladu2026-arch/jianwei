@@ -53,3 +53,8 @@
 | `tests/` | 实际 API 路由、内存 SQLite、模拟 HTTP 和独立 Schema 校验 |
 
 实际实现为 React/TypeScript + Vinext + Cloudflare Workers + D1。单角色模型步骤使用 LangGraph.js 的 web 构建做工具循环；Python/FastAPI 没有接入，不能写成后端。存储目前是单用户空间，授权由原托管站点控制面保障；应用数据库尚未实现多人资源隔离。
+
+
+## 2026-10-13 更新
+
+最新能力变更见 source/docs/CAPABILITY_GAPS_20261013.md：工具正文/回执回传、额外请求的持久预留与累计用量、默认关闭的嵌入混合检索、自动待确认机会草稿及带原文限制的 fact 类。236 项离线检查、类型检查与生产构建通过；真实 Qwen/向量服务验收、结论反证第二轮和交易核验仍未完成。本次代码未上线；早前 GitHub 写入分支返回 403，曾交付离线变更包。22:02 重试已确认 GitHub 写权限并成功创建 codex/research-capability-gaps 分支；通过独立分支交付，主分支和线上未修改。历史日期条目只描述对应版本，不把新代码或旧记录视为真实闭环通过。

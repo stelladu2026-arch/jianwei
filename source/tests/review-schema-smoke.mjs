@@ -153,6 +153,7 @@ check('planning schema matches the prompt wire and keyword failures keep their o
   assert.equal(search(wire(planningFixture.charset)),true,JSON.stringify(search.errors));
   const analysisWire=structuredClone(wire(planningFixture.looseCount));
   delete analysisWire.data.framing;
+  analysisWire.data.citations=[];
   assert.equal(analysis(analysisWire),true,JSON.stringify(analysis.errors));
   assert.equal(search(wire(planningFixture.looseCount)),false);
   assert.equal(search(wire(planningFixture.wrongKind)),false);

@@ -6,7 +6,7 @@ import {buildTask,makeRun,reserve,validateResult,type Analysis,type Run,type Pro
 import type {ModelTask,ModelResult,Role} from './model-port';
 import type {ResearchWorkflow} from './workflow';
 import {sourceCoverage} from './source-coverage';
-export const REVIEW_VERSION='evidence-review/2';
+export const REVIEW_VERSION='evidence-review/3';
 import {judgments,judgmentLabels,type ClaimCheck,type LocatedCheck} from './review-contract';
 export {judgments,judgmentLabels,targetLabels} from './review-contract';
 export type {ClaimCheck,LocatedCheck,Disagreement} from './review-contract';
