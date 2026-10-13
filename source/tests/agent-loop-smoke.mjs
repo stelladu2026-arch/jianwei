@@ -2,6 +2,8 @@
 import assert from 'node:assert/strict';
 import {acceptAgentFinal,assertLiteralCitations,retrieveProjectEvidence,runSingleRoleAgent} from '../lib/research/agent-loop.ts';
 import {validateResult} from '../lib/research/execution.ts';
+import {classifyPublicRemark,paymentJudgment,renderDemandCard,renderInterviewPlan,renderPublicSignals,renderQuoteLayers} from '../lib/research/draft-cards.ts';
+import {scopeChangeReason} from '../lib/research/domain.ts';
 let passed=0;
 const beforeFetch=globalThis.fetch;
 function check(label,fn){return Promise.resolve(fn()).then(()=>{passed++;console.log('PASS '+label);});}
@@ -86,6 +88,51 @@ try{
     assert.equal(fetches.length,0);
     assert.throws(()=>validateResult({status:'ok',data:{notes:[{claim:'customer support',refs:[],kind:'事实'}]},evidence_ids:[],gaps:[],errors:[],revision:1,usage:{input_tokens:0,output_tokens:0},model:'synthetic-agent'},task),/INVALID_MODEL_OUTPUT/);
     assert.throws(()=>validateResult({status:'ok',data:{notes:[{claim:'customer support',refs:[],kind:'观察'}]},evidence_ids:[],gaps:[],errors:[],revision:1,usage:{input_tokens:0,output_tokens:0},model:'synthetic-agent'},task),/INVALID_MODEL_OUTPUT/);
+  });
+  await check('demand card and interview plan keep missing fields and point at term overlap',async()=>{
+    const corpus=[evidence('E1',alphaText)];
+    const card=renderDemandCard({problem:'repeated setup questions',who_refs:['E1']},corpus);
+    assert.match(card,/## 需求卡/);
+    assert.match(card,/### 谁\n未提供/);
+    assert.match(card,/### 影响\n未提供/);
+    assert.match(card,/### 当前变通\n未提供/);
+    assert.match(card,/### 问题\nrepeated setup questions \[E1\]/);
+    assert.match(card,/不是语义检索/);
+    assert.doesNotMatch(card,/自动保存机会卡已|访谈记录：/);
+    const interview=renderInterviewPlan({questions:[{question:'Who repeats setup?',evidence_ids:['E1']}]},corpus);
+    assert.match(interview,/1\. Who repeats setup\? \[E1\]/);
+    assert.match(interview,/会改变决策的证据：未提供/);
+    const missing=renderInterviewPlan(undefined,corpus);
+    assert.match(missing,/没有编造访谈/);
+    assert.match(missing,/会改变决策的证据：未提供/);
+    assert.doesNotMatch(missing,/市场结论是/);
+    const quoted={...task,role:'coordinator',evidence_ids:['E1'],evidence:[{id:'E1',text:alphaText}]};
+    const proposal={title:'Draft',problem:'Friction',audience:'Teams',alternative:'Mail',conclusion:'Conditional',decision:'evidence',payment:'none',refs:['E1'],counter:'Counter',unknowns:'Unknown',plan:'Read the original'};
+    const foreign={status:'partial',data:{notes:[{claim:'A hypothesis only.',refs:['E1'],kind:'hypothesis'}],proposal:{...proposal,demand:{problem_refs:['FOREIGN']}}},evidence_ids:['E1'],gaps:['Gap'],errors:[],revision:1,usage:{input_tokens:1,output_tokens:1},model:'synthetic-agent'};
+    assert.throws(()=>validateResult(foreign,quoted),/INVALID_MODEL_REFERENCE/);
+  });
+  await check('public remarks stay complaints, verbal interest, or no payment',async()=>{
+    assert.equal(classifyPublicRemark('This is frustrating and painful.'), '抱怨');
+    assert.equal(classifyPublicRemark('I would pay if it were cheaper.'), '口头兴趣');
+    assert.equal(classifyPublicRemark('I paid $20 last month for the tool.'), '未见付款');
+    assert.equal(paymentJudgment('medium',['This is frustrating and painful.']), '未见付款');
+    assert.equal(paymentJudgment('none',['I would pay if it were cheaper.']), '未见付款');
+    assert.equal(paymentJudgment('weak',['I would pay if it were cheaper.']), '口头兴趣');
+    assert.equal(paymentJudgment('medium',['I paid $20 last month for the tool.']), '未见付款');
+    const shown=renderPublicSignals([{evidence_id:'E1',quote:'I paid $20 last month for the tool.',located:true}],'medium');
+    assert.match(shown,/付款判断：未见付款/);
+    assert.match(shown,/不能升级为实际付费/);
+    assert.doesNotMatch(shown,/付款判断：实际付费/);
+    const text='Synthetic fixture body that is long enough to locate as a literal slice.';
+    const layers=renderQuoteLayers([{claim:'A hypothesis only.',refs:['E1'],kind:'hypothesis'},{claim:'Payment is unknown.',refs:[],kind:'gap'}],[{evidence_id:'E1',quote:'long enough to locate'}],[{id:'E1',text}]);
+    assert.match(layers,/## 来源原句/);
+    assert.match(layers,/long enough to locate/);
+    assert.match(layers,/不是已核实的市场事实/);
+    assert.match(layers,/## 推断\n推断只收录 kind 为 hypothesis 的主张。\n- A hypothesis only\. \[E1\]/);
+    assert.match(layers,/## 未知/);
+    assert.match(layers,/Payment is unknown/);
+    assert.equal(scopeChangeReason({audience:'A',region:'R',decision:'D'},{audience:'B',region:'R',decision:'D'}),'目标人群已变更，较早完成的结论待复核。原文未改写，也未标成否定。');
+    assert.equal(scopeChangeReason({audience:'A',region:'R',decision:'D'},{audience:'A',region:'R',decision:'D'}),'');
   });
   console.log(JSON.stringify({agent_loop_checks:passed,actual_model_calls:0,scope:'scripted model, allowlisted tools, current-project term overlap; not a live four-role completion or a market conclusion'}));
 }finally{globalThis.fetch=beforeFetch;}

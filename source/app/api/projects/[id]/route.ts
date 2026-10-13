@@ -1,7 +1,7 @@
 import {NextResponse} from 'next/server';
 import {z} from 'zod';
 import {get,save,db} from '@/lib/research/store';
-import {demoOpportunities,invalidate,log,report,type Opportunity} from '@/lib/research/domain';
+import {demoOpportunities,invalidate,log,markCompletedConclusions,report,scopeChangeReason,type Opportunity} from '@/lib/research/domain';
 import {applyGovernanceAction} from '@/lib/research/governance-actions';
 import {scanReflections} from '@/lib/research/governance';
 import {invalidateRun} from '@/lib/research/execution';
@@ -13,7 +13,7 @@ const imported=z.object({title:z.string().trim().min(1).max(200),text:z.string()
 export async function PATCH(req:Request,ctx:{params:Promise<{id:string}>}){try{
 if(req.headers.get('sec-fetch-site')==='cross-site')return NextResponse.json({error:'请求来源不正确'},{status:403});
 const {id}=await ctx.params;const b=bodySchema.parse(await req.json());const p=await get(id);if(!p)return NextResponse.json({error:'项目不存在'},{status:404});if(p.actions.includes(b.callId))return NextResponse.json({project:p});if(p.version!==b.version)throw new Error('VERSION_CONFLICT');const d=b.data;
-if(b.action==='brief'){const v=z.object({title:z.string().trim().min(1).max(100),audience:text,region:text,period:text,exclusions:text,decision:text}).parse(d);Object.assign(p,v);p.revision++;p.confirmed=false;p.status='draft';p.step=0;p.budget={searches:0,requests:0,modelCalls:0};p.mode='manual';invalidate(p);log(p,'修改研究范围，旧结论已标记待复核');}
+if(b.action==='brief'){const v=z.object({title:z.string().trim().min(1).max(100),audience:text,region:text,period:text,exclusions:text,decision:text}).parse(d);const reason=scopeChangeReason(p,v);if(reason)markCompletedConclusions(p,reason);Object.assign(p,v);p.revision++;p.confirmed=false;p.status='draft';p.step=0;p.budget={searches:0,requests:0,modelCalls:0};p.mode='manual';invalidate(p);log(p,reason||'修改研究范围，旧结论已标记待复核');}
 if(b.action==='confirm'){if(!p.audience.trim()||!p.decision.trim())throw new Error('请先补充目标人群和预期决策。');p.confirmed=true;p.status='collecting';log(p,'已人工确认研究范围');}
 if(b.action==='step'){if(!p.confirmed||['paused','cancelled','completed'].includes(p.status))throw new Error('请先确认范围或恢复研究。');if(p.mode!=='replay')throw new Error('尚未接入文本模型。可以采集与导入证据、手动创建机会卡；自动分析将在接入后开放。');p.step=Math.min(4,p.step+1);p.status=['collecting','analyzing','reviewing','awaiting_decision','completed'][p.step];if(p.step===3)p.opportunities=demoOpportunities(p);log(p,['','演示回放：需求角色读取虚构资料','演示回放：替代研究与独立反证检查','演示回放：协调角色汇总条件性判断','演示回放完成；没有真实模型调用'][p.step]);}
 if(b.action==='pause'){if(activeWorkflow(p))controlWorkflow(p,'pause');if(!['collecting','analyzing','reviewing','awaiting_decision','partial'].includes(p.status))throw new Error('当前状态不能暂停。');if(p.run&&['ready','running','failed'].includes(p.run.status))controlRun(p,'pause');p.resume=p.status;p.status='paused';log(p,'暂停研究，保留进度');}

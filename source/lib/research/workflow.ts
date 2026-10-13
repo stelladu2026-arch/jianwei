@@ -1,6 +1,6 @@
 import type {Project,Evidence} from './domain';
 import type {ModelTask,ModelResult} from './model-port';
-import {buildTask,makeRun,reserve,failTask,invalidateRun,type Run,type Analysis} from './execution';
+import {buildTask,makeRun,reserve,failTask,invalidateRun,type Run,type Analysis,type ConclusionReview} from './execution';
 import {collaborationReport,type FrozenInput,type Comparison,type LocatedCheck} from './collaboration';
 import {sourceCoverage} from './source-coverage';
 import type {Collection} from './collection';
@@ -10,7 +10,7 @@ export const workflowStages={plan:'规划检索',collect:'采集公开资料',an
 export function stagesFor(w?:ResearchWorkflow){const keys:WorkflowStage[]=w?.mode==='four'?['needs','commercial','verifier','synthesis','check','deliver']:['plan','collect','analyze','gap','supplement','reanalyze','check','deliver'];return Object.fromEntries(keys.map(k=>[k,workflowStages[k]]));}
 export type WorkflowStage=keyof typeof workflowStages;
 export type WorkflowRecord={id:string;stage:WorkflowStage;kind:'model'|'source'|'local';state:'running'|'done'|'failed';started:string;elapsedMs:number;error:string;supportChecks?:LocatedCheck[];outputIssues?:string[];normalizations?:string[];usage?:ModelResult['usage'];requestId?:string;input?:ModelTask;output?:ModelResult;agentRuntime?:string;agentTools?:{name:string;status:'executed'|'refused';reason:string;requests:number}[];collection?:Omit<Collection,'evidence'> & {added:number;duplicate:number;titleOnly:number}};
-export type ResearchWorkflow={mode?:'single'|'four';frozen?:FrozenInput;comparison?:Comparison;id:string;version:string;revision:number;evidenceVersion:number;created:string;status:'ready'|'running'|'paused'|'failed'|'completed'|'partial'|'cancelled'|'stale';stage:WorkflowStage;allowSupplement:boolean;queries:{query:string;purpose:'initial'|'supplement';reason:string}[];collectIndex:number;usableIds:string[];freshIds:string[];limitations:string[];records:WorkflowRecord[];budget:{modelLimit:2|4;modelAttempts:number;sourceLimit:30;sourceAttempts:number;searchLimit:3;searches:number};lease?:{callId:string;expires:string};analysisRun?:Run;initialAnalysis?:Run;error:string;needsRetry:boolean;report:string;since:number|null;framing?:Analysis['framing'];retrieval?:RetrievalHit[];agentFetchedQueries?:string[]};
+export type ResearchWorkflow={mode?:'single'|'four';frozen?:FrozenInput;comparison?:Comparison;conclusionReview?:ConclusionReview;id:string;version:string;revision:number;evidenceVersion:number;created:string;status:'ready'|'running'|'paused'|'failed'|'completed'|'partial'|'cancelled'|'stale';stage:WorkflowStage;allowSupplement:boolean;queries:{query:string;purpose:'initial'|'supplement';reason:string}[];collectIndex:number;usableIds:string[];freshIds:string[];limitations:string[];records:WorkflowRecord[];budget:{modelLimit:2|4;modelAttempts:number;sourceLimit:30;sourceAttempts:number;searchLimit:3;searches:number};lease?:{callId:string;expires:string};analysisRun?:Run;initialAnalysis?:Run;error:string;needsRetry:boolean;report:string;since:number|null;framing?:Analysis['framing'];retrieval?:RetrievalHit[];agentFetchedQueries?:string[]};
 export function activeWorkflow(p:Project){return !!p.workflow&&['ready','running','paused','failed'].includes(p.workflow.status);}
 export function failureDiagnostics(w:Pick<ResearchWorkflow,'stage'|'evidenceVersion'|'revision'|'records'|'analysisRun'>){
   const failed=[...w.records].reverse().find(r=>r.state==='failed');
@@ -81,7 +81,7 @@ export function analysisTask(p:Project,w:ResearchWorkflow,id:string){
   const evidence=analysisEvidence(p,w);if(!evidence.length)throw new Error('NO_USABLE_EVIDENCE');
   const temporary:Project={...p,run:undefined,evidence};const r=makeRun(temporary,'single','normal',1);r.adapter='qwen';r.model='qwen3.7-plus';r.paidBudget=0;r.freeTierOnlyConfirmed=true;r.simulation=false;
   temporary.run=r;const reserved=reserve(temporary,id);const task=buildTask(temporary,r,reserved.task,id);task.brief={...task.brief,...brief(p,w)};
-  task.context!.rules.push('按问题主题归纳需求，保留不同作者和线程；不要把同一讨论计作多个客户。优先给出一个可验证的机会及其商业假设、已有替代、反证和下一步验证计划。公开自述和点击兴趣不能升级成真实付费承诺。');
+  task.context!.rules.push('按问题主题归纳需求，保留不同作者和线程；不要把同一讨论计作多个客户。优先给出一个可验证的机会及其商业假设、已有替代、反证和下一步验证计划。公开自述和点击兴趣不能升级成真实付费承诺。需求卡字段和访谈问题可以省略，省略就保持缺失，不得编造访谈记录或市场结论。');
   const retrieval=formatProjectRetrieval(w.retrieval||[]);if(retrieval)task.context!.rules.push(retrieval);
   if(JSON.stringify(task).length>16000)throw new Error('CONTEXT_LIMIT');reserved.task.context!.characters=JSON.stringify(task).length;reserved.task.inputSnapshot=structuredClone(task);w.analysisRun=r;return task;
 }

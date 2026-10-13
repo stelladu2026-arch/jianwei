@@ -5,6 +5,8 @@ import type {ModelResult,ModelTask} from './model-port';
 import {collectHN,collectZhWiki,readHNItem,SOURCE_REQUEST_CAP,type Collection} from './collection';
 import {literalQuoteStart} from './collaboration';
 import {validateResult} from './execution';
+import {formatProjectRetrieval,retrieveProjectEvidence,type RetrievalHit} from './retrieval';
+export {formatProjectRetrieval,retrieveProjectEvidence,type RetrievalHit};
 
 // LangGraph must not phone home. This process does not send traces.
 if(typeof process!=='undefined'&&process.env){process.env.LANGCHAIN_TRACING_V2='false';process.env.LANGSMITH_TRACING='false';process.env.LANGCHAIN_CALLBACKS_BACKGROUND='false';}
@@ -14,13 +16,11 @@ export const AGENT_TOOLS=['hacker_news_search','hacker_news_read','zh_wikipedia_
 export type AgentToolName=(typeof AGENT_TOOLS)[number];
 export type AgentToolCall={name:string;arguments:{query:string;id:string}};
 export type AgentToolTrace={name:string;status:'executed'|'refused';reason:string;requests:number};
-export type RetrievalHit={id:string;title:string;text:string};
 export type AgentSpend={extraModelCalls:number;sourceAttempts:number;searches:number;trace:AgentToolTrace[];collections:Collection[];retrieval:RetrievalHit[];fetchedQueries:string[]};
 export class AgentToolCalls extends Error{calls:AgentToolCall[];constructor(calls:AgentToolCall[]){super('AGENT_TOOL_CALLS');this.calls=calls;}}
 export class AgentStepFailure extends Error{spend:AgentSpend;constructor(message:string,spend:AgentSpend){super(message);this.spend=spend;}}
 
 const UNSEARCHABLE=/payment|invoice|billing|\bbills?\b|interview|geographic|representativeness|付款|付费|账单|访谈|地域代表性/i;
-const placeholder=/^该(帖子|条目)只有标题/;
 
 export function parseToolCalls(raw:unknown):AgentToolCall[]{
   if(!Array.isArray(raw))throw new Error('INVALID_MODEL_OUTPUT');
@@ -33,20 +33,6 @@ export function parseToolCalls(raw:unknown):AgentToolCall[]{
     if(typeof query!=='string'||typeof id!=='string'||query.length>160||id.length>12)throw new Error('INVALID_MODEL_OUTPUT');
     return {name,arguments:{query,id}};
   });
-}
-
-export function retrieveProjectEvidence(evidence:Evidence[],question:string):RetrievalHit[]{
-  const tokens=question.toLowerCase().split(/[\s,，。；;]+/).map(token=>token.trim()).filter(token=>token.length>=2);
-  if(!tokens.length)return [];
-  return evidence.filter(item=>!item.excluded&&item.kind!=='synthetic'&&item.text.length>=40&&!placeholder.test(item.text)).map(item=>{
-    const hay=`${item.title}\n${item.text}`.toLowerCase();
-    return {item,score:tokens.reduce((n,token)=>n+(hay.includes(token)?1:0),0)};
-  }).filter(row=>row.score>0).sort((a,b)=>b.score-a.score||a.item.id.localeCompare(b.item.id)).slice(0,4).map(row=>({id:row.item.id,title:row.item.title.slice(0,150),text:row.item.text.slice(0,400)}));
-}
-
-export function formatProjectRetrieval(hits:RetrievalHit[]){
-  if(!hits.length)return '';
-  return '本项目语料检索（词面重叠，不是语义检索质量结论）。以下片段只来自当前项目已保存的原文。引用必须是这些原文里的连续切片；原文可以引用，但不是已核实的市场事实。\n'+hits.map(hit=>`[${hit.id}] ${hit.title}\n${hit.text}`).join('\n');
 }
 
 export function assertLiteralCitations(citations:Analysis['citations'],evidence:{id:string;text:string}[],diagnose?:(issues:string[])=>void){
