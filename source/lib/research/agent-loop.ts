@@ -1,3 +1,5 @@
+import {assertLiteralCitations} from './evidence-citations';
+export {assertLiteralCitations} from './evidence-citations';
 import {Annotation, END, START, StateGraph} from '@langchain/langgraph/web';
 import type {Evidence} from './domain';
 import type {Analysis} from './execution';
@@ -35,15 +37,6 @@ export function parseToolCalls(raw:unknown):AgentToolCall[]{
   });
 }
 
-export function assertLiteralCitations(citations:Analysis['citations'],evidence:{id:string;text:string}[],diagnose?:(issues:string[])=>void){
-  if(!citations?.length)return;
-  const issues:string[]=[];
-  citations.forEach((citation,index)=>{
-    const source=evidence.find(item=>item.id===citation.evidence_id);
-    if(literalQuoteStart(source?.text,citation.quote)<0)issues.push(`data.citations.${index}.quote:not_in_input`);
-  });
-  if(issues.length){diagnose?.(issues);throw new Error('INVALID_EVIDENCE_QUOTE');}
-}
 
 type Turn={final:ModelResult|null;toolCalls:AgentToolCall[]};
 type LoopInput={

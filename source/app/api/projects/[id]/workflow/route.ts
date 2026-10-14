@@ -12,7 +12,7 @@ import {qwenCredentials} from '@/lib/research/qwen-settings';
 import {QWEN_TIMEOUT_MS} from '@/lib/research/provider-config';
 import {collectPublic,SOURCE_REQUEST_CAP,type Collection} from '@/lib/research/collection';
 import {executeModel,completeTask,failTask,localStep,reserve,errorLabels,type Analysis} from '@/lib/research/execution';
-import {makeWorkflow,currentWorkflow,controlWorkflow,plannerTask,planningQueries,analysisTask,stopWithoutEvidence,workflowReport,workflowStages,mergeCollected,skipFetchedQueries,normalizeQuery,type WorkflowRecord} from '@/lib/research/workflow';
+import {makeWorkflow,currentWorkflow,controlWorkflow,workflowAdvanceBlockReason,plannerTask,planningQueries,analysisTask,stopWithoutEvidence,workflowReport,workflowStages,mergeCollected,skipFetchedQueries,normalizeQuery,type WorkflowRecord} from '@/lib/research/workflow';
 import {acceptAgentFinal,AgentStepFailure,AgentToolCalls,AGENT_RUNTIME,runSingleRoleAgent,type AgentSpend} from '@/lib/research/agent-loop';
 import type {ModelTask,ModelResult} from '@/lib/research/model-port';
 const input=z.object({version:z.number().int().positive(),callId:z.string().uuid(),action:z.enum(['start','restart','advance','pause','resume','cancel','retry','recover','review']),mode:z.enum(['single','four']).default('single'),review:reviewInput.optional(),freeTierOnlyConfirmed:z.boolean().default(false),allowSupplement:z.boolean().default(true)}).strict();
@@ -43,6 +43,7 @@ export async function POST(request:Request,context:{params:Promise<{id:string}>}
   if(b.action!=='advance'){controlWorkflow(p,b.action);scanReflections(p);log(p,'一键研究：'+{pause:'暂停',resume:'恢复',cancel:'取消',retry:'准备重试',recover:'恢复过期检查点'}[b.action]);addAction(p,b.callId);return response(await save(p,b.version));}
   if(['paused','cancelled','completed'].includes(p.status)||p.archived)throw new Error('请先恢复项目研究。');
   const w=currentWorkflow(p);if(w.status!=='ready'||w.lease)throw new Error('流程未就绪，或有步骤正在执行。');
+  const blocked=workflowAdvanceBlockReason(p,w);if(blocked)throw new Error(blocked);
   const stage=w.stage,isModel=modelStages.has(stage),isSource=sourceStages.has(stage);let task:ModelTask|undefined,key:string|undefined;
   if(isModel){
     if(w.budget.modelAttempts>=w.budget.modelLimit)throw new Error('已达到本轮模型调用上限。');
@@ -107,7 +108,9 @@ export async function POST(request:Request,context:{params:Promise<{id:string}>}
     cw.budget.modelAttempts+=spend.extraModelCalls-reservedExtraModels;current.budget.modelCalls+=spend.extraModelCalls-reservedExtraModels;
     cw.budget.sourceAttempts+=spend.sourceAttempts-reservedToolRequests;current.budget.requests+=spend.sourceAttempts-reservedToolRequests;
     cw.budget.searches+=spend.searches-reservedToolSearches;current.budget.searches+=spend.searches-reservedToolSearches;
-    if(!error){
+    // Source collection has its own validation boundary. Preserve eligible
+    // originals even if the later model result fails; never preserve rejected analysis.
+    {
       if(spend.collections.length){
         const ids:string[]=[],usableIds:string[]=[];let added=0,duplicate=0,titleOnly=0,requests=0,failed=0,skipped=0;
         for(const item of spend.collections){const merged=mergeCollected(current,cw,item);ids.push(...merged.newIds);usableIds.push(...item.usableIds);added+=merged.added;duplicate+=merged.duplicate;titleOnly+=merged.titleOnly;requests+=item.requests;failed+=item.failed;skipped+=item.skipped;}
@@ -118,6 +121,9 @@ export async function POST(request:Request,context:{params:Promise<{id:string}>}
       if(spend.retrieval.length)cw.retrieval=spend.retrieval.filter(hit=>current.evidence.some(item=>item.id===hit.id&&!item.excluded));
     }
   }
+  // Only trusted tool originals from this unchanged lease advance the input
+  // version of a successful single-role analysis. Older/historical runs stay untouched.
+  if(!error&&cw.analysisRun&&['analyze','reanalyze'].includes(stage))cw.analysisRun.evidenceVersion=cw.evidenceVersion;
   cw.lease=undefined;
   if(error){
     cr.state='failed';cr.error=error;cw.status='failed';cw.error=error;cw.needsRetry=true;

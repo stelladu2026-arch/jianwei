@@ -281,3 +281,29 @@ PASS expired recovery preserves unknown use and cannot replay request
 PASS explicit fresh workflow archives prior audit and preserves cumulative spend
 PASS single, simulation, incomplete, outdated and cross-site audits cannot start
 {"conclusion_audit_checks":36,"actual_model_calls":0,"scope":"real routes and SQLite; synthetic HTTP, no live Qwen or semantic quality measurement"}
+PASS first-role rejection still delivers frozen originals with no invented opportunity
+PASS main project report and saved snapshot include local stage deliverable without generation
+PASS midstream failure exposes accepted roles, missing verifier and all original gaps
+PASS injected failed, running or pending outputs never enter stage report
+PASS accepted old payload with mismatched source quote is withheld without repair
+PASS old role output cannot smuggle a coordinator proposal into a stage report
+PASS deleted or changed source uses historical input instead of latest text
+PASS history without a snapshot never borrows sources from a different scope
+PASS local report remains available after pause, cancellation and JSON reload
+PASS failed coordinator delivers three independent views without fabricating aggregate conclusion
+PASS candidate after model steps is visible while local validation and delivery remain pending
+PASS ready exhausted workflow is blocked before reservation in both guard and route
+PASS saving a report while a lease is active cannot silently interrupt a paid request
+PASS local check or delivery stays available with model budget spent
+PASS source reservation shortage has read-only guidance and never calls a source
+PASS second-pass failure preserves completed first report and opportunity card
+PASS a finished flow with evidence gaps is not misclassified as technical failure
+PASS legacy nonreview with fabricated citation cannot become a partial opportunity
+PASS tool originals survive a later model quota failure with rejected analysis absent
+PASS successful tool analysis synchronizes its input version and can reach local delivery
+PASS independent simulation exposes bounded progress and never masquerades as real research
+PASS unfinished research cannot be manually marked complete even with confirmed cards
+PASS standalone unfinished or rejected task output stays out of its stage report
+PASS completed workflow record and independent duplicate do not duplicate the main report
+PASS stage UI renders actionable download, original snapshots and safe external text
+{"stage_outcome_checks":25,"actual_model_calls":0,"scope":"real SQLite/routes and React static rendering; synthetic HTTP; no live Qwen or market accuracy claims"}

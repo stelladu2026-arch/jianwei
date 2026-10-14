@@ -31,4 +31,5 @@ await import('./recovery-smoke.mjs');
 await import('./review-schema-smoke.mjs');
 await import('./capability-gaps-smoke.mjs');
 await import('./conclusion-audit-smoke.mjs');
+await import('./stage-outcomes-smoke.mjs');
 sqlite.close();

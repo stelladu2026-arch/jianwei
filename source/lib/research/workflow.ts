@@ -87,6 +87,16 @@ export function analysisTask(p:Project,w:ResearchWorkflow,id:string){
   if(JSON.stringify(task).length>16000)throw new Error('CONTEXT_LIMIT');reserved.task.context!.characters=JSON.stringify(task).length;reserved.task.inputSnapshot=structuredClone(task);w.analysisRun=r;return task;
 }
 export function stopWithoutEvidence(p:Project,w:ResearchWorkflow){w.status='partial';w.error='NO_USABLE_EVIDENCE';w.lease=undefined;p.status='partial';w.report=`# 一键研究部分完成：${p.title}\n\n未取得足够的可分析原文，未形成产品机会判断。没有搜到资料不代表没有需求。\n\n检索词：${w.queries.map(q=>q.query).join('；')}\n来源请求尝试：${w.budget.sourceAttempts}；模型请求尝试：${w.budget.modelAttempts}\n\n${w.limitations.map(x=>'- '+x).join('\n')}\n\n下一步：调整人群或检索词，或导入有来源的访谈资料后重新研究。\n`;}
+// Shared read-only guard: UI and server agree before any reservation.
+export function workflowAdvanceBlockReason(p:Project,w=p.workflow){
+ if(!w)return '尚未创建一键研究。';
+ if(w.status!=='ready')return '';
+ if(['plan','analyze','gap','reanalyze','needs','commercial','verifier','synthesis'].includes(w.stage)&&w.budget.modelAttempts>=w.budget.modelLimit)return '本轮模型预算已用尽。请导出已有成果并结束本轮；新一轮需另行确认预算。';
+ if(['collect','supplement'].includes(w.stage)&&(w.budget.searches>=w.budget.searchLimit||p.budget.searches>=6||w.budget.sourceAttempts+10>w.budget.sourceLimit))return '本轮采集预算不足以执行下一阶段。请导出已有成果并结束本轮，或人工导入资料后按新预算研究。';
+ return '';
+}
+export function researchHasLease(p:Project){return !!(p.run?.lease||p.workflow?.lease||p.workflow?.conclusionAudit?.lease);}
+export function unfinishedResearch(p:Project){return !!([p.workflow,p.run].some(r=>r&&['ready','running','paused'].includes(r.status))||p.workflow?.conclusionAudit&&['ready','running'].includes(p.workflow.conclusionAudit.status));}
 export function workflowRetryBlockReason(p:Project){
   const w=p.workflow;if(!w||w.status!=='failed')return '当前没有失败步骤。';
   if(w.mode==='four'&&!['check','deliver'].includes(w.stage))return '四角色预算仅覆盖各角色一次，失败请求仍占用预算；本轮不能追加重试。';

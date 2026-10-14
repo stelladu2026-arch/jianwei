@@ -57,5 +57,16 @@
     "real_embedding_calls": 0,
     "deployed": false,
     "details": "source/docs/CONCLUSION_AUDIT_20261014.md"
+  },
+  "update_20261014_stage_outcomes": {
+    "base_branch_head": "5f98e77b53c21ceb19081fef813cb47a903d31ba",
+    "offline_checks": 297,
+    "new_checks": 25,
+    "type_check": "passed",
+    "production_build": "passed",
+    "real_model_calls": 0,
+    "real_embedding_calls": 0,
+    "deployed": false,
+    "details": "source/docs/STAGE_OUTCOMES_20261014.md"
   }
 }

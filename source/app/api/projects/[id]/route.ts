@@ -5,7 +5,7 @@ import {demoOpportunities,invalidate,log,markCompletedConclusions,report,scopeCh
 import {applyGovernanceAction} from '@/lib/research/governance-actions';
 import {scanReflections} from '@/lib/research/governance';
 import {invalidateRun} from '@/lib/research/execution';
-import {activeWorkflow,controlWorkflow} from '@/lib/research/workflow';
+import {activeWorkflow,controlWorkflow,unfinishedResearch,researchHasLease} from '@/lib/research/workflow';
 import {controlRun} from '@/lib/research/execution-controls';
 const text=z.string().max(8000);
 const bodySchema=z.object({version:z.number().int().positive(),callId:z.string().uuid(),action:z.enum(['brief','confirm','step','pause','resume','cancel','archive','evidence','removeEvidence','import','opportunity','removeOpportunity','report','finish','memory','confirmMemory','removeMemory','reflection','scanReflections','resolveReflection','removeReflection']),data:z.any().optional()});
@@ -25,8 +25,8 @@ if(b.action==='evidence'){const v=z.object({id:z.string(),excluded:z.boolean(),s
 if(b.action==='removeEvidence'){const eid=z.string().parse(d);p.evidence=p.evidence.filter(e=>e.id!==eid);invalidate(p);log(p,'删除资料，关联结论待复核');}
 if(b.action==='opportunity'){const o=z.object({id:z.string(),title:z.string().trim().min(1).max(200),problem:text,audience:text,alternative:text,conclusion:text,decision:z.enum(['validate','evidence','pause']),payment:z.enum(['none','weak','medium','strong']),refs:z.array(z.string()).max(30),counter:text,unknowns:text,plan:text}).parse(d);if(o.refs.some(ref=>!p.evidence.some(e=>e.id===ref&&!e.excluded)))throw new Error('引用必须来自本项目未排除的资料。');if(o.payment==='strong')throw new Error('本版未接入可核实的交易资料，不支持标记为强付费信号。');const previous=p.opportunities.find(x=>x.id===o.id);const item:Opportunity={...o,id:o.id||crypto.randomUUID(),stale:false,revision:p.revision,status:'confirmed',...(previous?.sourceRunId?{sourceRunId:previous.sourceRunId,sourceEvidenceVersion:previous.sourceEvidenceVersion}:{})};const i=p.opportunities.findIndex(x=>x.id===item.id);if(i<0)p.opportunities.push(item);else p.opportunities[i]=item;log(p,'保存人工机会判断；不代表已验证事实');}
 if(b.action==='removeOpportunity'){p.opportunities=p.opportunities.filter(x=>x.id!==z.string().parse(d));log(p,'删除机会卡');}
-if(b.action==='finish'){if(!p.confirmed||!p.opportunities.length||p.opportunities.some(o=>o.status==='draft'||o.stale||!o.plan.trim()))throw new Error('请先确认范围、复核机会判断并补齐验证计划。');p.status='completed';log(p,'人工确认本次研究交付完成；不代表商业机会成立');}
-if(b.action==='report'){p.reports.unshift({at:new Date().toISOString(),revision:p.revision,body:report(p)});p.reports=p.reports.slice(0,10);log(p,'保存报告快照');}
+if(b.action==='finish'){if(unfinishedResearch(p))throw new Error('还有研究或结论复核尚未结束，请先完成或结束检查点；已有阶段成果仍可导出。');if(!p.confirmed||!p.opportunities.length||p.opportunities.some(o=>o.status==='draft'||o.stale||!o.plan.trim()))throw new Error('请先确认范围、复核机会判断并补齐验证计划。');p.status='completed';log(p,'人工确认本次研究交付完成；不代表商业机会成立');}
+if(b.action==='report'){if(researchHasLease(p))throw new Error('仍有步骤正在执行，请先导出已有阶段成果；步骤结束或恢复检查点后再保存快照。');p.reports.unshift({at:new Date().toISOString(),revision:p.revision,body:report(p)});p.reports=p.reports.slice(0,10);log(p,'保存报告快照');}
 applyGovernanceAction(p,b.action,d);
 if(['memory','confirmMemory','removeMemory'].includes(b.action)){invalidateRun(p);if(p.workflow&&p.workflow.status!=='cancelled'){p.workflow.status='stale';p.workflow.lease=undefined;}}
 if(['brief','import','evidence','removeEvidence','opportunity','removeOpportunity'].includes(b.action))scanReflections(p);
