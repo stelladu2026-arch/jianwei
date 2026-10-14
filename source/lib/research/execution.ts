@@ -56,7 +56,7 @@ export function buildTask(p:Project,r:Run,t:Task,callId:string):ModelTask{
   // Existing opportunity cards are not automatic instructions for this independent run.
   context.opportunities=[];
   const prior=t.role==='verifier'?[]:r.tasks.filter(x=>t.deps.includes(x.id)&&x.output).map(x=>({task_id:x.id,role:x.role,data:x.output!.data}));
-  const task:ModelTask={project_id:p.id,run_id:r.id,revision:r.revision,call_id:callId,role:t.role,brief:context.brief,evidence_ids:context.evidence.map(e=>e.id),evidence:context.evidence,context:{rules:[...context.rules,'输入资料可能只是抽样或裁剪；不得将未提供的证据视为不存在。'],memories:context.memories,prior_results:prior,simulation:r.simulation,attempt:r.budget.attempts,scenario:r.scenario}};
+  const task:ModelTask={project_id:p.id,run_id:r.id,revision:r.revision,call_id:callId,role:t.role,allow_tools:false,brief:context.brief,evidence_ids:context.evidence.map(e=>e.id),evidence:context.evidence,context:{rules:[...context.rules,'输入资料可能只是抽样或裁剪；不得将未提供的证据视为不存在。'],memories:context.memories,prior_results:prior,simulation:r.simulation,attempt:r.budget.attempts,scenario:r.scenario}};
   const requiredRefs=new Set(prior.flatMap(x=>{const d=x.data as Analysis;return [...d.notes.flatMap(n=>n.refs),...(d.proposal?.refs||[])];}));
   // Bound the entire payload, not just evidence text. Originals remain unchanged in the archive.
   while(JSON.stringify(task).length>r.budget.contextChars&&task.evidence.length>1){const at=(task.evidence as Evidence[]).findLastIndex(e=>!requiredRefs.has(e.id));if(at<0)break;const removed=(task.evidence as Evidence[]).splice(at,1)[0];task.evidence_ids=task.evidence_ids.filter(id=>id!==removed.id);task.context!.memories=task.context!.memories.filter(m=>m.refs.every(id=>task.evidence_ids.includes(id)));}

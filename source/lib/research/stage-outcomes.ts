@@ -31,6 +31,14 @@ function acceptedGroup(id:string,stage:string,label:string,input:ModelTask|undef
  const sourceKeys=(input.evidence as Evidence[]).map(e=>add(e,'input'));
  return {id,stage,label,role:input.role,data:result.data,checks,gaps:result.gaps,sourceKeys};
 }
+// Read-only presentation: completed results are checked against their own saved
+// inputs again. Never borrow today's originals to support a historical claim.
+export function completedRunSummary(p:Project,r:Run){
+ const builder=sourceBuilder(p),groups:OutcomeGroup[]=[];let withheld=0;
+ for(const t of r.tasks){if(t.status!=='done'||!t.role)continue;try{const group=acceptedGroup(t.id,t.id,t.label,t.inputSnapshot,t.output,builder.add);if(group)groups.push(group);else withheld++;}catch{withheld++;}}
+ const group=[...groups].reverse().find(g=>g.data.proposal);
+ return {group,groups,sources:builder.sources,withheld,historical:r.revision!==p.revision||r.evidenceVersion!==(p.evidenceVersion||0)||r.status==='stale'||!!r.conclusionReview};
+}
 function meaning(groups:OutcomeGroup[],sources:OutcomeSource[],researchComplete:boolean,historical:boolean,simulation:boolean){
  if(historical)return '这是旧输入下已有成果，仅供追溯，不能作为当前范围的研究结论。';
  if(simulation)return '这是模拟流程成果，不构成真实用户研究或市场结论。';

@@ -10,12 +10,13 @@ import {scanReflections} from '@/lib/research/governance';
 import {QwenModel} from '@/lib/research/qwen-model';
 import {qwenCredentials} from '@/lib/research/qwen-settings';
 import {QWEN_TIMEOUT_MS} from '@/lib/research/provider-config';
+import {collectV2exFeed} from '@/lib/research/v2ex-feed';
 import {collectPublic,SOURCE_REQUEST_CAP,type Collection} from '@/lib/research/collection';
 import {executeModel,completeTask,failTask,localStep,reserve,errorLabels,type Analysis} from '@/lib/research/execution';
-import {makeWorkflow,currentWorkflow,controlWorkflow,workflowAdvanceBlockReason,plannerTask,planningQueries,analysisTask,stopWithoutEvidence,workflowReport,workflowStages,mergeCollected,skipFetchedQueries,normalizeQuery,type WorkflowRecord} from '@/lib/research/workflow';
+import {makeWorkflow,workflowSourceCap,currentWorkflow,controlWorkflow,workflowAdvanceBlockReason,plannerTask,planningQueries,analysisTask,stopWithoutEvidence,workflowReport,workflowStages,mergeCollected,skipFetchedQueries,normalizeQuery,type WorkflowRecord} from '@/lib/research/workflow';
 import {acceptAgentFinal,AgentStepFailure,AgentToolCalls,AGENT_RUNTIME,runSingleRoleAgent,type AgentSpend} from '@/lib/research/agent-loop';
 import type {ModelTask,ModelResult} from '@/lib/research/model-port';
-const input=z.object({version:z.number().int().positive(),callId:z.string().uuid(),action:z.enum(['start','restart','advance','pause','resume','cancel','retry','recover','review']),mode:z.enum(['single','four']).default('single'),review:reviewInput.optional(),freeTierOnlyConfirmed:z.boolean().default(false),allowSupplement:z.boolean().default(true)}).strict();
+const input=z.object({version:z.number().int().positive(),callId:z.string().uuid(),action:z.enum(['start','restart','advance','pause','resume','cancel','retry','recover','review']),mode:z.enum(['single','four']).default('single'),review:reviewInput.optional(),freeTierOnlyConfirmed:z.boolean().default(false),allowSupplement:z.boolean().default(true),sourceProfile:z.enum(['public','v2ex']).default('public'),sourceNode:z.enum(['programmer','create','qna']).default('programmer')}).strict();
 const response=(p:Project)=>NextResponse.json({project:p});
 const modelStages=new Set(['plan','analyze','gap','reanalyze','needs','commercial','verifier','synthesis']);
 const sourceStages=new Set(['collect','supplement']);
@@ -35,7 +36,7 @@ export async function POST(request:Request,context:{params:Promise<{id:string}>}
       // concurrent edit cannot leave the persisted old round half-cancelled.
       controlWorkflow(p,'cancel');
     }
-    const w=makeWorkflow(p,b.allowSupplement,b.mode);if(b.mode==='four')await initializeFour(p,w);
+    const w=makeWorkflow(p,b.allowSupplement,b.mode,b.sourceProfile,b.sourceNode);if(b.mode==='four')await initializeFour(p,w);
     if(p.workflow)p.workflowHistory=[p.workflow,...(p.workflowHistory||[])].slice(0,2);
     p.workflow=w;log(p,`${b.action==='restart'?'保留失败记录并重新创建四角色复核':'创建一键研究'}；最多 ${w.budget.modelLimit} 次模型请求，付费预算 ¥0；尚未调用模型`);addAction(p,b.callId);return response(await save(p,b.version));
   }
@@ -44,6 +45,7 @@ export async function POST(request:Request,context:{params:Promise<{id:string}>}
   if(['paused','cancelled','completed'].includes(p.status)||p.archived)throw new Error('请先恢复项目研究。');
   const w=currentWorkflow(p);if(w.status!=='ready'||w.lease)throw new Error('流程未就绪，或有步骤正在执行。');
   const blocked=workflowAdvanceBlockReason(p,w);if(blocked)throw new Error(blocked);
+  const sourceCap=workflowSourceCap(w);
   const stage=w.stage,isModel=modelStages.has(stage),isSource=sourceStages.has(stage);let task:ModelTask|undefined,key:string|undefined;
   if(isModel){
     if(w.budget.modelAttempts>=w.budget.modelLimit)throw new Error('已达到本轮模型调用上限。');
@@ -53,8 +55,8 @@ export async function POST(request:Request,context:{params:Promise<{id:string}>}
     if(w.analysisRun&&['analyze','reanalyze','needs','commercial','verifier','synthesis'].includes(stage))w.analysisRun.budget.requests=(w.analysisRun.budget.requests||0)+1;
   }
   if(isSource){
-    if(w.budget.searches>=w.budget.searchLimit||p.budget.searches>=6||w.budget.sourceAttempts+SOURCE_REQUEST_CAP>w.budget.sourceLimit||!w.queries[w.collectIndex])throw new Error('已达到本轮采集上限。');
-    w.budget.searches++;p.budget.searches++;w.budget.sourceAttempts+=SOURCE_REQUEST_CAP;p.budget.requests+=SOURCE_REQUEST_CAP;
+    if(w.budget.searches>=w.budget.searchLimit||p.budget.searches>=6||w.budget.sourceAttempts+sourceCap>w.budget.sourceLimit||!w.queries[w.collectIndex])throw new Error('已达到本轮采集上限。');
+    w.budget.searches++;p.budget.searches++;w.budget.sourceAttempts+=sourceCap;p.budget.requests+=sourceCap;
   }
   if(!isModel&&!isSource){const r=w.analysisRun;if(!r)throw new Error('MISSING_PROPOSAL');reserve({...p,run:r},b.callId);}
   const record:WorkflowRecord={id:b.callId,stage,kind:isModel?'model':isSource?'source':'local',state:'running',started:new Date().toISOString(),elapsedMs:0,error:'',...(task?{input:structuredClone(task)}:{})};
@@ -85,7 +87,7 @@ export async function POST(request:Request,context:{params:Promise<{id:string}>}
         if(stage==='plan'||stage==='gap')planned=planningQueries(output,w,issues=>{outputIssues=issues});
       }
     }
-    else if(isSource)collection=await collectPublic(w.queries[w.collectIndex].query,w.since);
+    else if(isSource)collection=w.sourceProfile==='v2ex'?await collectV2exFeed(w.sourceNode||'',w.since,sourceCap):await collectPublic(w.queries[w.collectIndex].query,w.since);
     else{const r=w.analysisRun!,t=r.tasks.find(t=>t.id===stage)!;if(w.mode==='four'&&stage==='check')checkFour(w);localStep(p,r,t);}
   }catch(e){if(e instanceof AgentStepFailure)agentSpend=e.spend;error=safeError((e as Error).message);}
   const current=await get(id);if(!current)return NextResponse.json({error:'项目已删除，结果未写入。'},{status:409});
@@ -150,7 +152,7 @@ export async function POST(request:Request,context:{params:Promise<{id:string}>}
   }
   if(collection){
     const merged=mergeCollected(current,cw,collection);cw.freshIds=merged.newIds;
-    cw.budget.sourceAttempts-=SOURCE_REQUEST_CAP-collection.requests;current.budget.requests-=SOURCE_REQUEST_CAP-collection.requests;
+    cw.budget.sourceAttempts-=sourceCap-collection.requests;current.budget.requests-=sourceCap-collection.requests;
     const {evidence:_,...meta}=collection;cr.collection={...meta,added:merged.added,duplicate:merged.duplicate,titleOnly:merged.titleOnly};
     if(collection.failed)cw.limitations.push(`检索「${collection.query}」有 ${collection.failed} 次来源请求失败，已有正文保留。`);
     cw.collectIndex++;

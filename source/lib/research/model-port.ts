@@ -1,7 +1,7 @@
 import type {Memory} from './governance';
 // Provider-neutral contract. Qwen and simulation use the same result validator; credentials stay server-side.
 export type Role='coordinator'|'needs'|'commercial'|'verifier';
-export type ModelTask={project_id:string;run_id:string;revision:number;call_id:string;role:Role;review?:true;purpose?:'search_plan'|'gap_plan'|'conclusion_review';review_claims?:{target:string;role:Role;claim:string;refs:string[]}[];brief:Record<string,string>;evidence_ids:string[];evidence:unknown[];context?:{rules:string[];memories:Memory[];prior_results:{task_id:string;role:Role|null;data:unknown}[];simulation:boolean;attempt:number;scenario:string}};
+export type ModelTask={project_id:string;run_id:string;revision:number;call_id:string;role:Role;allow_tools?:boolean;review?:true;purpose?:'search_plan'|'gap_plan'|'conclusion_review';review_claims?:{target:string;role:Role;claim:string;refs:string[]}[];brief:Record<string,string>;evidence_ids:string[];evidence:unknown[];context?:{rules:string[];memories:Memory[];prior_results:{task_id:string;role:Role|null;data:unknown}[];simulation:boolean;attempt:number;scenario:string}};
 export type ModelResult={status:'ok'|'partial'|'error';data:unknown;evidence_ids:string[];gaps:string[];errors:string[];revision:number;usage:{input_tokens:number;output_tokens:number};model:string};
 export interface ResearchModelAdapter{execute(task:ModelTask,signal:AbortSignal):Promise<ModelResult>}
 export const roleRules:Record<Role,string>={coordinator:'根据原始证据形成有条件判断；证据缺失必须保留未知项；不同角色同意不是独立证据。',needs:'保留人群、场景、问题、影响、替代；不能从抱怨推断付费。',commercial:'区分购买者与使用者；不得编造市场规模、实时价格与真实交易。',verifier:'先独立核查原始证据，再阅读其他角色结论；指出反例、断章取义与引用缺口。'};

@@ -24,16 +24,28 @@ export class AgentStepFailure extends Error{spend:AgentSpend;constructor(message
 
 const UNSEARCHABLE=/payment|invoice|billing|\bbills?\b|interview|geographic|representativeness|付款|付费|账单|访谈|地域代表性/i;
 
-export function parseToolCalls(raw:unknown):AgentToolCall[]{
-  if(!Array.isArray(raw))throw new Error('INVALID_MODEL_OUTPUT');
-  if(raw.length>2)throw new Error('INVALID_MODEL_OUTPUT');
-  return raw.map(item=>{
-    if(!item||typeof item!=='object'||Array.isArray(item))throw new Error('INVALID_MODEL_OUTPUT');
+export function parseToolCalls(raw:unknown,diagnose?:(issues:string[])=>void):AgentToolCall[]{
+  function reject(path:string):never{diagnose?.([path]);throw new Error('INVALID_MODEL_OUTPUT');}
+  if(!Array.isArray(raw))reject('tool_calls:expected_array');
+  if(raw.length>2)reject('tool_calls:too_many');
+  return raw.map((item,index)=>{
+    const path='tool_calls.'+index;
+    if(!item||typeof item!=='object'||Array.isArray(item))reject(path+':expected_object');
+    if(Object.keys(item).some(k=>!['name','arguments'].includes(k)))reject(path+':unknown_fields');
     const name=(item as {name?:unknown}).name,args=(item as {arguments?:unknown}).arguments;
-    if(typeof name!=='string'||!args||typeof args!=='object'||Array.isArray(args))throw new Error('INVALID_MODEL_OUTPUT');
-    const query=(args as {query?:unknown}).query,id=(args as {id?:unknown}).id;
-    if(typeof query!=='string'||typeof id!=='string'||query.length>160||id.length>12)throw new Error('INVALID_MODEL_OUTPUT');
-    return {name,arguments:{query,id}};
+    if(typeof name!=='string'||!name.length||name.length>100)reject(path+'.name:invalid');
+    if(!args||typeof args!=='object'||Array.isArray(args))reject(path+'.arguments:expected_object');
+    if(Object.keys(args).some(k=>!['query','id'].includes(k)))reject(path+'.arguments:unknown_fields');
+    const supplied=args as {query?:unknown;id?:unknown},query=supplied.query,id=supplied.id;
+    const known=AGENT_TOOLS.includes(name as AgentToolName),read=name==='hacker_news_read';
+    if((!known||!read)&&typeof query!=='string')reject(path+'.arguments.query:required');
+    if((!known||read)&&typeof id!=='string')reject(path+'.arguments.id:required');
+    if(query!==undefined&&(typeof query!=='string'||query.length>160))reject(path+'.arguments.query:invalid');
+    if(id!==undefined&&(typeof id!=='string'||id.length>12))reject(path+'.arguments.id:invalid');
+    if(known&&!read&&!(query as string).trim())reject(path+'.arguments.query:empty');
+    // Only irrelevant, absent parameters are represented as empty internally.
+    // Missing query/ID needed by the selected tool remains a hard failure.
+    return {name,arguments:{query:query as string||'',id:id as string||''}};
   });
 }
 
@@ -48,7 +60,7 @@ type LoopInput={
   beforeModel?:()=>Promise<void>;
   beforeTool?:(name:string,requests:number)=>Promise<void>;
   retrieve?:(evidence:Evidence[],query:string)=>Promise<RetrievalHit[]>;
-  budget:{modelLimit:2|4;modelAttempts:number;sourceLimit:number;sourceAttempts:number;searchLimit:number;searches:number;paidBudget:0};
+  budget:{modelLimit:1|2|4;modelAttempts:number;sourceLimit:number;sourceAttempts:number;searchLimit:number;searches:number;paidBudget:0};
 };
 
 function emptySpend():AgentSpend{return {extraModelCalls:0,sourceAttempts:0,searches:0,trace:[],collections:[],retrieval:[],fetchedQueries:[]};}

@@ -15,10 +15,11 @@
     "new_actual_model_calls": 0
   },
   "pending": [
-    "Cursor machine dependency install/start/browser verification",
-    "review_v3 actual provider output",
-    "complete real four-role workflow",
-    "human semantic review and comparison"
+    "browser visual/mobile interaction review",
+    "bounded real full four-role workflow",
+    "bounded real tool-loop and conclusion-audit verification",
+    "V2EX source access or authorized originals",
+    "real semantic retrieval and human quality review"
   ],
   "runtime": {
     "tested_node": "24.19.0",
@@ -68,5 +69,23 @@
     "real_embedding_calls": 0,
     "deployed": false,
     "details": "source/docs/STAGE_OUTCOMES_20261014.md"
+  },
+  "latest_update_date_beijing": "2026-10-14",
+  "update_20261014_conclusion_and_domestic": {
+    "base_branch_head": "88a9c1e7c5fcc29a4186cbf77222b326150d5855",
+    "offline_checks": 338,
+    "new_checks": 41,
+    "type_check": "passed",
+    "production_build": "passed",
+    "new_real_model_requests": 4,
+    "new_real_source_requests": 1,
+    "fixed_originals_single_role": "completed with one request and draft saved",
+    "v2ex_live": "HTTP403; partial; zero model requests",
+    "full_four_role": "pending",
+    "real_tool_loop": "pending",
+    "browser_visual_qa": "not performed; approved browser skill unavailable",
+    "deployed": true,
+    "site_source_commit_tested": "646c7a80e793029d1269c9925659391fc1317682",
+    "details": "source/docs/CONCLUSION_UI_AND_SOURCES_20261014.md"
   }
 }

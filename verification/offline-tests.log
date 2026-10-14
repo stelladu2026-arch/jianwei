@@ -307,3 +307,48 @@ PASS standalone unfinished or rejected task output stays out of its stage report
 PASS completed workflow record and independent duplicate do not duplicate the main report
 PASS stage UI renders actionable download, original snapshots and safe external text
 {"stage_outcome_checks":25,"actual_model_calls":0,"scope":"real SQLite/routes and React static rendering; synthetic HTTP; no live Qwen or market accuracy claims"}
+PASS tool schemas require only parameters used by each tool
+PASS query tools normalize only absent irrelevant IDs and preserve real query
+PASS old valid tool objects stay valid without adding searches
+PASS missing required values remain rejected with field paths, never invented
+PASS null, JSON strings and unknown argument fields are not silently coerced
+PASS fact generation schema requires source selection ID instead of free text
+PASS same fact without own supports anchor is still rejected
+PASS no source choices prevents schema-generated facts while hypotheses remain available
+PASS nonreview facts use source IDs and reject free-text fact generation
+PASS provider adapter accepts canonical minimal tool parameters in one HTTP call
+PASS provider rejection stores precise diagnostics and usage but no raw invalid value
+PASS UI diagnostics distinguish paraphrased facts and required tool parameters
+PASS fixed-source execution forbids tool requests before accepting a provisional body
+{"model_contract_fix_checks":13,"actual_model_calls":0,"scope":"provider schemas, fixed adapters and strict literal validation; no true Qwen quality claim"}
+PASS source ID selection generates exact fact and own quote without model transcription
+PASS new selected facts cannot inject claim, refs or invented quote IDs
+PASS selected facts reject a raw conflicting anchor instead of overwriting it
+PASS fact check still needs exact target coverage and supports judgment
+PASS legacy free-text paraphrases remain rejected and are never turned into selected facts
+PASS nonreview selected fact adds own citation but preserves bad existing citation rejection
+PASS source catalog is deterministic and cannot include a disallowed evidence ID
+PASS real adapter new protocol expands selected facts in exactly one request
+PASS provider requires format marker and does not advertise the failed optional version
+PASS selected facts reserve citation capacity without loosening legacy four-citation validation
+{"source_fact_checks":10,"actual_model_calls":0,"scope":"explicit source-quote/1 protocol; legacy rejection stays strict; synthetic HTTP only"}
+PASS conclusion leads with recommendation and next action before expandable originals
+PASS incomplete analysis never invents a decision and keeps actionable next step
+PASS historical summary leads with reverification instead of old investment advice
+PASS simulation and human confirmation do not imply completed market validation
+PASS missing references remain explicitly unavailable and source count deduplicates
+PASS completed summary with missing or rejected input snapshots cannot expose injected proposal
+PASS fresh automatic drafts are not mislabeled historical by their confirmation reminder
+{"conclusion_ui_checks":7,"actual_model_calls":0,"scope":"React static rendering and saved-input rejection; no browser visual QA"}
+PASS public node feed uses one fixed anonymous request and records original provenance
+PASS invalid node and zero cap cannot request arbitrary hosts or sources
+PASS duplicate, empty, external and invalid dates are excluded without inventing text
+PASS feed sample caps saved originals at six without pagination or comment requests
+PASS redirect, rate limit and malformed source fail once with safe diagnostics
+PASS domestic plan comes from selected node with one model limit and no supplement
+PASS actual SQLite routes complete domestic collection, analysis, local checks and draft saving with bounded fixtures
+PASS empty domestic feed stops before model and offers usable source failure guidance
+PASS domestic model cannot start a hidden HN tool loop or append a second request
+PASS one source reservation guard matches collection budget without crediting failed requests
+PASS Chinese community coverage cannot be labeled verified domestic customer demand
+{"domestic_source_checks":11,"actual_model_calls":0,"actual_v2ex_requests":0,"scope":"synthetic public feed/HTTP and actual SQLite routes; no live source or model completion claim"}

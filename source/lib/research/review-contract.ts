@@ -4,6 +4,11 @@ export const judgments=['supports','partial','insufficient','contradicts'] as co
 export const judgmentLabels={supports:'支持',partial:'部分支持',insufficient:'证据不足',contradicts:'存在矛盾'};
 export const targetLabels:Record<string,string>={'proposal:problem':'机会问题','proposal:conclusion':'机会判断'};
 export function describeReviewIssue(issue:string){
+  if(issue.startsWith('fact_format'))return '模型缺少或使用了未知的原文编号格式标记，结果未接受。旧失败记录保留；核对原文后可按新轮预算重新研究。';
+  if(issue.includes('source_selection')||issue.includes('quote_id'))return '原文编号或确定性引用不符合约定。编号只能选择本次输入，单角色最多两条笔记及两条模型引用，应用会补齐编号对应的原文引用。结果未接受。';
+  if(issue==='data.citations:too_big')return '引用条数超过四条上限，结果未接受。新格式已为原文编号生成的引用预留空间；旧失败记录不会改写。';
+  if(issue.startsWith('tool_calls'))return '工具请求参数未通过检查。检索/摘录只需 query，读取主题只需 id；必需参数缺失、错误类型或未知字段会停止。字段位置见详情，已有成果可导出。';
+  if(issue.endsWith(':fact_requires_literal_source'))return '模型把概括或推断标成了资料事实，或没有附该主张自己的支持引文。资料事实必须逐字选择本轮原文，并引用同一片段；解释和概括应标为假设。该结果未接受。';
   const anchor=issue.match(/^data\.checks\.(\d+)\.anchors:required_for_judgment$/);
   if(anchor)return `第 ${Number(anchor[1])+1} 个核查条目给出了支持、部分支持或存在矛盾的判断，却没有附原文片段。该结果已拒绝；重新生成时须附引用，无法找到依据就应标为证据不足。`;
   const quote=issue.match(/^data\.checks\.(\d+)\.anchors\.(\d+)\.quote:not_in_input$/);

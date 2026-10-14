@@ -32,4 +32,8 @@ await import('./review-schema-smoke.mjs');
 await import('./capability-gaps-smoke.mjs');
 await import('./conclusion-audit-smoke.mjs');
 await import('./stage-outcomes-smoke.mjs');
+await import('./model-contract-fixes-smoke.mjs');
+await import('./source-facts-smoke.mjs');
+await import('./conclusion-ui-smoke.mjs');
+await import('./domestic-source-smoke.mjs');
 sqlite.close();

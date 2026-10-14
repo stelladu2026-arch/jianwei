@@ -4,7 +4,9 @@ import {createRequire} from 'node:module';
 import {responseSchema} from '../lib/research/qwen-model.ts';
 import {locateChecks} from '../lib/research/collaboration.ts';
 import {validateResult} from '../lib/research/execution.ts';
-import {decodeReviewWire} from '../lib/research/review-wire.ts';
+import {decodeReviewWire as decodeLegacy} from '../lib/research/review-wire.ts';
+import {expandSourceFacts} from '../lib/research/source-facts.ts';
+function decodeReviewWire(wire,role){return decodeLegacy(expandSourceFacts(wire,[],true),role)}
 import {describeReviewIssue} from '../lib/research/review-contract.ts';
 import {planningQueries} from '../lib/research/workflow.ts';
 const planningFixture=JSON.parse(readFileSync(new URL('./fixtures/planning-wire.json',import.meta.url),'utf8'));
@@ -20,7 +22,7 @@ function fixture(role,judgment,anchors){
     data.disagreements=[];
     for(const target of ['proposal:problem','proposal:conclusion'])data.checks.push({target,judgment:'insufficient',reason:'Synthetic missing evidence.',anchors:[]});
   }
-  return {review_format:'claim-anchors/1',status:'partial',data,gaps:[]};
+  return {fact_format:'source-quote/1',review_format:'claim-anchors/1',status:'partial',data,gaps:[]};
 }
 for(const role of ['needs','commercial','verifier','coordinator']){
   const schema=ajv.compile(responseSchema(role,['E1'],true,undefined,[{id:'E1',text:quote}]));

@@ -21,7 +21,7 @@ export async function publicJSON(url:string,signal?:AbortSignal){
   if(!response.ok)throw new Error('SOURCE_'+response.status);
   return response.json() as Promise<any>;
 }
-export type Collection={query:string;evidence:Evidence[];usableIds:string[];requests:number;failed:number;skipped:number;limited:boolean;since:number|null};
+export type Collection={query:string;evidence:Evidence[];usableIds:string[];requests:number;failed:number;skipped:number;limited:boolean;since:number|null;sourceErrors?:string[]};
 function blank(query:string,since:number|null):Collection{return {query,evidence:[],usableIds:[],requests:0,failed:0,skipped:0,limited:false,since};}
 async function anonAuthor(name:string){if(!name)return '';const hash=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(name));return Array.from(new Uint8Array(hash)).slice(0,6).map(x=>x.toString(16).padStart(2,'0')).join('');}
 // Search and source items are fixed public destinations. Links inside posts or articles are never fetched.
