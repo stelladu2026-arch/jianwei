@@ -22,6 +22,7 @@ export async function POST(req:Request,ctx:{params:Promise<{id:string}>}){try{
   if(b.adapter==='unconfigured')throw new Error('真实模型未配置，请使用 Qwen 会话接入或模拟模式。');
   if(activeWorkflow(p))throw new Error('请先完成或取消一键研究，再单独执行模型或评测。');
   if(b.action==='start'){
+    if(p.workflow?.conclusionAudit&&['ready','running'].includes(p.workflow.conclusionAudit.status))throw new Error('请先完成或结束结论复核，再开始新执行。');
     if(b.adapter==='qwen'){qwenCredentials(b.freeTierOnlyConfirmed);if(b.scenario!=='normal')throw new Error('真实模型不支持模拟故障场景。');if((b.limit??(b.mode==='single'?1:4))>QWEN_MAX_ATTEMPTS)throw new Error('首轮免费额度测试最多四次请求，建议单角色一次。');}
     const run=makeRun(p,b.mode,b.scenario,b.limit??(b.adapter==='qwen'?(b.mode==='single'?1:4):undefined));if(b.adapter==='qwen'){run.adapter='qwen';run.model=QWEN_MODEL;run.simulation=false;run.paidBudget=0;run.freeTierOnlyConfirmed=true;}if(p.run)p.runHistory=[p.run,...(p.runHistory||[])].slice(0,3);p.run=run;log(p,b.adapter==='qwen'?'创建 Qwen 研究执行；付费预算 ¥0，尚未调用模型；用完即停由用户确认':'创建模拟研究执行；没有真实模型调用');
   }else if(b.action==='evaluate'){

@@ -244,3 +244,40 @@ PASS completed real delivery creates one idempotent draft; simulation or failure
 PASS real route persists both model receipts and budget reservations; duplicate advance cannot call again
 PASS automatic draft blocks project completion until explicit manual save confirms it
 {"capability_gap_checks":11,"actual_model_calls":0,"actual_embedding_calls":0,"scope":"synthetic vectors and provider HTTP; not live semantic quality or real tool-loop validation"}
+PASS original four-role loop stays blind on first verifier and capped at four calls
+PASS second pass requires explicit separate confirmation before creating checkpoint
+PASS creation freezes all ten claims for preview without generation
+PASS duplicate creation is idempotent with stale client version
+PASS missing secret blocks before spending audit budget
+PASS active audit blocks competing run start
+PASS active audit blocks competing workflow start
+PASS second verifier reads predecessors and completes one separate request
+PASS audit preserves prior outputs, human review, report, opportunity drafts and memory
+PASS provider schema enforces exact targets, own-reference support and source-bound quotes
+PASS replayed completed advance does not call again
+PASS completed audit cannot reset via start
+PASS completed audit cannot reset via advance
+PASS audit missing fails once, preserves receipt, rejects output and cannot retry
+PASS audit duplicate fails once, preserves receipt, rejects output and cannot retry
+PASS audit unknown fails once, preserves receipt, rejects output and cannot retry
+PASS audit anchorless fails once, preserves receipt, rejects output and cannot retry
+PASS audit foreign fails once, preserves receipt, rejects output and cannot retry
+PASS audit quote fails once, preserves receipt, rejects output and cannot retry
+PASS audit crossquote fails once, preserves receipt, rejects output and cannot retry
+PASS audit other_support fails once, preserves receipt, rejects output and cannot retry
+PASS audit tool fails once, preserves receipt, rejects output and cannot retry
+PASS audit truncated fails once, preserves receipt, rejects output and cannot retry
+PASS audit quota fails once, preserves receipt, rejects output and cannot retry
+PASS audit auth fails once, preserves receipt, rejects output and cannot retry
+PASS evidence editing marks audit stale and prevents any HTTP
+PASS source hash catches changed predecessor even without version invalidation
+PASS oversized complete claim input fails before spending or silently truncating
+PASS concurrent cancel wins and rejects late audit output
+PASS concurrent pause wins and rejects late audit output
+PASS concurrent archive wins and rejects late audit output
+PASS concurrent removeEvidence wins and rejects late audit output
+PASS unexpired audit cannot be recovered and keeps request count
+PASS expired recovery preserves unknown use and cannot replay request
+PASS explicit fresh workflow archives prior audit and preserves cumulative spend
+PASS single, simulation, incomplete, outdated and cross-site audits cannot start
+{"conclusion_audit_checks":36,"actual_model_calls":0,"scope":"real routes and SQLite; synthetic HTTP, no live Qwen or semantic quality measurement"}
