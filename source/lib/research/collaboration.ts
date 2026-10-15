@@ -1,3 +1,4 @@
+import {checkAssessmentLabel} from './review-contract';
 import {z} from 'zod';
 import type {Evidence,Project} from './domain';
 import type {Memory} from './governance';
@@ -6,7 +7,7 @@ import {buildTask,makeRun,reserve,validateResult,type Analysis,type Run,type Pro
 import type {ModelTask,ModelResult,Role} from './model-port';
 import type {ResearchWorkflow} from './workflow';
 import {sourceCoverage} from './source-coverage';
-export const REVIEW_VERSION='evidence-review/5';
+export const REVIEW_VERSION='evidence-review/7';
 import {judgments,judgmentLabels,type ClaimCheck,type LocatedCheck} from './review-contract';
 export {judgments,judgmentLabels,targetLabels} from './review-contract';
 export type {ClaimCheck,LocatedCheck,Disagreement} from './review-contract';
@@ -92,7 +93,7 @@ export function comparisonMetrics(w:ResearchWorkflow){
 export function collaborationReport(w:ResearchWorkflow){
   if(w.mode!=='four')return '';
   const roles=w.analysisRun?.tasks.filter(t=>t.role)||[];
-  const checks=w.records.flatMap(r=>r.supportChecks||[]).map(c=>`- ${c.claim}\n  模型判断：${judgmentLabels[c.judgment]}；${c.reason}\n${c.anchors.map(a=>`  [${a.evidence_id}] “${a.quote}”（片段位置 ${a.start}–${a.end}）`).join('\n')}`).join('\n');
+  const checks=w.records.flatMap(r=>r.supportChecks||[]).map(c=>`- ${c.claim}\n  ${checkAssessmentLabel(c)}；${c.reason}\n${c.anchors.map(a=>`  [${a.evidence_id}] “${a.quote}”（片段位置 ${a.start}–${a.end}）`).join('\n')}`).join('\n');
   const disagreements=roles.find(t=>t.role==='coordinator')?.output?.data.disagreements||[];
-  return `\n\n## 四角色原文支持度核查\n**片段已定位；支持度由模型判断，未经人工确认。**\n${checks}\n\n## 模型提出的分歧与复核建议\n${disagreements.map(d=>`- ${d.topic}：${d.reason}；处理：${d.handling}；角色 ${d.roles.join(' / ')}；引用 ${d.refs.join(' / ')}`).join('\n')||'模型未提出显式角色分歧，不代表判断已被证实。'}\n\n## 单／多角色对照\n${w.comparison?.reason}\n基线 ${w.comparison?.baseline?.runId||'无'}；资料指纹 ${w.frozen?.fingerprint}\n结构与用量计数（不等于准确率）：\n${JSON.stringify(comparisonMetrics(w),null,2)}\n${w.comparison?.human?'人工评审：'+JSON.stringify(w.comparison.human,null,2):'人工评审未完成；不自动宣称多角色更好。'}\n`;
+  return `\n\n## 四角色原文支持度核查\n**资料事实仅记录原句及定位证明；其他主张支持度由模型判断，均未经独立核实或人工确认。**\n${checks}\n\n## 模型提出的分歧与复核建议\n${disagreements.map(d=>`- ${d.topic}：${d.reason}；处理：${d.handling}；角色 ${d.roles.join(' / ')}；引用 ${d.refs.join(' / ')}`).join('\n')||'模型未提出显式角色分歧，不代表判断已被证实。'}\n\n## 单／多角色对照\n${w.comparison?.reason}\n基线 ${w.comparison?.baseline?.runId||'无'}；资料指纹 ${w.frozen?.fingerprint}\n结构与用量计数（不等于准确率）：\n${JSON.stringify(comparisonMetrics(w),null,2)}\n${w.comparison?.human?'人工评审：'+JSON.stringify(w.comparison.human,null,2):'人工评审未完成；不自动宣称多角色更好。'}\n`;
 }

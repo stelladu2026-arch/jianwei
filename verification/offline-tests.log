@@ -253,7 +253,7 @@ PASS active audit blocks competing run start
 PASS active audit blocks competing workflow start
 PASS second verifier reads predecessors and completes one separate request
 PASS audit preserves prior outputs, human review, report, opportunity drafts and memory
-PASS provider schema enforces exact targets, own-reference support and source-bound quotes
+PASS provider schema constrains count and sources while runtime enforces unique target coverage
 PASS replayed completed advance does not call again
 PASS completed audit cannot reset via start
 PASS completed audit cannot reset via advance
@@ -352,3 +352,23 @@ PASS domestic model cannot start a hidden HN tool loop or append a second reques
 PASS one source reservation guard matches collection budget without crediting failed requests
 PASS Chinese community coverage cannot be labeled verified domestic customer demand
 {"domestic_source_checks":11,"actual_model_calls":0,"actual_v2ex_requests":0,"scope":"synthetic public feed/HTTP and actual SQLite routes; no live source or model completion claim"}
+PASS selected factual note has no second model assessment and owns exact literal proof
+PASS nonfactual assessments remain attached to their own claim after note reordering
+PASS two factual statements generate exactly two local positioning checks
+PASS coordinator problem and conclusion cannot borrow each other's source mapping
+PASS unsupported judgments, missing checks and duplicate selections are rejected
+PASS unknown source IDs and invented text cannot enter a selected statement
+PASS raw global checks, anchors, targets and unknown formats are never overwritten
+PASS role permissions, fact format and foreign disagreement refs stay strict
+PASS empty evidence only permits unverified notes and never generates factual selections
+PASS old selected-fact failure stays rejected through the original decoder
+PASS provider receives compact schema and one immutable quote catalog in one request
+PASS controlled reasons are bounded and cannot be replaced with unvalidated free text
+PASS real SQLite route completes all four roles and saves exactly one candidate using new wire
+PASS new quote protocol preserves first verifier blindness and coordinator prior context
+{"selection_review_checks":14,"actual_model_calls":0,"scope":"explicit claim-selections/2, strict legacy failures, provider fixtures and full four-role SQLite routes; no live semantics claim"}
+PASS every active role, plan, fixed-source and audit schema excludes provider-rejected keywords
+PASS compatibility inspection traverses actual schema positions and ignores field names and examples
+PASS local duplicate-source checks remain strict after removing unsupported provider keyword
+PASS provider parameter diagnostics retain safe keyword vocabulary without private message
+{"qwen_schema_checks":4,"actual_model_calls":0,"scope":"official supported-keyword subset, strict runtime uniqueness and safe fake HTTP diagnostics"}

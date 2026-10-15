@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {createRequire} from 'node:module';
-import {responseSchema} from '../lib/research/qwen-model.ts';
+import {legacyResponseSchema as responseSchema} from '../lib/research/qwen-model.ts';
 import {locateChecks} from '../lib/research/collaboration.ts';
 import {validateResult} from '../lib/research/execution.ts';
 import {decodeReviewWire as decodeLegacy} from '../lib/research/review-wire.ts';

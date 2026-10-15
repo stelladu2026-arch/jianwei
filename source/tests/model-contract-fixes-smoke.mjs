@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {createRequire} from 'node:module';
 import {parseToolCalls,AgentToolCalls} from '../lib/research/agent-loop.ts';
-import {responseSchema,toolCallSchema,QwenModel,quoteChoices} from '../lib/research/qwen-model.ts';
+import {legacyResponseSchema as responseSchema,toolCallSchema,QwenModel,quoteChoices} from '../lib/research/qwen-model.ts';
 import {validateResult} from '../lib/research/execution.ts';
 import {decodeReviewWire} from '../lib/research/review-wire.ts';
 import {locateChecks} from '../lib/research/collaboration.ts';

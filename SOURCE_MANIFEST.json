@@ -70,7 +70,7 @@
     "deployed": false,
     "details": "source/docs/STAGE_OUTCOMES_20261014.md"
   },
-  "latest_update_date_beijing": "2026-10-14",
+  "latest_update_date_beijing": "2026-10-15",
   "update_20261014_conclusion_and_domestic": {
     "base_branch_head": "88a9c1e7c5fcc29a4186cbf77222b326150d5855",
     "offline_checks": 338,
@@ -87,5 +87,34 @@
     "deployed": true,
     "site_source_commit_tested": "646c7a80e793029d1269c9925659391fc1317682",
     "details": "source/docs/CONCLUSION_UI_AND_SOURCES_20261014.md"
+  },
+  "update_20261015_four_role": {
+    "base_branch_head": "574ed211770ef692b9b8f96bc721cdae2a75324f",
+    "offline_checks": 356,
+    "new_checks": 18,
+    "type_check": "passed",
+    "production_build": "passed",
+    "new_real_request_attempts": 6,
+    "known_usage_receipts": 5,
+    "missing_usage_receipts": 1,
+    "real_role_states": {
+      "needs": "done",
+      "commercial": "done",
+      "verifier": "done",
+      "coordinator": "failed_reason_too_big"
+    },
+    "final_wire": "claim-selections/2",
+    "final_wire_live": "pending",
+    "full_real_four_role": "not verified",
+    "source_requests": 0,
+    "embedding_requests": 0,
+    "details": "source/docs/FOUR_ROLE_SELECTIONS_20261015.md",
+    "deployed": true
+  },
+  "latest_deployment": {
+    "status": "succeeded",
+    "url": "https://opportunity-research-lab.stelladu2026.chatgpt.site",
+    "id": "appgdep_6ad060b30574819195deb7f9a9f8c261",
+    "source_commit": "4a0496e7ffb6ff3d99428b13b90ecb3e1b15d6ca"
   }
 }

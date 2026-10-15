@@ -36,4 +36,6 @@ await import('./model-contract-fixes-smoke.mjs');
 await import('./source-facts-smoke.mjs');
 await import('./conclusion-ui-smoke.mjs');
 await import('./domestic-source-smoke.mjs');
+await import('./review-selections-smoke.mjs');
+await import('./qwen-schema-smoke.mjs');
 sqlite.close();

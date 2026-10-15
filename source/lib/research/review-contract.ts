@@ -1,9 +1,17 @@
 import {z} from 'zod';
 import type {Role} from './model-port';
+export const LITERAL_STATEMENT_REASON='该项仅复述本轮输入的原文片段；可定位不代表来源、市场或交易已独立核实。';
+export function checkAssessmentLabel(c:{judgment:typeof judgments[number];reason:string;claim?:string;anchors?:{quote:string}[]}){return c.reason===LITERAL_STATEMENT_REASON&&c.judgment==='supports'&&!!c.claim&&!!c.anchors?.some(a=>a.quote===c.claim)?'原文陈述已定位（未独立核实）':'模型判断：'+judgmentLabels[c.judgment]}
 export const judgments=['supports','partial','insufficient','contradicts'] as const;
 export const judgmentLabels={supports:'支持',partial:'部分支持',insufficient:'证据不足',contradicts:'存在矛盾'};
 export const targetLabels:Record<string,string>={'proposal:problem':'机会问题','proposal:conclusion':'机会判断'};
 export function describeReviewIssue(issue:string){
+  if(issue.endsWith('.reason:too_big'))return '核查说明超过长度上限，本轮结果未接受。新格式已改为选择受控原因项；旧说明不截断或修补，已有通过阶段仍可查看与导出。';
+  if(issue.endsWith(':invalid_selected_fact_check'))return '旧格式中，资料事实笔记对应的核查条目不符合约定。失败记录保留；新格式通过原文片段编号生成定位证明，可明确新轮预算后重新研究。';
+  if(issue.startsWith('provider_schema'))return '当前结构化格式含服务不支持的约束，需要更新应用格式；无需重新填写密钥，不会自动重试。';
+  if(issue.startsWith('provider.http:'))return '模型服务在生成前拒绝了请求参数，未取得用量回执；请保留本轮记录并核查应用配置。';
+  if(/^data\.notes\.\d+:invalid_union$/.test(issue))return '笔记未按当前格式填写：资料事实只需原文片段编号；假设、未知和反例需在本条笔记内附核查信息。该结果未接受。';
+  if(/^data\.proposal\.(problem_check|conclusion_check)/.test(issue))return '机会问题或机会结论缺少合规的自身核查信息；请选择本轮原文编号，依据不足时明确保留证据不足。';
   if(issue.startsWith('fact_format'))return '模型缺少或使用了未知的原文编号格式标记，结果未接受。旧失败记录保留；核对原文后可按新轮预算重新研究。';
   if(issue.includes('source_selection')||issue.includes('quote_id'))return '原文编号或确定性引用不符合约定。编号只能选择本次输入，单角色最多两条笔记及两条模型引用，应用会补齐编号对应的原文引用。结果未接受。';
   if(issue==='data.citations:too_big')return '引用条数超过四条上限，结果未接受。新格式已为原文编号生成的引用预留空间；旧失败记录不会改写。';

@@ -24,7 +24,13 @@ globalThis.fetch=async(url,init)=>{
   const refs=task.evidence_ids.slice(0,1),data={notes:[{claim:'Synthetic conditional hypothesis.',refs,kind:'hypothesis'},{claim:'Synthetic counterexample or missing payment data.',refs,kind:'counter'}]};
   if(task.role==='coordinator')data.proposal={title:'Synthetic conditional opportunity',problem:'Synthetic problem hypothesis',audience:'Fixture teams',alternative:'Existing tools',conclusion:'Synthetic conditional conclusion',decision:'evidence',payment:'none',refs,counter:'Low volume may not justify change',unknowns:'Payment, frequency and region unknown',plan:'Review originals and interview; thresholds are hypotheses'};
   if(task.review){
-    const dataBranches=body.response_format.json_schema.schema.properties.data.anyOf;assert.equal(dataBranches.length,2);assert.ok(dataBranches.every(b=>b.required.includes('checks')&&b.properties.checks.minItems===b.properties.checks.maxItems));const bound=new Map();for(const branch of dataBranches){for(const pair of branch.properties.checks.items.anyOf[0].properties.anchors.items.anyOf)bound.set(pair.properties.evidence_id.enum[0],pair.properties.quote.enum);}for(const item of task.evidence){const choices=quoteChoices([item]);if(choices.length)assert.deepEqual(bound.get(item.id),choices);else assert.equal(bound.has(item.id),false);}assert.ok([...bound.values()].every(list=>list.length&&list.every(q=>q.length>=12&&q.length<=160&&task.evidence.some(e=>e.text.includes(q)&&quoteChoices([e]).includes(q)))));
+    // The active provider wire uses source IDs and embedded checks. The
+    // legacy response fixtures below still exercise strict historical decoding.
+    assert.equal(body.response_format.json_schema.schema.properties.review_format.enum[0],'claim-selections/2');
+    const options=task.source_quote_options;assert.ok(options.length);
+    for(const item of task.evidence)assert.deepEqual(options.filter(q=>q.evidence_id===item.id).map(q=>q.quote),quoteChoices([item]));
+    assert.ok(options.every(q=>q.quote.length>=12&&q.quote.length<=160&&task.evidence.some(e=>e.id===q.evidence_id&&e.text.includes(q.quote))));
+
     data.checks=claims(data).map((c,i)=>({target:c.target,judgment:i===1?'insufficient':'partial',reason:'Synthetic model judgment, not verified truth',anchors:i===1?[]:[{evidence_id:refs[0],quote:quoteChoices(task.evidence.slice(0,1))[0]}]}));
     if(task.role==='coordinator')data.disagreements=[{topic:'Synthetic uncertainty',roles:['commercial','verifier'],reason:'Payment remains unknown',handling:'Retain gap and interview',refs}];
     if(scenario==='quote')data.checks[0].anchors[0].quote='Invented quotation absent from any source.';
