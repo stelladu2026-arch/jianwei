@@ -10,6 +10,7 @@ import {describeReviewIssue} from '@/lib/research/review-contract';
 import {errorLabels} from '@/lib/research/execution';
 import {ResearchStageOutcome} from './research-stage-outcome';
 import {ConclusionSummary} from './conclusion-summary';
+import {ChineseSourceActions} from './chinese-source-actions';
 import {completedRunSummary,workflowStageOutcome} from '@/lib/research/stage-outcomes';
 import {ConclusionAuditPanel} from './conclusion-audit';
 import {ResearchCollaboration} from './research-collaboration';
@@ -17,7 +18,7 @@ import type {HumanReview} from '@/lib/research/collaboration';
 import {workflowStages,stagesFor,workflowRetryBlockReason,workflowAdvanceBlockReason,failureDiagnostics} from '@/lib/research/workflow';
 const states={ready:'等待继续',running:'执行中',paused:'已暂停',failed:'已停止',completed:'草稿已保存',partial:'部分完成',cancelled:'已取消',stale:'依据已改变'};
 function download(text:string){const url=URL.createObjectURL(new Blob([text],{type:'text/markdown;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download='一键研究草稿.md';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
-export function ResearchWorkflowPanel({project:p,onUpdate,onBrief,onReview,onEvidence,onGovernance,onExecution,onSources,busy}:{project:Project;onUpdate:(p:Project)=>void;onBrief:()=>void;onReview:(proposal:Proposal)=>void;onEvidence:(id:string)=>void;onGovernance:()=>void;onExecution:()=>void;onSources:()=>void;busy:boolean}){
+export function ResearchWorkflowPanel({project:p,onUpdate,onBrief,onReview,onEvidence,onGovernance,onExecution,onSources,onImport,busy}:{project:Project;onUpdate:(p:Project)=>void;onBrief:()=>void;onReview:(proposal:Proposal)=>void;onEvidence:(id:string)=>void;onGovernance:()=>void;onExecution:()=>void;onSources:()=>void;onImport:()=>void;busy:boolean}){
   const [sourceProfile,setSourceProfile]=useState<SourceProfile>('public'),[sourceNode,setSourceNode]=useState<V2exNode>('programmer');
   const [mode,setMode]=useState<'single'|'four'>('single');const [supplement,setSupplement]=useState(true),[free,setFree]=useState(false),[provider,setProvider]=useState<ModelConfiguration|null>(null),[working,setWorking]=useState(false),[automatic,setAutomatic]=useState(false),[error,setError]=useState('');
   const [restartConfirmed,setRestartConfirmed]=useState(false);
@@ -44,7 +45,7 @@ export function ResearchWorkflowPanel({project:p,onUpdate,onBrief,onReview,onEvi
   const advanceReason=w?workflowAdvanceBlockReason(p,w):'';
   const localOnly=!!w&&['check','deliver'].includes(w.stage),missingOriginal=!p.evidence.some(e=>!e.excluded&&e.kind!=='synthetic'&&e.text.trim().length>=40);
   return <div className="stack auto-research">
-    <section className="panel">
+    <section className="panel" id="research-start">
       <div className="panel-heading"><div><h2>一键研究</h2><p className="subdued">选择公开来源采集线索，再分析问题、替代与反证。四角色只复核已有原文。</p></div><span className="tag neutral">Qwen3.7-Plus · {w?.mode==='four'?'四角色复核':w?.sourceProfile==='v2ex'?'V2EX 节点采样':'自动研究'}</span></div>
       {!realAllowed&&<p className="source-note"><AlertTriangle size={17}/>{p.archived?'请先恢复已归档项目。':['paused','cancelled','completed'].includes(p.status)?'请先在项目上方恢复或重新开启研究。':'请使用无虚构资料的真实项目，并先确认研究范围。'}<button className="button subtle" onClick={onBrief}>查看研究范围</button></p>}
       {auditActive&&<p className="source-note">请先在下方完成或结束结论复核，再开始新研究。</p>}
@@ -54,6 +55,7 @@ export function ResearchWorkflowPanel({project:p,onUpdate,onBrief,onReview,onEvi
         <div className="toolbar"><button className="button primary" disabled={busy||working||!realAllowed||manualActive||!provider?.ready||!free||(mode==='single'&&sourceBudgetFull)||(mode==='four'&&missingOriginal)} onClick={()=>operate('start',true)}><Play size={16}/>{working?'正在研究…':mode==='four'?'开始四角色复核':w?'重新开始一轮研究':'开始自动研究'}</button></div>
       </>}
       <p className="meta">{(canStart?mode:w?.mode)==='four'?'本轮只核查已有资料，来源与日期沿用原始记录；付款承诺和人群代表性仍需另行核查。':(canStart?sourceProfile:w?.sourceProfile)==='v2ex'?'本轮为 V2EX 中文社区订阅采样，原文日期保留；不能代表全体国内用户，公开发言不能证明实际付款。':'工具只允许 Hacker News 检索/阅读、中文维基百科摘录，以及本项目已保存资料的词面检索。付款、账单、访谈和地域代表性不会拿去搜索。这不是市场结论。'}</p>
+      {(sourceProfile==='v2ex'||w?.sourceProfile==='v2ex')&&<ChineseSourceActions existingCount={p.evidence.filter(e=>!e.excluded&&e.kind!=='synthetic'&&e.text.trim().length>=40).length} canReview={canStart&&realAllowed&&!manualActive&&!auditActive} busy={busy||working||manualActive||auditActive} onImport={onImport} onReview={()=>{setMode('four');document.getElementById('research-start')?.scrollIntoView({behavior:'smooth',block:'start'})}}/>}
       {providerError&&<p className="warning-text" role="alert">{providerError}</p>}
       {error&&<div className="error-banner" role="alert"><span>{error}</span><button onClick={()=>current().catch(e=>setError(e.message))}>刷新检查点</button><button onClick={()=>setError('')}>关闭</button></div>}
     </section>
