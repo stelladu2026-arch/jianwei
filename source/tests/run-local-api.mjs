@@ -38,4 +38,5 @@ await import('./conclusion-ui-smoke.mjs');
 await import('./domestic-source-smoke.mjs');
 await import('./review-selections-smoke.mjs');
 await import('./qwen-schema-smoke.mjs');
+await import('./workflow-budget-smoke.mjs');
 sqlite.close();

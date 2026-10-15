@@ -6,7 +6,7 @@ import {sourceCoverage} from './source-coverage';
 import type {Collection} from './collection';
 import {V2EX_NODES,isV2exNode,type SourceProfile,type V2exNode} from './domestic-sources';
 import {formatProjectRetrieval,type RetrievalHit} from './agent-loop';
-export const WORKFLOW_VERSION='opportunity-workflow/3';
+export const WORKFLOW_VERSION='opportunity-workflow/4';
 export const workflowStages={plan:'规划检索',collect:'采集公开资料',analyze:'归纳机会与反证',gap:'判断证据缺口',supplement:'补充检索',reanalyze:'复核机会判断',check:'校验引用与结构',deliver:'保存研究草稿',needs:'需求分析',commercial:'替代与商业分析',verifier:'独立反证核查',synthesis:'协调汇总与核查'};
 export function stagesFor(w?:ResearchWorkflow){const keys:WorkflowStage[]=w?.mode==='four'?['needs','commercial','verifier','synthesis','check','deliver']:w?.sourceProfile==='v2ex'?['collect','analyze','check','deliver']:['plan','collect','analyze','gap','supplement','reanalyze','check','deliver'];return Object.fromEntries(keys.map(k=>[k,workflowStages[k]]));}
 export type WorkflowStage=keyof typeof workflowStages;
@@ -92,10 +92,16 @@ export function analysisTask(p:Project,w:ResearchWorkflow,id:string){
 export function stopWithoutEvidence(p:Project,w:ResearchWorkflow){w.status='partial';w.error='NO_USABLE_EVIDENCE';w.lease=undefined;p.status='partial';w.report=`# 一键研究部分完成：${p.title}\n\n未取得足够的可分析原文，未形成产品机会判断。没有搜到资料不代表没有需求。\n\n检索词：${w.queries.map(q=>q.query).join('；')}\n来源请求尝试：${w.budget.sourceAttempts}；模型请求尝试：${w.budget.modelAttempts}\n\n${w.limitations.map(x=>'- '+x).join('\n')}\n\n下一步：调整人群或检索词，或导入有来源的访谈资料后重新研究。\n`;}
 export function workflowSourceCap(w:ResearchWorkflow){return w.sourceProfile==='v2ex'?1:10;}
 // Shared read-only guard: UI and server agree before any reservation.
+export function workflowModelCeiling(w:Pick<ResearchWorkflow,'mode'|'stage'|'budget'>){
+ // A planning tool loop cannot consume the request needed to analyze its sources.
+ return w.mode!=='four'&&['plan','gap'].includes(w.stage)?Math.max(0,w.budget.modelLimit-1):w.budget.modelLimit;
+}
+function stageBudgetBlock(w:ResearchWorkflow){return ['plan','gap'].includes(w.stage)&&w.budget.modelAttempts>=workflowModelCeiling(w)?`本轮尚余 ${w.budget.modelLimit-w.budget.modelAttempts} 次请求，已为后续分析保留；当前规划阶段不能追加。请保留成果并结束本轮，新轮需重新确认请求上限。`:'';}
 export function workflowAdvanceBlockReason(p:Project,w=p.workflow){
  if(!w)return '尚未创建一键研究。';
  if(w.status!=='ready')return '';
- if(['plan','analyze','gap','reanalyze','needs','commercial','verifier','synthesis'].includes(w.stage)&&w.budget.modelAttempts>=w.budget.modelLimit)return '本轮模型预算已用尽。请导出已有成果并结束本轮；新一轮需另行确认预算。';
+ if(['plan','analyze','gap','reanalyze','needs','commercial','verifier','synthesis'].includes(w.stage)&&w.budget.modelAttempts>=w.budget.modelLimit)return `本轮模型预算已用尽（请求次数 ${w.budget.modelAttempts} / ${w.budget.modelLimit}，包含工具后的模型调用），不代表账户免费额度耗尽。请导出已有成果并结束本轮；新一轮需另行确认请求上限。`;
+ if(w.mode!=='four'&&stageBudgetBlock(w))return stageBudgetBlock(w);
  if(['collect','supplement'].includes(w.stage)&&(w.budget.searches>=w.budget.searchLimit||p.budget.searches>=6||w.budget.sourceAttempts+workflowSourceCap(w)>w.budget.sourceLimit))return '本轮采集预算不足以执行下一阶段。请导出已有成果并结束本轮，或人工导入资料后按新预算研究。';
  return '';
 }
@@ -104,7 +110,8 @@ export function unfinishedResearch(p:Project){return !!([p.workflow,p.run].some(
 export function workflowRetryBlockReason(p:Project){
   const w=p.workflow;if(!w||w.status!=='failed')return '当前没有失败步骤。';
   if(w.mode==='four'&&!['check','deliver'].includes(w.stage))return '四角色预算仅覆盖各角色一次，失败请求仍占用预算；本轮不能追加重试。';
-  if(['plan','analyze','gap','reanalyze'].includes(w.stage)&&w.budget.modelAttempts>=w.budget.modelLimit)return '模型调用预算已用完，不能重试。';
+  if(['plan','analyze','gap','reanalyze'].includes(w.stage)&&w.budget.modelAttempts>=w.budget.modelLimit)return `本轮模型调用预算已用完（请求次数 ${w.budget.modelAttempts} / ${w.budget.modelLimit}），不能在原轮追加重试；账户余额和免费额度需在百炼核查。`;
+  if(w.mode!=='four'&&stageBudgetBlock(w))return stageBudgetBlock(w);
   if(['collect','supplement'].includes(w.stage)&&(w.budget.sourceAttempts+workflowSourceCap(w)>w.budget.sourceLimit||w.budget.searches>=w.budget.searchLimit||p.budget.searches>=6))return '采集预算已用完，不能重试。';
   if(['check','deliver'].includes(w.stage)){const t=w.analysisRun?.tasks.find(t=>t.id===w.stage);if(!t||t.attempts>=2)return '该本地步骤已达到重试上限。';}
   return '';

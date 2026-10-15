@@ -34,12 +34,12 @@ function noteSchema(claim:unknown,refs:unknown,review:boolean,evidence?:ModelTas
   return catalog.length?{anyOf:[nonfact,object({quote_id:{type:'string',enum:catalog.map(q=>q.id)},kind:{type:'string',enum:['fact']}})]}:nonfact;
 }
 
-function planningResponseSchema(purpose:'search_plan'|'gap_plan'){
+function planningResponseSchema(purpose:'search_plan'|'gap_plan',allowTools=true){
   const claim={type:'string',minLength:2,maxLength:100};
   const note=object({claim,refs:emptyIdList(),kind:{type:'string',enum:['gap']}});
   const notes={type:'array',minItems:1,maxItems:purpose==='search_plan'?2:1,items:note};
   const data=purpose==='search_plan'?object({notes,framing:object({target_user:{type:'string',minLength:1,maxLength:200},scenario:{type:'string',minLength:1,maxLength:500},questions:{type:'array',minItems:1,maxItems:3,items:{type:'string',minLength:1,maxLength:200}}})}):object({notes});
-  return object({status:{type:'string',enum:purpose==='search_plan'?['ok']:['ok','partial']},data,evidence_ids:emptyIdList(),gaps:{type:'array',maxItems:20,items:{type:'string',maxLength:2000}},tool_calls:toolCallSchema()});
+  return object({status:{type:'string',enum:purpose==='search_plan'?['ok']:['ok','partial']},data,evidence_ids:emptyIdList(),gaps:{type:'array',maxItems:20,items:{type:'string',maxLength:2000}},tool_calls:allowTools?toolCallSchema():{type:'array',maxItems:0,items:{type:'object'}}});
 }
 // Choices are literal slices of the frozen input, including original punctuation.
 // Constrain provider decoding without repairing or accepting a nonliteral quote.
@@ -75,7 +75,7 @@ export function auditResponseSchema(task:ModelTask){
 }
 const auditRules='你是结论反证复核角色。review_claims 是四个角色的完整待核查主张，包含协调角色的问题与结论；逐项核查，每个 target 恰好一次，不得漏项、重复或改写主张。对照本次冻结原文，区分支持、部分支持、证据不足和矛盾。支持或部分支持只能引用该主张原来的 refs；反证可以引用其他本次 evidence_ids，但必须逐字选该资料对应的 quote.enum。判断不是人工已验证事实；公开抱怨、兴趣和自述不证明实际付款。insufficient 可无引文，其余必须附可定位片段，reason 最多160字符。不得输出新笔记、机会卡、工具调用、记忆或实际付费认定；不把角色一致当作证据。只输出结论核查契约。';
 export function legacyResponseSchema(role:Role,allowedIds?:readonly string[],review=false,quotes?:readonly string[],evidence?:ModelTask['evidence'],purpose?:ModelTask['purpose'],allowTools=true){
-  if(purpose==='search_plan'||purpose==='gap_plan')return planningResponseSchema(purpose);
+  if(purpose==='search_plan'||purpose==='gap_plan')return planningResponseSchema(purpose,allowTools);
   const refs=allowedIds?allowedIds.length?{type:'array',items:{type:'string',enum:[...new Set(allowedIds)]},maxItems:30}:{type:'array',items:{type:'string'},maxItems:0}:{type:'array',items:{type:'string'},maxItems:30};
   // Review text limits match decodeReviewWire. Selected facts reserve space inside the unchanged four-citation limit.
   const claim=review?{type:'string',minLength:1,maxLength:2000}:string;
