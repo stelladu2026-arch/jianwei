@@ -270,3 +270,14 @@ body{background:#f8faf7}.main-shell{background:radial-gradient(ellipse at 100% 0
 .evidence-scope-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin:16px 0}.evidence-scope-metrics>div{min-width:0}.evidence-scope-metrics dt{font-size:12px;color:#5f7063;line-height:1.7}.evidence-scope-metrics dd{font-size:19px;font-weight:600;line-height:1.6;color:#34513b;margin:4px 0 0;font-variant-numeric:tabular-nums}
 .research-typesetting .evidence-scope .aligned-copy-list{font-size:13px;color:#6e5938;margin:12px 0}.evidence-scope>.meta{border-top:1px solid #e2e9db;padding-top:12px}
 @media(max-width:600px){.evidence-scope{padding:16px}.evidence-scope-metrics{gap:10px}.evidence-scope-metrics dt{font-size:12px}.evidence-scope-metrics dd{font-size:17px}}
+
+/* Card handoff keeps success, status and the next action together. */
+.opportunity-next-step{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;margin-top:24px;padding:20px;border:1px solid var(--border);border-radius:12px;background:var(--muted)}
+.opportunity-next-step.saved{border-color:#49795f;background:#edf5ef}
+.opportunity-next-step h3{margin:4px 0 8px;font-size:16px;line-height:1.5}
+.opportunity-next-step p{margin:0;line-height:1.7}
+.opportunity-next-actions{display:flex;flex-direction:column;align-items:flex-start;gap:8px;flex-shrink:0;max-width:100%}
+.opportunity-card,.validation-plan,#opportunities-heading{scroll-margin-top:88px}
+.opportunity-card:focus,.validation-plan:focus,#opportunities-heading:focus{outline:2px solid #49795f;outline-offset:5px}
+.danger-text{color:#a12e32}
+@media(max-width:760px){.opportunity-next-step{flex-direction:column;gap:16px;padding:16px}.opportunity-next-actions{width:100%}.opportunity-next-actions .button{white-space:normal;text-align:left}}
