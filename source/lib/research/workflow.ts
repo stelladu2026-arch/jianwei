@@ -7,11 +7,11 @@ import {sourceCoverage} from './source-coverage';
 import type {Collection} from './collection';
 import {V2EX_NODES,isV2exNode,type SourceProfile,type V2exNode} from './domestic-sources';
 import {formatProjectRetrieval,type RetrievalHit} from './agent-loop';
-export const WORKFLOW_VERSION='opportunity-workflow/4';
+export const WORKFLOW_VERSION='opportunity-workflow/5';
 export const workflowStages={plan:'规划检索',collect:'采集公开资料',analyze:'归纳机会与反证',gap:'判断证据缺口',supplement:'补充检索',reanalyze:'复核机会判断',check:'校验引用与结构',deliver:'保存研究草稿',needs:'需求分析',commercial:'替代与商业分析',verifier:'独立反证核查',synthesis:'协调汇总与核查'};
 export function stagesFor(w?:ResearchWorkflow){const keys:WorkflowStage[]=w?.mode==='four'?['needs','commercial','verifier','synthesis','check','deliver']:w?.sourceProfile==='v2ex'?['collect','analyze','check','deliver']:['plan','collect','analyze','gap','supplement','reanalyze','check','deliver'];return Object.fromEntries(keys.map(k=>[k,workflowStages[k]]));}
 export type WorkflowStage=keyof typeof workflowStages;
-export type WorkflowRecord={id:string;stage:WorkflowStage;kind:'model'|'source'|'local';state:'running'|'done'|'failed';started:string;elapsedMs:number;error:string;supportChecks?:LocatedCheck[];outputIssues?:string[];normalizations?:string[];usage?:ModelResult['usage'];requestId?:string;input?:ModelTask;output?:ModelResult;agentModelReceipts?:{usage?:ModelResult['usage'];requestId?:string}[];embeddingReceipt?:{requests:number;input_tokens?:number;model:string};agentRuntime?:string;agentTools?:{name:string;status:'executed'|'refused';reason:string;requests:number}[];collection?:Omit<Collection,'evidence'> & {added:number;duplicate:number;titleOnly:number}};
+export type WorkflowRecord={id:string;stage:WorkflowStage;kind:'model'|'source'|'local';state:'running'|'done'|'failed';started:string;elapsedMs:number;error:string;collectionCloseout?:{reason:'search_limit'|'project_search_limit'|'source_limit';unexecutedQueries:string[];next:'analyze'|'reanalyze'|'check'|'partial'};supportChecks?:LocatedCheck[];outputIssues?:string[];normalizations?:string[];usage?:ModelResult['usage'];requestId?:string;input?:ModelTask;output?:ModelResult;agentModelReceipts?:{usage?:ModelResult['usage'];requestId?:string}[];embeddingReceipt?:{requests:number;input_tokens?:number;model:string};agentRuntime?:string;agentTools?:{name:string;status:'executed'|'refused';reason:string;requests:number}[];collection?:Omit<Collection,'evidence'> & {added:number;duplicate:number;titleOnly:number}};
 export type ResearchWorkflow={sourceProfile?:SourceProfile;sourceNode?:V2exNode;conclusionAudit?:import('./conclusion-audit').ConclusionAudit;mode?:'single'|'four';frozen?:FrozenInput;comparison?:Comparison;conclusionReview?:ConclusionReview;id:string;version:string;revision:number;evidenceVersion:number;created:string;status:'ready'|'running'|'paused'|'failed'|'completed'|'partial'|'cancelled'|'stale';stage:WorkflowStage;allowSupplement:boolean;queries:{query:string;purpose:'initial'|'supplement';reason:string}[];collectIndex:number;usableIds:string[];freshIds:string[];limitations:string[];records:WorkflowRecord[];budget:{embeddingAttempts?:number;modelLimit:1|2|4;modelAttempts:number;sourceLimit:30;sourceAttempts:number;searchLimit:3;searches:number};lease?:{callId:string;expires:string};analysisRun?:Run;initialAnalysis?:Run;error:string;needsRetry:boolean;report:string;since:number|null;framing?:Analysis['framing'];retrieval?:RetrievalHit[];agentFetchedQueries?:string[]};
 export function activeWorkflow(p:Project){return !!p.workflow&&['ready','running','paused','failed'].includes(p.workflow.status);}
 export function failureDiagnostics(w:Pick<ResearchWorkflow,'stage'|'evidenceVersion'|'revision'|'records'|'analysisRun'>){
@@ -92,6 +92,32 @@ export function analysisTask(p:Project,w:ResearchWorkflow,id:string){
 }
 export function stopWithoutEvidence(p:Project,w:ResearchWorkflow){w.status='partial';w.error='NO_USABLE_EVIDENCE';w.lease=undefined;p.status='partial';w.report=`# 一键研究部分完成：${p.title}\n\n未取得足够的可分析原文，未形成产品机会判断。没有搜到资料不代表没有需求。\n\n检索词：${w.queries.map(q=>q.query).join('；')}\n来源请求尝试：${w.budget.sourceAttempts}；模型请求尝试：${w.budget.modelAttempts}\n\n${w.limitations.map(x=>'- '+x).join('\n')}\n\n下一步：调整人群或检索词，或导入有来源的访谈资料后重新研究。\n`;}
 export function workflowSourceCap(w:ResearchWorkflow){return w.sourceProfile==='v2ex'?1:10;}
+// Closing an exhausted collection is a local transition, never another source request.
+export function collectionCloseout(p:Project,w=p.workflow){
+ if(!w||w.mode==='four'||w.status!=='ready'||w.lease||!['collect','supplement'].includes(w.stage)||!w.queries[w.collectIndex])return null;
+ const reason=w.budget.searches>=w.budget.searchLimit?'search_limit':p.budget.searches>=6?'project_search_limit':w.budget.sourceAttempts+workflowSourceCap(w)>w.budget.sourceLimit?'source_limit':null;
+ if(!reason)return null;
+ const allowed=new Set(w.usableIds);
+ const usable=p.evidence.filter(e=>!e.excluded&&e.kind!=='synthetic'&&e.text.trim().length>=40&&!/^该(帖子|条目)只有标题/.test(e.text)&&(allowed.has(e.id)||e.kind==='imported'));
+ let next:'analyze'|'reanalyze'|'check'|'partial';
+ if(w.stage==='supplement'){
+   const accepted=w.analysisRun?.tasks.find(t=>t.role==='coordinator'&&t.status==='done'&&t.output&&t.inputSnapshot);
+   if(!accepted)return null;
+   const gap=w.records.filter(r=>r.stage==='gap'&&r.state==='done').at(-1);
+   const newInGap=!!gap?.collection?.added&&w.freshIds.some(id=>usable.some(e=>e.id===id));
+   next=newInGap?'reanalyze':'check';
+ }else next=usable.length?'analyze':'partial';
+ const unexecutedQueries=w.queries.slice(w.collectIndex).map(q=>q.query);
+ const message=`采集预算已达到上限，剩余 ${unexecutedQueries.length} 个计划检索未执行。`+(next==='analyze'||next==='reanalyze'?'已有正文保留，下一步只分析可用资料；未采集部分保留为证据缺口。':next==='check'?'未取得新的补充正文，保留已有分析并转入本地校验；不追加模型请求。':'尚无可用正文，本轮保留部分成果，不生成机会判断。');
+ return {reason:reason as 'search_limit'|'project_search_limit'|'source_limit',unexecutedQueries,next,message};
+}
+export function closeCollectionAtLimit(p:Project,w:ResearchWorkflow,callId:string){
+ const close=collectionCloseout(p,w);if(!close)return false;
+ w.records.push({id:callId,stage:w.stage,kind:'local',state:'done',started:new Date().toISOString(),elapsedMs:0,error:'',collectionCloseout:{reason:close.reason,unexecutedQueries:close.unexecutedQueries,next:close.next}});
+ w.limitations.push(close.message);w.collectIndex=w.queries.length;
+ if(close.next==='partial')stopWithoutEvidence(p,w);else w.stage=close.next;
+ return true;
+}
 // Shared read-only guard: UI and server agree before any reservation.
 export function workflowModelCeiling(w:Pick<ResearchWorkflow,'mode'|'stage'|'budget'>){
  // A planning tool loop cannot consume the request needed to analyze its sources.
@@ -103,6 +129,7 @@ export function workflowAdvanceBlockReason(p:Project,w=p.workflow){
  if(w.status!=='ready')return '';
  if(['plan','analyze','gap','reanalyze','needs','commercial','verifier','synthesis'].includes(w.stage)&&w.budget.modelAttempts>=w.budget.modelLimit)return `本轮模型预算已用尽（请求次数 ${w.budget.modelAttempts} / ${w.budget.modelLimit}，包含工具后的模型调用），不代表账户免费额度耗尽。请导出已有成果并结束本轮；新一轮需另行确认请求上限。`;
  if(w.mode!=='four'&&stageBudgetBlock(w))return stageBudgetBlock(w);
+ if(collectionCloseout(p,w))return '';
  if(['collect','supplement'].includes(w.stage)&&(w.budget.searches>=w.budget.searchLimit||p.budget.searches>=6||w.budget.sourceAttempts+workflowSourceCap(w)>w.budget.sourceLimit))return '本轮采集预算不足以执行下一阶段。请导出已有成果并结束本轮，或人工导入资料后按新预算研究。';
  return '';
 }

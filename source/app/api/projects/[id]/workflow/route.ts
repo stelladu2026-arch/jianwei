@@ -13,7 +13,7 @@ import {QWEN_TIMEOUT_MS} from '@/lib/research/provider-config';
 import {collectV2exFeed} from '@/lib/research/v2ex-feed';
 import {collectPublic,SOURCE_REQUEST_CAP,type Collection} from '@/lib/research/collection';
 import {executeModel,completeTask,failTask,localStep,reserve,errorLabels,type Analysis} from '@/lib/research/execution';
-import {makeWorkflow,workflowSourceCap,currentWorkflow,controlWorkflow,workflowAdvanceBlockReason,workflowModelCeiling,plannerTask,planningQueries,analysisTask,stopWithoutEvidence,workflowReport,workflowStages,mergeCollected,skipFetchedQueries,normalizeQuery,type WorkflowRecord} from '@/lib/research/workflow';
+import {makeWorkflow,workflowSourceCap,closeCollectionAtLimit,currentWorkflow,controlWorkflow,workflowAdvanceBlockReason,workflowModelCeiling,plannerTask,planningQueries,analysisTask,stopWithoutEvidence,workflowReport,workflowStages,mergeCollected,skipFetchedQueries,normalizeQuery,type WorkflowRecord} from '@/lib/research/workflow';
 import {acceptAgentFinal,AgentStepFailure,AgentToolCalls,AGENT_RUNTIME,runSingleRoleAgent,type AgentSpend} from '@/lib/research/agent-loop';
 import type {ModelTask,ModelResult} from '@/lib/research/model-port';
 const input=z.object({version:z.number().int().positive(),callId:z.string().uuid(),action:z.enum(['start','restart','advance','pause','resume','cancel','retry','recover','review']),mode:z.enum(['single','four']).default('single'),review:reviewInput.optional(),freeTierOnlyConfirmed:z.boolean().default(false),allowSupplement:z.boolean().default(true),sourceProfile:z.enum(['public','v2ex']).default('public'),sourceNode:z.enum(['programmer','create','qna']).default('programmer')}).strict();
@@ -44,6 +44,10 @@ export async function POST(request:Request,context:{params:Promise<{id:string}>}
   if(b.action!=='advance'){controlWorkflow(p,b.action);scanReflections(p);log(p,'一键研究：'+{pause:'暂停',resume:'恢复',cancel:'取消',retry:'准备重试',recover:'恢复过期检查点'}[b.action]);addAction(p,b.callId);return response(await save(p,b.version));}
   if(['paused','cancelled','completed'].includes(p.status)||p.archived)throw new Error('请先恢复项目研究。');
   const w=currentWorkflow(p);if(w.status!=='ready'||w.lease)throw new Error('流程未就绪，或有步骤正在执行。');
+  if(closeCollectionAtLimit(p,w,b.callId)){
+    addAction(p,b.callId);log(p,'采集预算收尾：已有资料保留，未执行检索明确记录；未调用模型或来源');
+    return response(await save(p,b.version));
+  }
   const blocked=workflowAdvanceBlockReason(p,w);if(blocked)throw new Error(blocked);
   const sourceCap=workflowSourceCap(w);
   const stage=w.stage,isModel=modelStages.has(stage),isSource=sourceStages.has(stage);let task:ModelTask|undefined,key:string|undefined;
@@ -168,6 +172,7 @@ export async function POST(request:Request,context:{params:Promise<{id:string}>}
       saveOpportunityDraft(current,r);current.run=r;cw.status='completed';cw.report=workflowReport(current,cw);current.status='awaiting_decision';
     }
   }
+  closeCollectionAtLimit(current,cw,b.callId+':collection-closeout');
   log(current,`一键研究：${workflowStages[stage]}完成${cw.status==='completed'?'；草稿已保存，等待人工判断':''}`);
   return response(await save(current,current.version));
 }catch(e){const msg=e instanceof Error?e.message:'';return NextResponse.json({error:msg==='VERSION_CONFLICT'?'项目已变更，请刷新检查点。':e instanceof z.ZodError?'一键研究参数不正确。':msg||'执行失败。'},{status:msg==='VERSION_CONFLICT'?409:400})}}

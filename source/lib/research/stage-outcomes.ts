@@ -5,7 +5,7 @@ import type {ModelTask,ModelResult,Role} from './model-port';
 import {validateResult,errorLabels,type Analysis,type Run} from './execution';
 import {assertLiteralCitations} from './evidence-citations';
 import {locateChecks,type LocatedCheck} from './collaboration';
-import {workflowStages,workflowRetryBlockReason,workflowAdvanceBlockReason,type ResearchWorkflow} from './workflow';
+import {collectionCloseout,workflowStages,workflowRetryBlockReason,workflowAdvanceBlockReason,type ResearchWorkflow} from './workflow';
 import {runRetryBlockReason} from './execution-controls';
 import {roleNames} from './governance';
 import {sourceCoverage} from './source-coverage';
@@ -69,6 +69,7 @@ export function workflowStageOutcome(p:Project,w=p.workflow):StageOutcome|null{
   if(Array.isArray(record.input?.evidence))for(const item of record.input.evidence){const e=item as Evidence;if(e&&typeof e.id==='string'&&typeof e.text==='string')builder.add(e,'input');}
   if(record.state!=='done')continue;
   if(record.input?.purpose){completed.push(workflowStages[record.stage]);continue;}
+  if(record.collectionCloseout){completed.push(workflowStages[record.stage]+'（本地收尾，部分检索未执行）');continue;}
   if(record.kind==='model')try{const group=acceptedGroup(record.id,record.stage,workflowStages[record.stage],record.input,record.output,builder.add);if(group){groups.push(group);completed.push(workflowStages[record.stage]);}else withheld++;}catch{withheld++;}
   else completed.push(workflowStages[record.stage]);
  }
@@ -84,7 +85,7 @@ export function workflowStageOutcome(p:Project,w=p.workflow):StageOutcome|null{
  outcome.summary=meaning(groups,outcome.sources,outcome.researchComplete,historical,outcome.simulation);outcome.next=commonNext(outcome);
  for(const query of w.queries)outcome.limitations.unshift(`已保存检索词：${query.query}（计划或检索记录，不是市场结论）`);
  if(w.framing)outcome.limitations.unshift(`研究问题：${w.framing.questions.join('；')}（规划问题，不是已回答结论）`);
- if(!historical&&!auditStopped){const block=workflowAdvanceBlockReason(p,w);if(block)outcome.next.unshift(block);else if(w.status==='failed'){const reason=workflowRetryBlockReason({...p,workflow:w});outcome.next.unshift(reason||'可在剩余预算内手动准备重试当前步骤；本报告本身不触发重试。');}else if(['paused','ready'].includes(w.status))outcome.next.unshift(w.status==='paused'?'先恢复项目及研究检查点，再在已确认预算内继续。':'研究尚未结束，可在当前检查点查看并手动继续。');}
+ if(!historical&&!auditStopped){const close=collectionCloseout(p,w),block=workflowAdvanceBlockReason(p,w);if(close)outcome.next.unshift(close.message+' 可在检查点结束采集，不会追加来源请求。');else if(block)outcome.next.unshift(block);else if(w.status==='failed'){const reason=workflowRetryBlockReason({...p,workflow:w});outcome.next.unshift(reason||'可在剩余预算内手动准备重试当前步骤；本报告本身不触发重试。');}else if(['paused','ready'].includes(w.status))outcome.next.unshift(w.status==='paused'?'先恢复项目及研究检查点，再在已确认预算内继续。':'研究尚未结束，可在当前检查点查看并手动继续。');}
  if(outcome.failure===errorLabels.FREE_QUOTA_EXHAUSTED)outcome.next.unshift('先核查百炼免费额度；额度恢复前不要重新调用，不会切换到付费模式。');
  outcome.report=stageOutcomeReport(outcome);return outcome;
 }

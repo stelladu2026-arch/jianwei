@@ -12,7 +12,7 @@ export function ResearchActivity({workflow:w,stages,now=Date.now()}:{workflow:Re
    const record=w.records.filter(r=>r.stage===key).at(-1),current=w.stage===key&&w.status!=='completed';
    const state=record?.state==='failed'?'failed':record?.state==='done'&&!current?'done':current&&running?'running':current?'current':w.status==='completed'?'skipped':'pending';
    const captions={done:'已完成',failed:'已停止',running:'执行中',current:w.status==='paused'?'已暂停':w.status==='stale'?'需复核':w.status==='running'?'状态待确认':['failed','cancelled','partial'].includes(w.status)?'已结束':'等待处理',skipped:'本轮未触发',pending:'尚未执行'};
-   return <li key={key} className={'research-step step-'+state} aria-current={current?'step':undefined}><span className="step-number" aria-hidden="true">{state==='done'?'✓':String(i+1).padStart(2,'0')}</span><div><strong>{label}</strong><span>{captions[state]}</span></div></li>;
+   return <li key={key} className={'research-step step-'+state} aria-current={current?'step':undefined}><span className="step-number" aria-hidden="true">{state==='done'?'✓':String(i+1).padStart(2,'0')}</span><div><strong>{label}</strong><span>{record?.collectionCloseout?'已收尾 · 部分检索未执行':captions[state]}</span></div></li>;
   })}</ol>
   {!!tools.length&&<details className="activity-tools"><summary>工具活动 · {tools.length} 条记录</summary><div className="tool-chip-list">{Object.entries(Object.groupBy(tools,t=>t.name+':'+t.status)).map(([key,rows])=><span key={key} className={'tool-chip '+(rows![0].status==='refused'?'tool-refused':'')}><span className="tool-chip-dot" aria-hidden="true"/>{names[rows![0].name]||'工具记录'} · {rows![0].status==='executed'?'已执行':'未执行'} {rows!.length} 次</span>)}</div><p className="meta">工具记录反映执行情况，未执行项及停止原因可在下方执行记录查看；不代表资料已被核实。</p></details>}
  </div>;
