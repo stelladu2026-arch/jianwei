@@ -281,3 +281,5 @@ body{background:#f8faf7}.main-shell{background:radial-gradient(ellipse at 100% 0
 .opportunity-card:focus,.validation-plan:focus,#opportunities-heading:focus{outline:2px solid #49795f;outline-offset:5px}
 .danger-text{color:#a12e32}
 @media(max-width:760px){.opportunity-next-step{flex-direction:column;gap:16px;padding:16px}.opportunity-next-actions{width:100%}.opportunity-next-actions .button{white-space:normal;text-align:left}}
+
+.existing-analysis-recovery{margin:24px 0;padding:20px;border:1px solid #b9cbbd;border-radius:12px;background:#f1f6f2}.existing-analysis-recovery .workflow-confirm{margin:16px 0}.existing-analysis-recovery h3{font-size:17px}

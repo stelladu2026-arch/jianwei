@@ -12,6 +12,7 @@ export function describeReviewIssue(issue:string){
   if(issue.startsWith('provider.http:'))return '模型服务在生成前拒绝了请求参数，未取得用量回执；请保留本轮记录并核查应用配置。';
   if(/^data\.notes\.\d+:invalid_union$/.test(issue))return '笔记未按当前格式填写：资料事实只需原文片段编号；假设、未知和反例需在本条笔记内附核查信息。该结果未接受。';
   if(/^data\.proposal\.(problem_check|conclusion_check)/.test(issue))return '机会问题或机会结论缺少合规的自身核查信息；请选择本轮原文编号，依据不足时明确保留证据不足。';
+  if(issue.startsWith('citation_format')||issue.startsWith('data.citation_quote_ids')||issue==='data.citations:forbidden_in_selection_format')return '引文编号未通过检查：只能选择本次输入的原文片段，且对应资料必须已被该判断引用；不能混入抄写引文、未知编号或重复编号。结果未接受，已有原文保留。';
   if(issue.startsWith('fact_format'))return '模型缺少或使用了未知的原文编号格式标记，结果未接受。旧失败记录保留；核对原文后可按新轮预算重新研究。';
   if(issue.includes('source_selection')||issue.includes('quote_id'))return '原文编号或确定性引用不符合约定。编号只能选择本次输入，单角色最多两条笔记及两条模型引用，应用会补齐编号对应的原文引用。结果未接受。';
   if(issue==='data.citations:too_big')return '引用条数超过四条上限，结果未接受。新格式已为原文编号生成的引用预留空间；旧失败记录不会改写。';

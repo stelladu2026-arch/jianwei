@@ -44,4 +44,5 @@ await import('./research-activity-ui-smoke.mjs');
 await import('./collection-closeout-smoke.mjs');
 await import('./evidence-scope-smoke.mjs');
 await import('./opportunity-lifecycle-smoke.mjs');
+await import('./citation-recovery-smoke.mjs');
 sqlite.close();

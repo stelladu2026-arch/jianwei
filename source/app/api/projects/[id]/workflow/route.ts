@@ -13,10 +13,10 @@ import {QWEN_TIMEOUT_MS} from '@/lib/research/provider-config';
 import {collectV2exFeed} from '@/lib/research/v2ex-feed';
 import {collectPublic,SOURCE_REQUEST_CAP,type Collection} from '@/lib/research/collection';
 import {executeModel,completeTask,failTask,localStep,reserve,errorLabels,type Analysis} from '@/lib/research/execution';
-import {makeWorkflow,workflowSourceCap,closeCollectionAtLimit,currentWorkflow,controlWorkflow,workflowAdvanceBlockReason,workflowModelCeiling,plannerTask,planningQueries,analysisTask,stopWithoutEvidence,workflowReport,workflowStages,mergeCollected,skipFetchedQueries,normalizeQuery,type WorkflowRecord} from '@/lib/research/workflow';
+import {restartExistingAnalysis,makeWorkflow,workflowSourceCap,closeCollectionAtLimit,currentWorkflow,controlWorkflow,workflowAdvanceBlockReason,workflowModelCeiling,plannerTask,planningQueries,analysisTask,stopWithoutEvidence,workflowReport,workflowStages,mergeCollected,skipFetchedQueries,normalizeQuery,type WorkflowRecord} from '@/lib/research/workflow';
 import {acceptAgentFinal,AgentStepFailure,AgentToolCalls,AGENT_RUNTIME,runSingleRoleAgent,type AgentSpend} from '@/lib/research/agent-loop';
 import type {ModelTask,ModelResult} from '@/lib/research/model-port';
-const input=z.object({version:z.number().int().positive(),callId:z.string().uuid(),action:z.enum(['start','restart','advance','pause','resume','cancel','retry','recover','review']),mode:z.enum(['single','four']).default('single'),review:reviewInput.optional(),freeTierOnlyConfirmed:z.boolean().default(false),allowSupplement:z.boolean().default(true),sourceProfile:z.enum(['public','v2ex']).default('public'),sourceNode:z.enum(['programmer','create','qna']).default('programmer')}).strict();
+const input=z.object({version:z.number().int().positive(),callId:z.string().uuid(),action:z.enum(['start','restart','analyze-existing','advance','pause','resume','cancel','retry','recover','review']),mode:z.enum(['single','four']).default('single'),review:reviewInput.optional(),freeTierOnlyConfirmed:z.boolean().default(false),allowSupplement:z.boolean().default(true),sourceProfile:z.enum(['public','v2ex']).default('public'),sourceNode:z.enum(['programmer','create','qna']).default('programmer')}).strict();
 const response=(p:Project)=>NextResponse.json({project:p});
 const modelStages=new Set(['plan','analyze','gap','reanalyze','needs','commercial','verifier','synthesis']);
 const sourceStages=new Set(['collect','supplement']);
@@ -28,6 +28,13 @@ export async function POST(request:Request,context:{params:Promise<{id:string}>}
   const b=input.parse(await request.json()),{id}=await context.params,p=await get(id);if(!p)return NextResponse.json({error:'项目不存在'},{status:404});
   if(p.actions.includes(b.callId)||p.workflow?.records.some(r=>r.id===b.callId))return response(p);
   if(p.version!==b.version)throw new Error('VERSION_CONFLICT');
+  if(b.action==='analyze-existing'){
+    qwenCredentials(b.freeTierOnlyConfirmed);
+    const next=restartExistingAnalysis(p),previous=p.workflow!;
+    p.workflowHistory=[previous,...(p.workflowHistory||[])].slice(0,2);p.workflow=next;
+    addAction(p,b.callId);log(p,'保留停止记录，使用当前原文重新分析；新轮最多 2 次模型请求，未重新采集或重置累计用量');
+    return response(await save(p,b.version));
+  }
   if(b.action==='start'||b.action==='restart'){
     qwenCredentials(b.freeTierOnlyConfirmed);
     if(b.action==='restart'){
