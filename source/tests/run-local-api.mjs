@@ -42,4 +42,5 @@ await import('./workflow-budget-smoke.mjs');
 await import('./workflow-start-smoke.mjs');
 await import('./research-activity-ui-smoke.mjs');
 await import('./collection-closeout-smoke.mjs');
+await import('./evidence-scope-smoke.mjs');
 sqlite.close();

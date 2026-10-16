@@ -50,7 +50,7 @@ export function renderDemandCard(demand:DemandNote|undefined,evidence:Evidence[]
     const refs=ids.length?` ${ids.map(id=>'['+id+']').join(' ')}（词面重叠或该行已写的资料标识，不是语义检索）`:'';
     return `### ${label}\n${line.text}${refs}`;
   }).join('\n');
-  return `## 需求卡\n缺的字段保持未提供。应用没有补写，也没有自动保存机会卡。\n${body}`;
+  return `## 需求卡\n缺的字段保持未提供。应用没有补写缺失字段；完整真实研究可另存待人工确认的机会草稿，正式机会卡仍需人工确认。\n${body}`;
 }
 
 export function renderInterviewPlan(interview:InterviewPlan|undefined,evidence:Evidence[]){

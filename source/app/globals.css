@@ -263,3 +263,10 @@ body{background:#f8faf7}.main-shell{background:radial-gradient(ellipse at 100% 0
   .research-typesetting .run-actions { display: grid; grid-template-columns: minmax(0, 1fr); }.research-typesetting .run-actions > .subtle { margin-left: 0; }
   .research-typesetting .panel-heading .toolbar { width: 100%; justify-content: flex-start; }.setup-section { margin: 24px 0; }.outcome-overview { gap: 16px; }.copy-section { padding: 16px; }.conclusion-summary.research-typesetting .conclusion-decision { font-size: 23px; }
 }
+
+/* Put citation scope beside the recommendation without assigning a confidence score. */
+.evidence-scope{margin-top:24px;padding:18px 20px;border:1px solid #dce5d5;border-radius:12px;background:#fafcf7}
+.evidence-scope>.spread{align-items:baseline;flex-wrap:wrap;gap:8px 16px}.conclusion-summary .evidence-scope h4{font-size:15px;margin:0}
+.evidence-scope-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin:16px 0}.evidence-scope-metrics>div{min-width:0}.evidence-scope-metrics dt{font-size:12px;color:#5f7063;line-height:1.7}.evidence-scope-metrics dd{font-size:19px;font-weight:600;line-height:1.6;color:#34513b;margin:4px 0 0;font-variant-numeric:tabular-nums}
+.research-typesetting .evidence-scope .aligned-copy-list{font-size:13px;color:#6e5938;margin:12px 0}.evidence-scope>.meta{border-top:1px solid #e2e9db;padding-top:12px}
+@media(max-width:600px){.evidence-scope{padding:16px}.evidence-scope-metrics{gap:10px}.evidence-scope-metrics dt{font-size:12px}.evidence-scope-metrics dd{font-size:17px}}
