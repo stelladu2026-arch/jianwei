@@ -35,7 +35,7 @@ function noteSchema(claim:unknown,refs:unknown,review:boolean,evidence?:ModelTas
 }
 
 function planningResponseSchema(purpose:'search_plan'|'gap_plan',allowTools=true){
-  const claim={type:'string',minLength:2,maxLength:100};
+  const claim={type:'string',minLength:2,maxLength:100,pattern:'^[A-Za-z][A-Za-z0-9-]*( [A-Za-z0-9][A-Za-z0-9-]*){0,2}$'};
   const note=object({claim,refs:emptyIdList(),kind:{type:'string',enum:['gap']}});
   const notes={type:'array',minItems:1,maxItems:purpose==='search_plan'?2:1,items:note};
   const data=purpose==='search_plan'?object({notes,framing:object({target_user:{type:'string',minLength:1,maxLength:200},scenario:{type:'string',minLength:1,maxLength:500},questions:{type:'array',minItems:1,maxItems:3,items:{type:'string',minLength:1,maxLength:200}}})}):object({notes});

@@ -1,3 +1,4 @@
+import {collectionStartBlocker} from './workflow-start';
 import type {Project,Evidence} from './domain';
 import type {ModelTask,ModelResult} from './model-port';
 import {buildTask,makeRun,reserve,failTask,invalidateRun,type Run,type Analysis,type ConclusionReview} from './execution';
@@ -32,7 +33,7 @@ export function makeWorkflow(p:Project,allowSupplement:boolean,mode:'single'|'fo
   if(activeWorkflow(p)||p.run&&['ready','running','paused','failed'].includes(p.run.status))throw new Error('请先完成或取消当前执行。');
   if(sourceProfile==='v2ex'&&(mode!=='single'||!isV2exNode(sourceNode)))throw new Error('V2EX 节点采样仅用于单角色采集；四角色请使用已有资料。');
   if(sourceProfile==='v2ex'&&allowSupplement)throw new Error('V2EX 节点采样不支持关键词补搜，请关闭补搜后开始。');
-  if(mode==='single'&&(p.budget.searches>(sourceProfile==='v2ex'?5:3)||p.evidence.length>70))throw new Error('本项目剩余采集空间不足，请新建研究项目。');
+  if(mode==='single'){const blocked=collectionStartBlocker(p,sourceProfile);if(blocked)throw new Error(blocked.message);}
   const since=sinceForPeriod(p.period);
   return {...(sourceProfile==='v2ex'?{sourceProfile,sourceNode}:{}),mode,id:crypto.randomUUID(),version:WORKFLOW_VERSION,revision:p.revision,evidenceVersion:p.evidenceVersion||0,created:new Date().toISOString(),status:'ready',stage:mode==='four'?'needs':sourceProfile==='v2ex'?'collect':'plan',allowSupplement:mode==='single'&&allowSupplement,queries:sourceProfile==='v2ex'?[{query:sourceNode,purpose:'initial',reason:'操作者选择的公开节点订阅，非关键词搜索'}]:[],collectIndex:0,usableIds:[],freshIds:[],limitations:sourceProfile==='v2ex'?['公开来源为 V2EX 中文技术社区的节点订阅，不代表全体国内用户或目标客户。',`本轮仅采样「${V2EX_NODES[sourceNode]}」订阅，最多 6 篇有正文的主题；不按关键词搜全站，不读评论、不翻页、不访问外链。`,'未采样的历史讨论、反例和付费事实仍未知。先核查主题与研究范围是否相关；无相关线索不等于没有需求。','单角色只分析采样及已有导入原文，最多 1 次模型请求，不追加工具或补搜。']:mode==='four'?['本轮只复核冻结的已有资料；来源、人群、地域与时间覆盖需结合原始采集记录核查。']:['公开来源只有 Hacker News 与中文维基百科，不能代表目标地域或国内用户。','Hacker News 每个检索词最多 3 帖、每帖最多 2 条一级评论；中文维基百科最多 2 篇条目正文。两者共享 10 次来源请求，不访问外链。','单角色模型步骤由 LangGraph.js 执行工具循环。模型只能请求 Hacker News 检索或阅读、中文维基百科摘录，以及本项目已保存资料的词面检索。',...(since===null&&!/不限|全部|所有时间/.test(p.period)?['无法把当前时间描述转换为日期过滤，原始日期已保留，时间匹配需人工核查。']:[])],records:[],budget:{modelLimit:sourceProfile==='v2ex'?1:mode==='four'||allowSupplement?4:2,modelAttempts:0,sourceLimit:30,sourceAttempts:0,searchLimit:3,searches:0},error:'',needsRetry:false,report:'',since};
 }

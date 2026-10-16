@@ -152,7 +152,7 @@ check('planning schema matches the prompt wire and keyword failures keep their o
   const analysis=ajv.compile(responseSchema('needs',[],false));
   assert.equal(search(wire(planningFixture.intended)),true,JSON.stringify(search.errors));
   assert.deepEqual(planningQueries(wire(planningFixture.intended),plan('plan')),['customer support','help desk']);
-  assert.equal(search(wire(planningFixture.charset)),true,JSON.stringify(search.errors));
+  assert.equal(search(wire(planningFixture.charset)),false);assert.equal(search.errors[0].keyword,'pattern');
   const analysisWire=structuredClone(wire(planningFixture.looseCount));
   delete analysisWire.data.framing;
   analysisWire.data.citations=[];
