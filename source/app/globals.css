@@ -180,6 +180,11 @@ body{background:#f8faf7}.main-shell{background:radial-gradient(ellipse at 100% 0
 .research-typesetting .panel-heading .toolbar { display: flex; flex-wrap: wrap; gap: 8px; }
 .research-typesetting .panel > :where(h2, h3) { margin-bottom: 12px; }
 .research-typesetting .panel > p + p { margin-top: 8px; }
+/* Prose lists share the heading's left edge; spacing separates individual items. */
+.research-typesetting .aligned-copy-list { list-style: none; padding: 0; margin: 12px 0 16px; }
+.research-typesetting .aligned-copy-list > li { padding: 0; margin: 0; }
+.research-typesetting .aligned-copy-list > li + li { margin-top: 12px; }
+
 .research-typesetting .panel > details { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--research-line); }
 .research-typesetting details > summary { font-size: 14px; line-height: 1.8; color: #3c5b43; cursor: pointer; }
 .research-typesetting details > :where(p, ul, .meta) { margin-top: 12px; }

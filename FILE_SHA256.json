@@ -21,7 +21,7 @@
   "source/app/api/projects/route.ts": "92ddd975598f79b5fd3d68af7d39a8eac1ab8655e60d111cafcdbdee8e4ec054",
   "source/app/api/search/route.ts": "d78820c3d95e137e9d2aa9eafb791ef955e9f40e9b0d300142b75b9cd8c1bd8e",
   "source/app/chatgpt-auth.ts": "4265a2e7c2dcb3a6f4b7026f762bf5b6e4caec76cc13c0a45987ee9a9f2e42cc",
-  "source/app/globals.css": "87f3e7709096fc64def64c3dcebfd312ab03b030f08110164f252345cc1694b8",
+  "source/app/globals.css": "9428a6e838fbf2eb9406975517cd2bf245b5963ee36d0dfd4fcc0dcbc380727f",
   "source/app/layout.tsx": "94a54d8138057c96b7c5e7193693b1b7e8b8527fd8893d8013a523b9c370d269",
   "source/app/page.tsx": "01cbb151120c751e7903adc01619bea32228319a252928d2abc0efb65600c42f",
   "source/build/connector-preview-plugin.mjs": "a6a9fe2086e302f94a3f91e3c1a68a45bb3aa07d4a79faf01b14732191eb4e80",
@@ -41,8 +41,8 @@
   "source/components/research-execution.tsx": "7e29e5a85667615cf22935bcd3bd52659a162765cc6cb9dd8963c48e92220e03",
   "source/components/research-governance.tsx": "81892b3d2945cf11bd31521c1a6994c748d53923e0dd39373bb6252c16ef8b7a",
   "source/components/research-overview-pulse.tsx": "a7118af9e485e1d5a405856ae3cb0848ac307ecaf7814a81ff304bfba521c800",
-  "source/components/research-stage-outcome.tsx": "3d312a9e075c297091d6a8b530da4450bd92e2295a74bb43ca338f72a662b802",
-  "source/components/research-workflow.tsx": "a789052e528466b21ea5e9d0f425c1cecda371dc3b917a7006f8f3f928f6f9f2",
+  "source/components/research-stage-outcome.tsx": "d966aa283ecfa72d573eec8f926893f3f699d99bfeecf88b18d40b6ef3bdebd4",
+  "source/components/research-workflow.tsx": "d2cf3ffd5cad1f9fb7aa25ec5d4991679f211251d2dda0cefcee6d4ec5206f0c",
   "source/components/ui/accordion.tsx": "a4f153089ba886dfcf73fac26b5c01ca933fa12fbe88df6fb723912bfffdfbb0",
   "source/components/ui/alert-dialog.tsx": "9a8d950f2b9b4352d5ebb762fb44d5c28c2d353aa29712071973656a8736e311",
   "source/components/ui/alert.tsx": "2cc59b5f7bda91c1670884b1bf46bfc8a2a6f226cef184f5762acc037188885b",
@@ -237,5 +237,6 @@
   "verification/offline-tests.log": "2221b525e98852bc37f267aef1abd9021f9be22e9521daef331a7f63bf573544",
   "source/docs/WORKSPACE_LAYOUT_20261016.md": "9366cf7d586367d358dae44e318cbf07ffad69617c2719c6343b564f6e5081be",
   "source/components/workspace-notice.tsx": "6da68f646899d02af93b08111d46d9c0a5022112c59675482cfa97f255ef3c7e",
-  "source/docs/TYPOGRAPHY_PRINCIPLES_20261016.md": "ec3f5e2857bc130c26a85b895e5d71276718e669279495b5bc190d154ca880a1"
+  "source/docs/TYPOGRAPHY_PRINCIPLES_20261016.md": "ec3f5e2857bc130c26a85b895e5d71276718e669279495b5bc190d154ca880a1",
+  "source/docs/LIST_ALIGNMENT_20261016.md": "9d62d121849c41fbc2b5437deefa739bb95aed4516568aeb34349f2d5227f002"
 }
