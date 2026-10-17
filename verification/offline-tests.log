@@ -13,6 +13,7 @@ PASS snapshot discloses stale and synthetic state
 PASS scope revision invalidates and preserves old snapshot
 PASS incomplete study cannot finish
 PASS duplicate import and injection remain source text
+PASS import without authorization attestation is rejected
 PASS cross project reference rejected
 PASS unverified strong payment rejected
 PASS manual judgment saves with project citations
@@ -46,7 +47,7 @@ PASS public connector validates item and counts requests
 PASS source failure preserves prior evidence and records partial
 PASS concurrent search reserves one version without overwrite
 PASS search budget stops additional requests
-{"passed":48,"model_calls":0,"scope":"local API and domain invariants; not live model or visual QA"}
+{"passed":49,"model_calls":0,"scope":"local API and domain invariants; not live model or visual QA"}
 PASS unconfigured provider rejects before reservation
 PASS single role plan and local checks persist
 PASS active run cannot be replaced
@@ -128,6 +129,8 @@ PASS titles without original bodies cannot drive model analysis
 PASS quota failure stops once and cannot bypass total request budget
 PASS invalid planner output never becomes an arbitrary network request
 PASS overlong keyword phrases stop before wasting source requests
+PASS planning fixture that passes the length bound records a field path and does not search
+PASS planning reference mismatch stays distinct from planning keyword validation
 PASS explicit planner retries cannot reset four-request budget
 PASS invalid output exposes field paths and codes without private values
 PASS foreign proposal references stop before a report or opportunity is saved
@@ -139,9 +142,26 @@ PASS source reservation cannot exceed absolute external-request cap
 PASS expired workflow lease preserves uncertain local attempt and stops
 PASS explicit local checkpoint retry resumes without another model request
 PASS invalid zero time windows fall back without NaN date filters
+PASS same thread or author collapses to one independent sample
 PASS source identity mismatches cannot enter evidence
 PASS source redirects stop without following unapproved destinations
-{"workflow_checks":30,"actual_model_calls":0,"scope":"real workflow routes, synthetic provider/source HTTP; no semantic quality claim"}
+PASS encyclopedia redirects also stop without following unapproved destinations
+PASS encyclopedia page identity mismatches cannot enter evidence
+PASS same encyclopedia author collapses to one independent sample
+PASS encyclopedia failure keeps hacker news bodies from the same query
+PASS encyclopedia titles without bodies are not usable evidence
+PASS audience change marks the completed conclusion for review without rewriting it
+PASS a new round keeps the new input version and the earlier conclusion text
+{"workflow_checks":40,"actual_model_calls":0,"scope":"real workflow routes, synthetic provider/source HTTP; no semantic quality claim"}
+PASS allowlisted search runs and a second search stops when the source cap is spent
+PASS payment, bill, interview and geographic gaps do not search
+PASS a quote that is not a literal slice is rejected and a real slice is kept
+PASS retrieval context comes only from the current project corpus
+PASS a follow-up model call is refused when the model cap is already spent
+PASS an unknown tool and a fact label are refused without a search
+PASS demand card and interview plan keep missing fields and point at term overlap
+PASS public remarks stay complaints, verbal interest, or no payment
+{"agent_loop_checks":8,"actual_model_calls":0,"scope":"scripted model, allowlisted tools, current-project term overlap; not a live four-role completion or a market conclusion"}
 PASS four-role research cannot start without usable originals
 PASS four-role start freezes baseline input without extra generation or collection
 PASS role reservation is idempotent and retains frozen input
@@ -189,9 +209,10 @@ PASS exhausted standalone retries are blocked consistently in UI and server
 PASS spent model budget does not prevent eligible local-step recovery
 PASS insufficient collection reservation blocks retry before any source call
 PASS four-role model failure stays stopped even with unused total budget
+PASS failure diagnostics keep protocol, evidence version, tokens and request id without rejected text
 PASS anchorless supported claims produce a safe precise failure path
 PASS forbidden role fields are diagnosed without storing rejected text
-{"recovery_checks":10,"actual_model_calls":0,"scope":"browser response handling, shared retry guards and safe rejection diagnostics; no visual or live-model claims"}
+{"recovery_checks":11,"actual_model_calls":0,"scope":"browser response handling, shared retry guards and safe rejection diagnostics; no visual or live-model claims"}
 PASS needs schema rejects anchorless supports, partial and contradicts before downstream validation
 PASS needs accepts insufficient without inventing a quotation and accepts cited judgments
 PASS commercial schema rejects anchorless supports, partial and contradicts before downstream validation
@@ -206,5 +227,148 @@ PASS claim refs and proposal refs are derived from matching anchor targets witho
 PASS new wire rejects redundant old citation lists and unknown format instead of repairing them
 PASS legacy internal claim reference mismatch remains rejected with the original field path
 PASS missing, duplicate and unknown targets are not rescued by reference derivation
+PASS provider schema rejects cross-source quotes, mismatched note coverage, oversized gaps and extra disagreement refs
+PASS provider schema rejects duplicate targets and disagreement roles while application checks still reject them
+PASS planning schema matches the prompt wire and keyword failures keep their own field path
 PASS a literal quotation from another source still fails source-specific location
-{"review_schema_checks":15,"actual_model_calls":0,"scope":"independent JSON Schema validation plus actual strict application validators; provider compatibility and model quality still need live verification"}
+{"review_schema_checks":18,"actual_model_calls":0,"scope":"independent JSON Schema validation plus actual strict application validators; provider compatibility and model quality still need live verification"}
+PASS fact requires a literal current source, not merely an ID or another claim quote
+PASS review fact needs its own supporting target and literal quote
+PASS hybrid search recalls a semantically related source with no query token overlap
+PASS excluded or synthetic sources cannot be sent to the embedding adapter
+PASS embedding HTTP is fixed, separately gated, validates dimensions and rejects redirects
+PASS a provisional final with tool calls is not accepted until tool results return
+PASS public source bodies return to the model and final refs validate against that exact input
+PASS changed run before a follow-up prevents the next model invocation
+PASS completed real delivery creates one idempotent draft; simulation or failure creates none
+PASS real route persists both model receipts and budget reservations; duplicate advance cannot call again
+PASS automatic draft blocks project completion until explicit manual save confirms it
+{"capability_gap_checks":11,"actual_model_calls":0,"actual_embedding_calls":0,"scope":"synthetic vectors and provider HTTP; not live semantic quality or real tool-loop validation"}
+PASS original four-role loop stays blind on first verifier and capped at four calls
+PASS second pass requires explicit separate confirmation before creating checkpoint
+PASS creation freezes all ten claims for preview without generation
+PASS duplicate creation is idempotent with stale client version
+PASS missing secret blocks before spending audit budget
+PASS active audit blocks competing run start
+PASS active audit blocks competing workflow start
+PASS second verifier reads predecessors and completes one separate request
+PASS audit preserves prior outputs, human review, report, opportunity drafts and memory
+PASS provider schema constrains count and sources while runtime enforces unique target coverage
+PASS replayed completed advance does not call again
+PASS completed audit cannot reset via start
+PASS completed audit cannot reset via advance
+PASS audit missing fails once, preserves receipt, rejects output and cannot retry
+PASS audit duplicate fails once, preserves receipt, rejects output and cannot retry
+PASS audit unknown fails once, preserves receipt, rejects output and cannot retry
+PASS audit anchorless fails once, preserves receipt, rejects output and cannot retry
+PASS audit foreign fails once, preserves receipt, rejects output and cannot retry
+PASS audit quote fails once, preserves receipt, rejects output and cannot retry
+PASS audit crossquote fails once, preserves receipt, rejects output and cannot retry
+PASS audit other_support fails once, preserves receipt, rejects output and cannot retry
+PASS audit tool fails once, preserves receipt, rejects output and cannot retry
+PASS audit truncated fails once, preserves receipt, rejects output and cannot retry
+PASS audit quota fails once, preserves receipt, rejects output and cannot retry
+PASS audit auth fails once, preserves receipt, rejects output and cannot retry
+PASS evidence editing marks audit stale and prevents any HTTP
+PASS source hash catches changed predecessor even without version invalidation
+PASS oversized complete claim input fails before spending or silently truncating
+PASS concurrent cancel wins and rejects late audit output
+PASS concurrent pause wins and rejects late audit output
+PASS concurrent archive wins and rejects late audit output
+PASS concurrent removeEvidence wins and rejects late audit output
+PASS unexpired audit cannot be recovered and keeps request count
+PASS expired recovery preserves unknown use and cannot replay request
+PASS explicit fresh workflow archives prior audit and preserves cumulative spend
+PASS single, simulation, incomplete, outdated and cross-site audits cannot start
+{"conclusion_audit_checks":36,"actual_model_calls":0,"scope":"real routes and SQLite; synthetic HTTP, no live Qwen or semantic quality measurement"}
+PASS first-role rejection still delivers frozen originals with no invented opportunity
+PASS main project report and saved snapshot include local stage deliverable without generation
+PASS midstream failure exposes accepted roles, missing verifier and all original gaps
+PASS injected failed, running or pending outputs never enter stage report
+PASS accepted old payload with mismatched source quote is withheld without repair
+PASS old role output cannot smuggle a coordinator proposal into a stage report
+PASS deleted or changed source uses historical input instead of latest text
+PASS history without a snapshot never borrows sources from a different scope
+PASS local report remains available after pause, cancellation and JSON reload
+PASS failed coordinator delivers three independent views without fabricating aggregate conclusion
+PASS candidate after model steps is visible while local validation and delivery remain pending
+PASS ready exhausted workflow is blocked before reservation in both guard and route
+PASS saving a report while a lease is active cannot silently interrupt a paid request
+PASS local check or delivery stays available with model budget spent
+PASS source reservation shortage has read-only guidance and never calls a source
+PASS second-pass failure preserves completed first report and opportunity card
+PASS a finished flow with evidence gaps is not misclassified as technical failure
+PASS legacy nonreview with fabricated citation cannot become a partial opportunity
+PASS tool originals survive a later model quota failure with rejected analysis absent
+PASS successful tool analysis synchronizes its input version and can reach local delivery
+PASS independent simulation exposes bounded progress and never masquerades as real research
+PASS unfinished research cannot be manually marked complete even with confirmed cards
+PASS standalone unfinished or rejected task output stays out of its stage report
+PASS completed workflow record and independent duplicate do not duplicate the main report
+PASS stage UI renders actionable download, original snapshots and safe external text
+{"stage_outcome_checks":25,"actual_model_calls":0,"scope":"real SQLite/routes and React static rendering; synthetic HTTP; no live Qwen or market accuracy claims"}
+PASS tool schemas require only parameters used by each tool
+PASS query tools normalize only absent irrelevant IDs and preserve real query
+PASS old valid tool objects stay valid without adding searches
+PASS missing required values remain rejected with field paths, never invented
+PASS null, JSON strings and unknown argument fields are not silently coerced
+PASS fact generation schema requires source selection ID instead of free text
+PASS same fact without own supports anchor is still rejected
+PASS no source choices prevents schema-generated facts while hypotheses remain available
+PASS nonreview facts use source IDs and reject free-text fact generation
+PASS provider adapter accepts canonical minimal tool parameters in one HTTP call
+PASS provider rejection stores precise diagnostics and usage but no raw invalid value
+PASS UI diagnostics distinguish paraphrased facts and required tool parameters
+PASS fixed-source execution forbids tool requests before accepting a provisional body
+{"model_contract_fix_checks":13,"actual_model_calls":0,"scope":"provider schemas, fixed adapters and strict literal validation; no true Qwen quality claim"}
+PASS source ID selection generates exact fact and own quote without model transcription
+PASS new selected facts cannot inject claim, refs or invented quote IDs
+PASS selected facts reject a raw conflicting anchor instead of overwriting it
+PASS fact check still needs exact target coverage and supports judgment
+PASS legacy free-text paraphrases remain rejected and are never turned into selected facts
+PASS nonreview selected fact adds own citation but preserves bad existing citation rejection
+PASS source catalog is deterministic and cannot include a disallowed evidence ID
+PASS real adapter new protocol expands selected facts in exactly one request
+PASS provider requires format marker and does not advertise the failed optional version
+PASS selected facts reserve citation capacity without loosening legacy four-citation validation
+{"source_fact_checks":10,"actual_model_calls":0,"scope":"explicit source-quote/1 protocol; legacy rejection stays strict; synthetic HTTP only"}
+PASS conclusion leads with recommendation and next action before expandable originals
+PASS incomplete analysis never invents a decision and keeps actionable next step
+PASS historical summary leads with reverification instead of old investment advice
+PASS simulation and human confirmation do not imply completed market validation
+PASS missing references remain explicitly unavailable and source count deduplicates
+PASS completed summary with missing or rejected input snapshots cannot expose injected proposal
+PASS fresh automatic drafts are not mislabeled historical by their confirmation reminder
+{"conclusion_ui_checks":7,"actual_model_calls":0,"scope":"React static rendering and saved-input rejection; no browser visual QA"}
+PASS public node feed uses one fixed anonymous request and records original provenance
+PASS invalid node and zero cap cannot request arbitrary hosts or sources
+PASS duplicate, empty, external and invalid dates are excluded without inventing text
+PASS feed sample caps saved originals at six without pagination or comment requests
+PASS redirect, rate limit and malformed source fail once with safe diagnostics
+PASS domestic plan comes from selected node with one model limit and no supplement
+PASS actual SQLite routes complete domestic collection, analysis, local checks and draft saving with bounded fixtures
+PASS empty domestic feed stops before model and offers usable source failure guidance
+PASS domestic model cannot start a hidden HN tool loop or append a second request
+PASS one source reservation guard matches collection budget without crediting failed requests
+PASS Chinese community coverage cannot be labeled verified domestic customer demand
+{"domestic_source_checks":11,"actual_model_calls":0,"actual_v2ex_requests":0,"scope":"synthetic public feed/HTTP and actual SQLite routes; no live source or model completion claim"}
+PASS selected factual note has no second model assessment and owns exact literal proof
+PASS nonfactual assessments remain attached to their own claim after note reordering
+PASS two factual statements generate exactly two local positioning checks
+PASS coordinator problem and conclusion cannot borrow each other's source mapping
+PASS unsupported judgments, missing checks and duplicate selections are rejected
+PASS unknown source IDs and invented text cannot enter a selected statement
+PASS raw global checks, anchors, targets and unknown formats are never overwritten
+PASS role permissions, fact format and foreign disagreement refs stay strict
+PASS empty evidence only permits unverified notes and never generates factual selections
+PASS old selected-fact failure stays rejected through the original decoder
+PASS provider receives compact schema and one immutable quote catalog in one request
+PASS controlled reasons are bounded and cannot be replaced with unvalidated free text
+PASS real SQLite route completes all four roles and saves exactly one candidate using new wire
+PASS new quote protocol preserves first verifier blindness and coordinator prior context
+{"selection_review_checks":14,"actual_model_calls":0,"scope":"explicit claim-selections/2, strict legacy failures, provider fixtures and full four-role SQLite routes; no live semantics claim"}
+PASS every active role, plan, fixed-source and audit schema excludes provider-rejected keywords
+PASS compatibility inspection traverses actual schema positions and ignores field names and examples
+PASS local duplicate-source checks remain strict after removing unsupported provider keyword
+PASS provider parameter diagnostics retain safe keyword vocabulary without private message
+{"qwen_schema_checks":4,"actual_model_calls":0,"scope":"official supported-keyword subset, strict runtime uniqueness and safe fake HTTP diagnostics"}

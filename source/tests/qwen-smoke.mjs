@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {QWEN_BASE_URL,QWEN_MODEL,QWEN_MAX_OUTPUT_TOKENS} from '../lib/research/provider-config.ts';
 import {QwenModel,requireQwenCredentials} from '../lib/research/qwen-model.ts';
 import {makeRun,buildTask,reserve,executeModel} from '../lib/research/execution.ts';
+import {create as storeCreate} from '../lib/research/store.ts';
 import {fixtureProject} from '../lib/research/evaluation.ts';
 const key='sk-synthetic-test-key-only',owned=[];
 let passed=0,requests=0,scenario='normal',pendingRelease;
@@ -11,7 +12,7 @@ function check(label,fn){fn();passed++;console.log('PASS '+label)}
 async function api(path,method='GET',body,secret=key){const res=await globalThis.__apiTestFetch('http://test.local'+path,{method,headers:{'content-type':'application/json',...(secret?{'x-qwen-api-key':secret}:{})},body:body===undefined?undefined:JSON.stringify(body)});return {status:res.status,data:await res.json()}}
 async function control(p,action,extra={},secret=key,callId=crypto.randomUUID()){return api(`/api/projects/${p.id}/run`,'POST',{version:p.version,callId,action,adapter:'qwen',freeTierOnlyConfirmed:true,...extra},secret)}
 async function read(p){return (await api(`/api/projects/${p.id}/run`)).data.project}
-async function create(){const x=await api('/api/projects','POST',{demo:true,title:'synthetic Qwen HTTP fixture only'});owned.push(x.data.project.id);return (await api(`/api/projects/${x.data.project.id}`,'PATCH',{version:x.data.project.version,callId:crypto.randomUUID(),action:'confirm'})).data.project}
+async function create(){const p=fixtureProject('baseline');p.mode='manual';p.title='Synthetic Qwen HTTP fixture only';p.evidence=p.evidence.map(e=>({...e,kind:'imported',source:'Synthetic authorized adapter fixture only'}));owned.push(p.id);return storeCreate(p)}
 globalThis.fetch=async(url,init)=>{
   requests++;
   assert.equal(url,QWEN_BASE_URL+'/chat/completions');assert.equal(init.redirect,'manual');assert.equal(init.headers.Authorization,'Bearer '+key);
@@ -63,7 +64,7 @@ p=(await control(p,'start')).data.project;check('single Qwen run defaults to one
 delete globalThis.__testEnv.DASHSCOPE_API_KEY;x=await control(p,'advance');check('removed server credentials block advance without consuming budget',()=>{assert.equal(x.status,400);assert.equal(requests,0)});globalThis.__testEnv.DASHSCOPE_API_KEY=key;
 const old=p,id=crypto.randomUUID();p=(await control(p,'advance',{},key,id)).data.project;
 x=await control(old,'advance',{},key,id);check('HTTP request stays idempotent and keeps trusted usage metadata',()=>{assert.equal(requests,1);assert.equal(x.status,200);assert.equal(p.budget.modelCalls,1);assert.equal(p.run.budget.requests,1);assert.equal(p.run.tasks[0].output.model,QWEN_MODEL);assert.deepEqual(p.run.tasks[0].calls[0].usage,{input_tokens:123,output_tokens:45});assert.equal(p.run.tasks[0].calls[0].requestId,'fixture-request-1');assert.ok(!JSON.stringify(p).includes(key));assert.ok(!JSON.stringify(p).includes('reasoning_content'))});
-delete globalThis.__testEnv.DASHSCOPE_API_KEY;p=(await control(p,'advance',{},null)).data.project;p=(await control(p,'advance',{},null)).data.project;globalThis.__testEnv.DASHSCOPE_API_KEY=key;check('local checks and report need no key or additional model calls',()=>{assert.equal(requests,1);assert.equal(p.run.status,'completed');assert.match(p.run.report,/真实模型生成/);assert.match(p.run.report,/实际费用：待百炼账单核对/);assert.match(p.run.report,/123 \/ 45/);assert.equal(p.reports.length,0);assert.equal(p.opportunities.length,0)});
+delete globalThis.__testEnv.DASHSCOPE_API_KEY;p=(await control(p,'advance',{},null)).data.project;p=(await control(p,'advance',{},null)).data.project;globalThis.__testEnv.DASHSCOPE_API_KEY=key;check('local checks and report need no key or additional model calls',()=>{assert.equal(requests,1);assert.equal(p.run.status,'completed');assert.match(p.run.report,/真实模型生成/);assert.match(p.run.report,/实际费用：待百炼账单核对/);assert.match(p.run.report,/123 \/ 45/);assert.equal(p.reports.length,0);assert.equal(p.opportunities.length,1);assert.equal(p.opportunities[0].status,'draft')});
 scenario='missing_declared';p=(await control(p,'start')).data.project;p=(await control(p,'advance')).data.project;check('Qwen constrains IDs in schema and completes redundant declarations only for unchanged allowed nested refs',()=>{assert.equal(p.run.status,'ready');assert.deepEqual(p.run.tasks[0].output.data.notes[0].refs,p.run.tasks[0].output.evidence_ids);assert.deepEqual(p.run.tasks[0].calls[0].normalizations,['nested_refs_declared_in_envelope'])});p=(await control(p,'cancel')).data.project;scenario='normal';
 p=(await control(p,'start',{mode:'four'})).data.project;
 for(let i=0;i<6;i++)p=(await control(p,'advance')).data.project;

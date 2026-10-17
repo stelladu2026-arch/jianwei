@@ -15,10 +15,11 @@
     "new_actual_model_calls": 0
   },
   "pending": [
-    "Cursor machine dependency install/start/browser verification",
-    "review_v3 actual provider output",
-    "complete real four-role workflow",
-    "human semantic review and comparison"
+    "browser visual/mobile interaction review",
+    "bounded real full four-role workflow",
+    "bounded real tool-loop and conclusion-audit verification",
+    "V2EX source access or authorized originals",
+    "real semantic retrieval and human quality review"
   ],
   "runtime": {
     "tested_node": "24.19.0",
@@ -35,5 +36,85 @@
     "git history"
   ],
   "local_configuration_example": "local-config/.dev.vars.example (blank key, protection false)",
-  "tracked_generated_metadata": "source/tsconfig.tsbuildinfo retained to preserve exact commit snapshot; can be regenerated"
+  "tracked_generated_metadata": "source/tsconfig.tsbuildinfo retained to preserve exact commit snapshot; can be regenerated",
+  "update_20261013": {
+    "base_commit": "0463674af822955de7e3af1d7d69f8be0ebccd85",
+    "offline_checks": 236,
+    "type_check": "passed",
+    "production_build": "passed",
+    "real_model_calls": 0,
+    "real_embedding_calls": 0,
+    "deployed": false,
+    "github_write": "authorized at 2026-10-13 22:02 Asia/Shanghai; branch codex/research-capability-gaps created",
+    "details": "source/docs/CAPABILITY_GAPS_20261013.md"
+  },
+  "update_20261014": {
+    "base_branch_head": "b6888edb0a6c3e8777a6b2f819b653c63db2027e",
+    "feature": "optional conclusion audit, separate max one model request",
+    "offline_checks": 272,
+    "type_check": "passed",
+    "production_build": "passed",
+    "real_model_calls": 0,
+    "real_embedding_calls": 0,
+    "deployed": false,
+    "details": "source/docs/CONCLUSION_AUDIT_20261014.md"
+  },
+  "update_20261014_stage_outcomes": {
+    "base_branch_head": "5f98e77b53c21ceb19081fef813cb47a903d31ba",
+    "offline_checks": 297,
+    "new_checks": 25,
+    "type_check": "passed",
+    "production_build": "passed",
+    "real_model_calls": 0,
+    "real_embedding_calls": 0,
+    "deployed": false,
+    "details": "source/docs/STAGE_OUTCOMES_20261014.md"
+  },
+  "latest_update_date_beijing": "2026-10-15",
+  "update_20261014_conclusion_and_domestic": {
+    "base_branch_head": "88a9c1e7c5fcc29a4186cbf77222b326150d5855",
+    "offline_checks": 338,
+    "new_checks": 41,
+    "type_check": "passed",
+    "production_build": "passed",
+    "new_real_model_requests": 4,
+    "new_real_source_requests": 1,
+    "fixed_originals_single_role": "completed with one request and draft saved",
+    "v2ex_live": "HTTP403; partial; zero model requests",
+    "full_four_role": "pending",
+    "real_tool_loop": "pending",
+    "browser_visual_qa": "not performed; approved browser skill unavailable",
+    "deployed": true,
+    "site_source_commit_tested": "646c7a80e793029d1269c9925659391fc1317682",
+    "details": "source/docs/CONCLUSION_UI_AND_SOURCES_20261014.md"
+  },
+  "update_20261015_four_role": {
+    "base_branch_head": "574ed211770ef692b9b8f96bc721cdae2a75324f",
+    "offline_checks": 356,
+    "new_checks": 18,
+    "type_check": "passed",
+    "production_build": "passed",
+    "new_real_request_attempts": 6,
+    "known_usage_receipts": 5,
+    "missing_usage_receipts": 1,
+    "real_role_states": {
+      "needs": "done",
+      "commercial": "done",
+      "verifier": "done",
+      "coordinator": "failed_reason_too_big"
+    },
+    "final_wire": "claim-selections/2",
+    "final_wire_live": "pending",
+    "full_real_four_role": "not verified",
+    "source_requests": 0,
+    "embedding_requests": 0,
+    "details": "source/docs/FOUR_ROLE_SELECTIONS_20261015.md",
+    "deployed": true
+  },
+  "latest_deployment": {
+    "status": "succeeded",
+    "url": "https://opportunity-research-lab.stelladu2026.chatgpt.site",
+    "id": "appgdep_6ad060b30574819195deb7f9a9f8c261",
+    "source_commit": "4a0496e7ffb6ff3d99428b13b90ecb3e1b15d6ca"
+  }
 }

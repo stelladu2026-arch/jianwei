@@ -1,0 +1,19 @@
+import assert from 'node:assert/strict';
+import React from 'react';
+import {renderToStaticMarkup} from 'react-dom/server';
+import {componentURL} from './render-component.mjs';
+import {completedRunSummary} from '../lib/research/stage-outcomes.ts';
+import {newProject} from '../lib/research/domain.ts';
+const {ConclusionSummary,opportunityConclusionScope}=await import(componentURL(new URL('../components/conclusion-summary.tsx',import.meta.url)));
+const proposal={title:'Sample candidate',problem:'Fixture repeated questions',conclusion:'Conditional fixture',decision:'evidence',plan:'Interview actual users before investing',counter:'Low frequency may not justify a new tool',unknowns:'Frequency and payment unknown',alternative:'Current tools',refs:['E1']};
+const sources=[{key:'s1',id:'E1',title:'Original',text:'<script>external original</script>',source:'Fixture source',date:'2026-10-14',current:true}];
+const render=props=>renderToStaticMarkup(React.createElement(ConclusionSummary,props));
+let passed=0;function check(label,fn){fn();passed++;console.log('PASS '+label)}
+check('conclusion leads with recommendation and next action before expandable originals',()=>{const html=render({proposal,sources,scope:'draft'});assert.ok(html.indexOf('当前建议')<html.indexOf('下一步行动'));assert.ok(html.indexOf('下一步行动')<html.indexOf('原文依据'));assert.ok(html.includes('先补充关键证据'));assert.ok(html.includes('研究草稿 · 待人工确认'));assert.ok(html.includes(proposal.plan));assert.ok(html.includes('计划尚未执行'));assert.ok(!html.includes('<details open'));assert.ok(html.includes('&lt;script&gt;external'));assert.ok(!html.includes('<script>external'))});
+check('incomplete analysis never invents a decision and keeps actionable next step',()=>{const html=render({analysisCount:2,next:['核对已有原文后处理停止步骤']});assert.ok(html.includes('尚未形成机会判断'));assert.ok(html.includes('已有 2 份阶段分析'));assert.ok(html.includes('核对已有原文'));assert.ok(!html.includes('继续小规模验证'))});
+check('historical summary leads with reverification instead of old investment advice',()=>{const html=render({proposal,sources,scope:'historical'});assert.ok(html.includes('先复核当前范围与原文'));assert.ok(html.includes('历史判断 · 需重新复核'));assert.ok(!html.includes('查看资料详情'));assert.ok(!html.includes('先补充关键证据'))});
+check('simulation and human confirmation do not imply completed market validation',()=>{for(const scope of ['simulation','confirmed']){const html=render({proposal,sources,scope});assert.ok(html.includes(scope==='simulation'?'虚构演示':'人工已确认'));assert.ok(html.includes('流程完成不代表机会已被证实'))}});
+check('missing references remain explicitly unavailable and source count deduplicates',()=>{const html=render({proposal:{...proposal,refs:['E1','E1','MISSING']},sources});assert.ok(html.includes('2 个资料编号'));assert.ok(html.includes('[MISSING] 此摘要未附对应原文'));assert.ok(html.includes('引用数量不是客户数量'))});
+check('completed summary with missing or rejected input snapshots cannot expose injected proposal',()=>{const p=newProject();const r={revision:p.revision,evidenceVersion:0,status:'completed',tasks:[{id:'x',role:'coordinator',status:'done',output:{data:{proposal}}}]};const c=completedRunSummary(p,r);assert.equal(c.withheld,1);assert.equal(c.group,undefined);assert.equal(c.groups.length,0)});
+check('fresh automatic drafts are not mislabeled historical by their confirmation reminder',()=>{const o={stale:false,revision:1,status:'draft',reviewReason:'自动生成的机会草稿，尚未人工确认'};assert.equal(opportunityConclusionScope(o,1),'draft');assert.equal(opportunityConclusionScope(o,2),'historical');assert.equal(opportunityConclusionScope({...o,stale:true},1),'historical');assert.equal(opportunityConclusionScope(o,1,true),'simulation');assert.equal(opportunityConclusionScope({...o,status:'confirmed',reviewReason:undefined},1),'confirmed')});
+console.log(JSON.stringify({conclusion_ui_checks:passed,actual_model_calls:0,scope:'React static rendering and saved-input rejection; no browser visual QA'}));

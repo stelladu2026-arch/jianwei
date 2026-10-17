@@ -1,10 +1,12 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {createRequire} from 'node:module';
-import {responseSchema} from '../lib/research/qwen-model.ts';
+import {legacyResponseSchema as responseSchema} from '../lib/research/qwen-model.ts';
 import {locateChecks} from '../lib/research/collaboration.ts';
 import {validateResult} from '../lib/research/execution.ts';
-import {decodeReviewWire} from '../lib/research/review-wire.ts';
+import {decodeReviewWire as decodeLegacy} from '../lib/research/review-wire.ts';
+import {expandSourceFacts} from '../lib/research/source-facts.ts';
+function decodeReviewWire(wire,role){return decodeLegacy(expandSourceFacts(wire,[],true),role)}
 import {describeReviewIssue} from '../lib/research/review-contract.ts';
 import {planningQueries} from '../lib/research/workflow.ts';
 const planningFixture=JSON.parse(readFileSync(new URL('./fixtures/planning-wire.json',import.meta.url),'utf8'));
@@ -20,7 +22,7 @@ function fixture(role,judgment,anchors){
     data.disagreements=[];
     for(const target of ['proposal:problem','proposal:conclusion'])data.checks.push({target,judgment:'insufficient',reason:'Synthetic missing evidence.',anchors:[]});
   }
-  return {review_format:'claim-anchors/1',status:'partial',data,gaps:[]};
+  return {fact_format:'source-quote/1',review_format:'claim-anchors/1',status:'partial',data,gaps:[]};
 }
 for(const role of ['needs','commercial','verifier','coordinator']){
   const schema=ajv.compile(responseSchema(role,['E1'],true,undefined,[{id:'E1',text:quote}]));
@@ -150,9 +152,10 @@ check('planning schema matches the prompt wire and keyword failures keep their o
   const analysis=ajv.compile(responseSchema('needs',[],false));
   assert.equal(search(wire(planningFixture.intended)),true,JSON.stringify(search.errors));
   assert.deepEqual(planningQueries(wire(planningFixture.intended),plan('plan')),['customer support','help desk']);
-  assert.equal(search(wire(planningFixture.charset)),true,JSON.stringify(search.errors));
+  assert.equal(search(wire(planningFixture.charset)),false);assert.equal(search.errors[0].keyword,'pattern');
   const analysisWire=structuredClone(wire(planningFixture.looseCount));
   delete analysisWire.data.framing;
+  analysisWire.data.citations=[];
   assert.equal(analysis(analysisWire),true,JSON.stringify(analysis.errors));
   assert.equal(search(wire(planningFixture.looseCount)),false);
   assert.equal(search(wire(planningFixture.wrongKind)),false);
