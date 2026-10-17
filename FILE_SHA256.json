@@ -22,8 +22,8 @@
   "source/app/api/search/route.ts": "d78820c3d95e137e9d2aa9eafb791ef955e9f40e9b0d300142b75b9cd8c1bd8e",
   "source/app/chatgpt-auth.ts": "4265a2e7c2dcb3a6f4b7026f762bf5b6e4caec76cc13c0a45987ee9a9f2e42cc",
   "source/app/globals.css": "bc6279d056b2160aaa471317d84c935a271d7fdf69e6c27e6376ea14e578c8d2",
-  "source/app/layout.tsx": "94a54d8138057c96b7c5e7193693b1b7e8b8527fd8893d8013a523b9c370d269",
-  "source/app/page.tsx": "29a1548544efd7fa8e31f2664054a09c6b733c6d21102648f1b7f821797651b7",
+  "source/app/layout.tsx": "5a0fa5333bc84fdcae5c3747fe9df58c0cefa104bdeb0982f1fe69de12b1ad2f",
+  "source/app/page.tsx": "031d6dcf28c89668e2446896c8778c5cb14856a54f49f82d15f0553580d9d380",
   "source/build/connector-preview-plugin.mjs": "a6a9fe2086e302f94a3f91e3c1a68a45bb3aa07d4a79faf01b14732191eb4e80",
   "source/build/connector-preview-worker.mjs": "c1b6b2c420cb67d9e28f8f4ae440f578c0dfd4cb840a12cfe4b58076629a17ba",
   "source/build/sites-vite-plugin.LICENSE": "7de1e115d165f176e68f962acdb809b5ab8d8ae78d3981e0701392b2ac50c713",
@@ -33,7 +33,7 @@
   "source/components.json": "31f4ca67a4a62572571003d3d5aac85ee6fbfca67a192924bac6b168d95e98fd",
   "source/components/chinese-source-actions.tsx": "030cebb14c0c6c025feba812cd24c9df09ae6db6fc64cbfdf91dbfad788634bb",
   "source/components/conclusion-audit.tsx": "0d391aa2d6e0fd0e244e6c7a2b416f6a4205d261775964175ea399308ae1b8fc",
-  "source/components/conclusion-summary.tsx": "9bdf6bf6778832de3894e30edcce0427d53a713e7d3c43373a29794ede15d485",
+  "source/components/conclusion-summary.tsx": "51a970651635edefab451e3b7f126932ecbde53f51ae6122527921d2afcb6402",
   "source/components/connector-error.tsx": "2d0d04559952ce9c9a327cca499f4b99f35d885cccfce375230e116695d3f155",
   "source/components/model-request-summary.tsx": "f65cde1bf5c5a4bacecc3b2fcf659ecc6c3c97849cab32ece60213efbbf04e84",
   "source/components/research-activity.tsx": "2f29a70b8a48ab0a979804d9939b60230959014cd9e2f05787305290d6c0a3ce",
@@ -187,7 +187,7 @@
   "source/pnpm-lock.yaml": "e985a7b98aaa5f660b3e03461befecb0307c9b25701e8209d553e2aca82a4830",
   "source/pnpm-workspace.yaml": "4a69dc93a75ff4a33f54c2853d5317c8e7374faab592f3472b5164257bff8066",
   "source/postcss.config.mjs": "dfac7ac2d86d326a0e5adb024e7943c181393ed17a5fcb8f0315b24c7da6ddde",
-  "source/public/favicon.svg": "1b8133e12ac30ad317dacf31ea4b2dfa53c9e79399ff6d2ae881be46c6cb797f",
+  "source/public/favicon.svg": "dcfae6328d8a8964cc549ebbd45650b3b3872833589a217bc722945905b1fb01",
   "source/public/file.svg": "1e0ae4d1a1ddfa36752988647b731e4abf150c414d069ec83c96fb0aaeff0307",
   "source/public/globe.svg": "d051a8c47936990a9085693d307bb7cea1bc1b6d7ed956bcbaacf674f4ec96b9",
   "source/public/window.svg": "decf1cf7bb22b5c99c4857cfcd5718ce5465c4454166317589c83fc73df74b66",
@@ -255,5 +255,7 @@
   "source/lib/research/wait-feedback.ts": "a9a83703a6eb6961334b1ceef08eda998da88e8c539040134f0912de712018a3",
   "source/tests/wait-feedback-smoke.mjs": "e6945a9facf3fcf7e471251c1c2c93106d9a7af62b87e6f3001d61a64625f437",
   "source/lib/research/execution-start.ts": "f4087e3395c52aaf904aa347f2b32ef2b3f18f34b6f19e376bc5a1ac3cfda22a",
-  "source/tests/interaction-audit-smoke.mjs": "af727678e1923a70df7a774fdf5470ff0685e0d2f1d73346c467d820afb9f0e0"
+  "source/tests/interaction-audit-smoke.mjs": "af727678e1923a70df7a774fdf5470ff0685e0d2f1d73346c467d820afb9f0e0",
+  "source/app/research-desk.css": "52fa91cb8a26610395c84e6a701df01cc511cd6cf282b1edafd53eeb369a15a1",
+  "source/components/research-desk.tsx": "422f113b187c949f8df915b09b03981a75fe32f476d71a1cb209a139ce774865"
 }
