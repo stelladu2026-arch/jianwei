@@ -20,6 +20,7 @@ function source(p:Project){
  if(!targets.length||targets.length>10)throw new Error('INVALID_REVIEW_COVERAGE');
  return {w,roles,targets};
 }
+export function conclusionAuditBlockReason(p:Project){try{source(p);return ''}catch(error){return (error as Error).message}}
 export async function auditSourceHash(p:Project){const {w,roles}=source(p),payload=JSON.stringify({id:w.id,revision:w.revision,evidenceVersion:w.evidenceVersion,frozen:w.frozen,outputs:roles.map(t=>({role:t.role,output:t.output}))});return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(payload)))).map(x=>x.toString(16).padStart(2,'0')).join('');}
 export function auditTask(p:Project,a:ConclusionAudit,callId:string):ModelTask{
  const {w,roles,targets}=source(p);

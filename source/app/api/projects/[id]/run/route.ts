@@ -6,6 +6,7 @@ import {log,type Project} from '@/lib/research/domain';
 import {scanReflections} from '@/lib/research/governance';
 import {buildTask,completeTask,currentRun,executeModel,failTask,localStep,makeRun,reserve,SimulationModel,validateResult,errorLabels,nextTask} from '@/lib/research/execution';
 import {controlRun} from '@/lib/research/execution-controls';
+import {realExecutionStartReason} from '@/lib/research/execution-start';
 import {evaluateFixtures} from '@/lib/research/evaluation';
 import {activeWorkflow} from '@/lib/research/workflow';
 import {QwenModel} from '@/lib/research/qwen-model';
@@ -21,17 +22,18 @@ export async function POST(req:Request,ctx:{params:Promise<{id:string}>}){try{
   if(p.version!==b.version)throw new Error('VERSION_CONFLICT');
   if(b.adapter==='unconfigured')throw new Error('真实模型未配置，请使用 Qwen 会话接入或模拟模式。');
   if(activeWorkflow(p))throw new Error('请先完成或取消一键研究，再单独执行模型或评测。');
+  if(p.workflow?.conclusionAudit&&['ready','running'].includes(p.workflow.conclusionAudit.status))throw new Error('请先完成或结束结论复核，再进行独立执行或评测。');
   if(b.action==='start'){
     if(p.workflow?.conclusionAudit&&['ready','running'].includes(p.workflow.conclusionAudit.status))throw new Error('请先完成或结束结论复核，再开始新执行。');
-    if(b.adapter==='qwen'){qwenCredentials(b.freeTierOnlyConfirmed);if(b.scenario!=='normal')throw new Error('真实模型不支持模拟故障场景。');if((b.limit??(b.mode==='single'?1:4))>QWEN_MAX_ATTEMPTS)throw new Error('首轮免费额度测试最多四次请求，建议单角色一次。');}
-    const run=makeRun(p,b.mode,b.scenario,b.limit??(b.adapter==='qwen'?(b.mode==='single'?1:4):undefined));if(b.adapter==='qwen'){run.adapter='qwen';run.model=QWEN_MODEL;run.simulation=false;run.paidBudget=0;run.freeTierOnlyConfirmed=true;}if(p.run)p.runHistory=[p.run,...(p.runHistory||[])].slice(0,3);p.run=run;log(p,b.adapter==='qwen'?'创建 Qwen 研究执行；付费预算 ¥0，尚未调用模型；用完即停由用户确认':'创建模拟研究执行；没有真实模型调用');
+    if(b.adapter==='qwen'){const reason=realExecutionStartReason(p,b.mode,b.limit??(b.mode==='single'?1:4));if(reason)throw new Error(reason);qwenCredentials(b.freeTierOnlyConfirmed);if(b.scenario!=='normal')throw new Error('研究执行不支持流程测试场景。');if((b.limit??(b.mode==='single'?1:4))>QWEN_MAX_ATTEMPTS)throw new Error('本次执行最多四次请求。');}
+    const run=makeRun(p,b.mode,b.scenario,b.limit??(b.adapter==='qwen'?(b.mode==='single'?1:4):undefined));if(b.adapter==='qwen'){run.adapter='qwen';run.model=QWEN_MODEL;run.simulation=false;run.paidBudget=0;run.freeTierOnlyConfirmed=true;}if(p.run)p.runHistory=[p.run,...(p.runHistory||[])].slice(0,3);p.run=run;log(p,b.adapter==='qwen'?'创建研究执行；尚未调用研究服务':'创建模拟研究执行；没有真实模型调用');
   }else if(b.action==='evaluate'){
     if(p.run?.lease)throw new Error('请等待当前步骤完成或先暂停执行，再进行评测。');
     p.evaluations=[await evaluateFixtures(),...(p.evaluations||[])].slice(0,3);log(p,'运行固定虚构评测集；结果为流程检查，不代表模型质量');
   }else if(b.action!=='advance'){
     controlRun(p,b.action);scanReflections(p);log(p,`研究执行：${{pause:'暂停',resume:'恢复',cancel:'取消',retry:'准备重试',recover:'恢复中断检查点'}[b.action]}`);
   }else{
-    if(['paused','cancelled'].includes(p.status))throw new Error('请先恢复项目研究。');
+    if(p.archived||['paused','cancelled','completed'].includes(p.status))throw new Error('请先恢复项目研究。');
     const pending=currentRun(p),key=pending.adapter==='qwen'&&nextTask(pending)?.role?qwenCredentials(b.freeTierOnlyConfirmed):undefined;
     const {run:r,task:t}=reserve(p,b.callId);let task;
     try{if(t.role)task=buildTask(p,r,t,b.callId);}catch(e){failTask(r,t,(e as Error).message,b.callId,0);scanReflections(p);record(p,b.callId);return response(await save(p,b.version));}
@@ -40,7 +42,7 @@ export async function POST(req:Request,ctx:{params:Promise<{id:string}>}){try{
     const adapter=key?new QwenModel(key):new SimulationModel();
     try{if(task)output=validateResult(await executeModel(task,adapter,r.adapter==='qwen'?QWEN_TIMEOUT_MS:4000),task,issues=>{outputIssues=issues});else localStep(p,r,t);}catch(e){const code=(e as Error).message;error=code in errorLabels?code:'MODEL_REPORTED_ERROR';}
     const current=await get(id);if(!current)return NextResponse.json({error:'项目已删除，结果未写入。'},{status:409});
-    if(current.version!==reserved.version||current.run?.lease?.callId!==b.callId||current.run?.id!==r.id){
+    if(current.version!==reserved.version||current.run?.lease?.callId!==b.callId||current.run?.id!==r.id||current.run.status!=='running'||Date.parse(current.run.lease.expires)<=Date.now()){
       // Preserve concurrent user edits. Record the interruption only while this lease is still ours.
       if(current.run?.id===r.id&&current.run.lease?.callId===b.callId){const ct=current.run.tasks.find(x=>x.id===t.id)!;failTask(current.run,ct,'EXECUTION_INTERRUPTED',b.callId,Date.now()-start);scanReflections(current);try{await save(current,current.version)}catch{}}
       return NextResponse.json({error:'研究或执行状态已改变，本次迟到结果未写入。请刷新。'},{status:409});

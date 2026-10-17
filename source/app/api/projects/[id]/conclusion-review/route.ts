@@ -16,8 +16,8 @@ export async function POST(request:Request,ctx:{params:Promise<{id:string}>}){tr
  if(p.actions.includes(b.callId)||p.workflow?.conclusionAudit?.callId===b.callId)return response(p);
  if(p.version!==b.version)throw new Error('VERSION_CONFLICT');
  if(b.action==='start'){
-  if(!b.freeTierOnlyConfirmed)throw new Error('请确认免费额度保护生效，并同意结论复核单独最多一次模型请求。');
-  const audit=await createAudit(p);p.workflow!.conclusionAudit=audit;remember(p,b.callId);log(p,'创建结论复核检查点；独立上限 1 次、付费预算 ¥0，尚未调用模型');return response(await save(p,b.version));
+  qwenCredentials(b.freeTierOnlyConfirmed);
+  const audit=await createAudit(p);p.workflow!.conclusionAudit=audit;remember(p,b.callId);log(p,'创建结论复核检查点；独立上限 1 次，尚未调用模型');return response(await save(p,b.version));
  }
  const a=p.workflow?.conclusionAudit;if(!a)throw new Error('请先创建结论复核检查点。');
  if(b.action==='cancel'){

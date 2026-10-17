@@ -47,4 +47,5 @@ await import('./opportunity-lifecycle-smoke.mjs');
 await import('./citation-recovery-smoke.mjs');
 await import('./product-presentation-smoke.mjs');
 await import('./wait-feedback-smoke.mjs');
+await import('./interaction-audit-smoke.mjs');
 sqlite.close();

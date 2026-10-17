@@ -1,7 +1,7 @@
 import type {Project} from './domain';
 import type {SourceProfile} from './domestic-sources';
 
-export type StartAction='brief'|'new'|'execution'|'checkpoint'|'audit'|'four'|'sources'|'provider'|'confirmation';
+export type StartAction='brief'|'new'|'execution'|'checkpoint'|'audit'|'four'|'sources'|'provider';
 export type StartBlocker={code:string;message:string;action:StartAction;label:string};
 export function collectionStartBlocker(p:Project,profile:SourceProfile):StartBlocker|null{
  const reserved=profile==='v2ex'?1:3;
@@ -10,7 +10,7 @@ export function collectionStartBlocker(p:Project,profile:SourceProfile):StartBlo
  return null;
 }
 export function researchBriefFromProject(p:Project){return {title:p.title,audience:p.audience,region:p.region,period:p.period,exclusions:p.exclusions,decision:p.decision};}
-export function workflowStartBlockers(p:Project,options:{mode:'single'|'four';sourceProfile:SourceProfile;busy:boolean;working:boolean;providerLoading:boolean;providerReady:boolean;providerError:string;freeConfirmed:boolean;restartFour?:boolean}):StartBlocker[]{
+export function workflowStartBlockers(p:Project,options:{mode:'single'|'four';sourceProfile:SourceProfile;busy:boolean;working:boolean;providerLoading:boolean;providerReady:boolean;providerError:string;restartFour?:boolean}):StartBlocker[]{
  const rows:StartBlocker[]=[];
  if(options.busy||options.working)rows.push({code:'busy',message:'当前操作尚未完成，请等待结束后再开始。',action:'checkpoint',label:'查看研究检查点'});
  if(p.archived||['paused','cancelled','completed'].includes(p.status))rows.push({code:'project_state',message:p.archived?'项目已归档，请先恢复项目。':'项目已暂停、结束或完成，请先在项目上方恢复或重新开启研究。',action:'brief',label:'查看项目状态'});
@@ -21,8 +21,7 @@ export function workflowStartBlockers(p:Project,options:{mode:'single'|'four';so
  if(p.workflow&&['ready','running','paused','failed'].includes(p.workflow.status)&&!(options.restartFour&&p.workflow.mode==='four'&&p.workflow.status==='failed'))rows.push({code:'workflow_active',message:'当前研究检查点尚未结束，先处理当前轮再创建新轮。',action:'checkpoint',label:'处理当前研究检查点'});
  if(options.mode==='single'){const collection=collectionStartBlocker(p,options.sourceProfile);if(collection)rows.push(collection);}
  if(options.mode==='four'&&!p.evidence.some(e=>!e.excluded&&e.kind!=='synthetic'&&e.text.trim().length>=40))rows.push({code:'originals',message:'至少需要一条可分析的真实正文；只有标题、已排除或虚构资料不能启动复核。',action:'sources',label:'去补充原文'});
- if(options.providerLoading)rows.push({code:'provider_loading',message:'正在读取模型配置，请等待完成。',action:'provider',label:'刷新模型配置'});
- else if(options.providerError||!options.providerReady)rows.push({code:'provider',message:options.providerError||'模型配置尚未就绪，请先刷新配置并核对服务端状态。',action:'provider',label:'刷新模型配置'});
- if(!options.freeConfirmed)rows.push({code:'confirmation',message:'请勾选免费额度“用完即停”与本轮预算确认；刷新页面后需要重新确认。',action:'confirmation',label:'前往预算确认'});
+ if(options.providerLoading)rows.push({code:'provider_loading',message:'正在读取研究服务状态，请等待完成。',action:'provider',label:'刷新服务状态'});
+ else if(options.providerError||!options.providerReady)rows.push({code:'provider',message:options.providerError||'研究服务暂不可用，请刷新服务状态后重试。',action:'provider',label:'刷新服务状态'});
  return rows;
 }

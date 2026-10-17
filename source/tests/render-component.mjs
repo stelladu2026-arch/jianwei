@@ -7,5 +7,6 @@ export function componentURL(url){
  let js=ts.transpileModule(readFileSync(url,'utf8'),{compilerOptions:{module:ts.ModuleKind.ESNext,jsx:ts.JsxEmit.ReactJSX,target:ts.ScriptTarget.ES2022}}).outputText;
  js=js.replace(/(['"])react\1/g,JSON.stringify(pathToFileURL(require.resolve('react')).href));
  js=js.replace('"react/jsx-runtime"',JSON.stringify(pathToFileURL(require.resolve('react/jsx-runtime')).href));
+ js=js.replace(/from (["'])(\.\.?\/[^"']+)\1/g,(match,_quote,specifier)=>{const child=new URL(specifier+'.tsx',url);try{return 'from '+JSON.stringify(componentURL(child))}catch(error){if(error.code==='ENOENT')return match;throw error}});
  return 'data:text/javascript;base64,'+Buffer.from(js).toString('base64');
 }

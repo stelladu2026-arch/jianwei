@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {QWEN_BASE_URL,QWEN_MODEL,QWEN_MAX_OUTPUT_TOKENS} from '../lib/research/provider-config.ts';
 import {QwenModel,requireQwenCredentials} from '../lib/research/qwen-model.ts';
 import {makeRun,buildTask,reserve,executeModel} from '../lib/research/execution.ts';
+import {create as storeCreate} from '../lib/research/store.ts';
 import {fixtureProject} from '../lib/research/evaluation.ts';
 const key='sk-synthetic-test-key-only',owned=[];
 let passed=0,requests=0,scenario='normal',pendingRelease;
@@ -11,7 +12,7 @@ function check(label,fn){fn();passed++;console.log('PASS '+label)}
 async function api(path,method='GET',body,secret=key){const res=await globalThis.__apiTestFetch('http://test.local'+path,{method,headers:{'content-type':'application/json',...(secret?{'x-qwen-api-key':secret}:{})},body:body===undefined?undefined:JSON.stringify(body)});return {status:res.status,data:await res.json()}}
 async function control(p,action,extra={},secret=key,callId=crypto.randomUUID()){return api(`/api/projects/${p.id}/run`,'POST',{version:p.version,callId,action,adapter:'qwen',freeTierOnlyConfirmed:true,...extra},secret)}
 async function read(p){return (await api(`/api/projects/${p.id}/run`)).data.project}
-async function create(){const x=await api('/api/projects','POST',{demo:true,title:'synthetic Qwen HTTP fixture only'});owned.push(x.data.project.id);return (await api(`/api/projects/${x.data.project.id}`,'PATCH',{version:x.data.project.version,callId:crypto.randomUUID(),action:'confirm'})).data.project}
+async function create(){const p=fixtureProject('baseline');p.mode='manual';p.title='Synthetic Qwen HTTP fixture only';p.evidence=p.evidence.map(e=>({...e,kind:'imported',source:'Synthetic authorized adapter fixture only'}));owned.push(p.id);return storeCreate(p)}
 globalThis.fetch=async(url,init)=>{
   requests++;
   assert.equal(url,QWEN_BASE_URL+'/chat/completions');assert.equal(init.redirect,'manual');assert.equal(init.headers.Authorization,'Bearer '+key);

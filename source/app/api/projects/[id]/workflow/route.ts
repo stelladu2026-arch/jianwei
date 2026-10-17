@@ -45,7 +45,7 @@ export async function POST(request:Request,context:{params:Promise<{id:string}>}
     }
     const w=makeWorkflow(p,b.allowSupplement,b.mode,b.sourceProfile,b.sourceNode);if(b.mode==='four')await initializeFour(p,w);
     if(p.workflow)p.workflowHistory=[p.workflow,...(p.workflowHistory||[])].slice(0,2);
-    p.workflow=w;log(p,`${b.action==='restart'?'保留失败记录并重新创建四角色复核':'创建一键研究'}；最多 ${w.budget.modelLimit} 次模型请求，付费预算 ¥0；尚未调用模型`);addAction(p,b.callId);return response(await save(p,b.version));
+    p.workflow=w;log(p,`${b.action==='restart'?'保留失败记录并重新创建四角色复核':'创建一键研究'}；最多 ${w.budget.modelLimit} 次模型请求；尚未调用模型`);addAction(p,b.callId);return response(await save(p,b.version));
   }
   if(b.action==='review'){const w=currentWorkflow(p);if(!b.review)throw new Error('请填写人工评审。');saveHumanReview(w,b.review);w.report=workflowReport(p,w);addAction(p,b.callId);log(p,'保存单／多角色人工对照评审；未调用模型');return response(await save(p,b.version));}
   if(b.action!=='advance'){controlWorkflow(p,b.action);scanReflections(p);log(p,'一键研究：'+{pause:'暂停',resume:'恢复',cancel:'取消',retry:'准备重试',recover:'恢复过期检查点'}[b.action]);addAction(p,b.callId);return response(await save(p,b.version));}
@@ -102,7 +102,7 @@ export async function POST(request:Request,context:{params:Promise<{id:string}>}
     else{const r=w.analysisRun!,t=r.tasks.find(t=>t.id===stage)!;if(w.mode==='four'&&stage==='check')checkFour(w);localStep(p,r,t);}
   }catch(e){if(e instanceof AgentStepFailure)agentSpend=e.spend;error=safeError((e as Error).message);}
   const current=await get(id);if(!current)return NextResponse.json({error:'项目已删除，结果未写入。'},{status:409});
-  if(current.version!==expectedVersion||current.workflow?.id!==w.id||current.workflow?.lease?.callId!==b.callId){
+  if(current.version!==expectedVersion||current.workflow?.id!==w.id||current.workflow?.lease?.callId!==b.callId||current.workflow.status!=='running'||Date.parse(current.workflow.lease.expires)<=Date.now()){
     // User edits/pause/cancel win. Never replace their newer state with late output.
     if(current.workflow?.id===w.id&&current.workflow.lease?.callId===b.callId){const cw=current.workflow,cr=cw.records.find(r=>r.id===b.callId)!;cr.state='failed';cr.error='EXECUTION_INTERRUPTED';cw.status='failed';cw.error=cr.error;cw.needsRetry=true;cw.lease=undefined;try{await save(current,current.version)}catch{}}
     return NextResponse.json({error:'研究状态已改变，迟到结果未写入；请刷新检查点。'},{status:409});
