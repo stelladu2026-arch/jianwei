@@ -1,4 +1,5 @@
 'use client';
+import type {WaitingRequest} from '@/lib/research/wait-feedback';
 import {presentRecord,presentReport,presentSystemCopy} from '@/lib/research/product-presentation';
 import {workflowOpportunity} from '@/lib/research/opportunity-lifecycle';
 import {V2EX_NODES,domesticErrors,type SourceProfile,type V2exNode} from '@/lib/research/domestic-sources';
@@ -33,6 +34,7 @@ export function ResearchWorkflowPanel({project:p,onUpdate,onBrief,onReview,onEvi
   const [mode,setMode]=useState<'single'|'four'>(initialMode);const [supplement,setSupplement]=useState(true),[free,setFree]=useState(false),[provider,setProvider]=useState<ModelConfiguration|null>(null),[working,setWorking]=useState(false),[automatic,setAutomatic]=useState(false),[error,setError]=useState('');
   const [restartConfirmed,setRestartConfirmed]=useState(false),[existingConfirmed,setExistingConfirmed]=useState(false);
   const [providerError,setProviderError]=useState(''),[providerLoading,setProviderLoading]=useState(false);
+  const [pendingRequest,setPendingRequest]=useState<WaitingRequest|null>(null);
   const active=useRef(true),auto=useRef(false);const w=p.workflow,stages=stagesFor(w),canStart=!w||['completed','partial','cancelled','stale'].includes(w.status);
   useEffect(()=>{active.current=true;return()=>{active.current=false;auto.current=false}},[]);
   async function configuration(){setProviderLoading(true);setProviderError('');setProvider(null);try{const value=await readModelConfiguration();if(active.current){setProvider(value);setProviderError('')}}catch(e){if(active.current)setProviderError((e as Error).message)}finally{if(active.current)setProviderLoading(false)}}
@@ -40,8 +42,8 @@ export function ResearchWorkflowPanel({project:p,onUpdate,onBrief,onReview,onEvi
   useEffect(()=>{setRestartConfirmed(false);setExistingConfirmed(false)},[w?.id]);
   useEffect(()=>{setMode(initialMode)},[initialMode]);
   async function current(){const d=await requestJSON<{project:Project;error?:string}>(`/api/projects/${p.id}/workflow`);if(active.current)onUpdate(d.project);return d.project as Project;}
-  useEffect(()=>{if(!w?.lease)return;const timer=setInterval(()=>{current().catch(()=>{})},2500);return()=>clearInterval(timer)},[w?.lease?.callId]);
-  async function call(action:string,value:Project,extra:Record<string,unknown>={}){const d=await requestJSON<{project:Project;error?:string}>(`/api/projects/${p.id}/workflow`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({version:value.version,callId:crypto.randomUUID(),action,mode,freeTierOnlyConfirmed:action==='analyze-existing'?existingConfirmed:free,allowSupplement:mode==='single'&&sourceProfile==='v2ex'?false:supplement,sourceProfile:mode==='single'?sourceProfile:'public',sourceNode,...(action==='analyze-existing'?{mode:'single',allowSupplement:false}:{}),...extra})});if(active.current)onUpdate(d.project);return d.project as Project;}
+  useEffect(()=>{if(!pendingRequest&&!w?.lease)return;let disposed=false,inflight=false;async function poll(){if(inflight||disposed)return;inflight=true;try{const data=await requestJSON<{project:Project}>(`/api/projects/${p.id}/workflow`);if(!disposed&&active.current)onUpdate(data.project)}catch{}finally{inflight=false}}void poll();const timer=setInterval(poll,2500);return()=>{disposed=true;clearInterval(timer)}},[pendingRequest?.id,w?.lease?.callId]);
+  async function call(action:string,value:Project,extra:Record<string,unknown>={}){const callId=crypto.randomUUID();if(action==='advance')setPendingRequest({id:callId,stage:value.workflow!.stage,startedAt:Date.now()});try{const d=await requestJSON<{project:Project;error?:string}>(`/api/projects/${p.id}/workflow`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({version:value.version,callId,action,mode,freeTierOnlyConfirmed:action==='analyze-existing'?existingConfirmed:free,allowSupplement:mode==='single'&&sourceProfile==='v2ex'?false:supplement,sourceProfile:mode==='single'?sourceProfile:'public',sourceNode,...(action==='analyze-existing'?{mode:'single',allowSupplement:false}:{}),...extra})});if(active.current)onUpdate(d.project);return d.project as Project;}finally{if(action==='advance')setPendingRequest(current=>current?.id===callId?null:current)}}
   async function loop(value:Project){auto.current=true;setAutomatic(true);try{let next=value;for(let i=0;i<18&&auto.current&&active.current&&next.workflow?.status==='ready'&&!workflowAdvanceBlockReason(next);i++)next=await call('advance',next);}finally{auto.current=false;if(active.current)setAutomatic(false)}}
   async function operate(action:string,continuous=false){if(['pause','cancel'].includes(action))auto.current=false;setError('');setWorking(true);try{let value=await current();if(action!=='continue')value=await call(action,value,action==='restart'?{mode:'four',allowSupplement:false}:{});if(action==='restart'){setMode('four');setRestartConfirmed(false)}if(action==='analyze-existing')setMode('single');if(continuous)await loop(value);}catch(e){try{const latest=await current();if(!['paused','cancelled'].includes(latest.workflow?.status||''))setError((e as Error).message);}catch{if(active.current)setError((e as Error).message)}}finally{if(active.current)setWorking(false)}}
   const conclusion=w?.analysisRun?completedRunSummary(p,w.analysisRun):null;
@@ -81,7 +83,7 @@ export function ResearchWorkflowPanel({project:p,onUpdate,onBrief,onReview,onEvi
     </section>
     {w&&<>
       <section className="panel checkpoint-panel" id="research-checkpoint"><div className="panel-heading"><div><h2>{w.status==='failed'?'流程未完成 · 已有成果保留':states[w.status]}</h2><p className="meta">研究版本 {w.revision} · {new Date(w.created).toLocaleString('zh-CN')}{automatic?' · 正在连续推进':''}</p></div><button className="button secondary" onClick={()=>current().catch(e=>setError(e.message))}><RefreshCw size={16}/>刷新检查点</button></div>
-        <ResearchActivity workflow={w} stages={stages}/>
+        <ResearchActivity workflow={w} stages={stages} pending={pendingRequest}/>
         {collectionClosing&&<WorkspaceNotice title="采集次数已用完，可保留资料继续" tone="warning">{collectionClosing.message} 点击下方按钮保留已有资料并进入下一阶段，不追加检索。</WorkspaceNotice>}
         {lastCloseout&&!collectionClosing&&<WorkspaceNotice title="本轮采集已收尾">仍有 {lastCloseout.unexecutedQueries.length} 个计划检索未执行，已保留为证据缺口；收尾没有新增模型或来源请求。</WorkspaceNotice>}
         {w.error&&<p className="warning-text">{stopReason||failureReasons[0]||errorLabels[w.error]||(w.error==='NO_USABLE_EVIDENCE'?'未取得足够可分析的正文；这不代表没有需求。':w.error)}</p>}

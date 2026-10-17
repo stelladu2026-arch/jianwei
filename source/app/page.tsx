@@ -1,4 +1,5 @@
 'use client';
+import {mergeProjectUpdate} from '@/lib/research/project-updates';
 import {presentReport} from '@/lib/research/product-presentation';
 import {OpportunityNextStep} from '@/components/opportunity-next-step';
 import {opportunityForReview,opportunityTarget} from '@/lib/research/opportunity-lifecycle';
@@ -58,7 +59,7 @@ export default function Page(){
  const p=projects.find(x=>x.id===selected),c=p?counts(p):null,detail=p?.evidence.find(e=>e.id===detailId);
  const load=useCallback(async()=>{setLoadError('');try{const d=await api('/api/projects');setProjects(d.projects);setSelected(s=>d.projects.some((x:Project)=>x.id===s)?s:d.projects[0]?.id||'');}catch(e){setLoadError((e as Error).message)}finally{setLoading(false)}},[]);
  useEffect(()=>{load()},[load]);
- const put=(next:Project)=>{setProjects(xs=>[next,...xs.filter(x=>x.id!==next.id)]);setSelected(next.id)};
+ const put=(next:Project)=>{setProjects(xs=>mergeProjectUpdate(xs,next));setSelected(next.id)};
  async function act(action:string,data?:unknown){if(!p||mutation.current)return;mutation.current=true;setBusy(true);setOperationError('');try{const d=await api('/api/projects/'+p.id,{method:'PATCH',body:JSON.stringify({version:p.version,callId:crypto.randomUUID(),action,data})});put(d.project);if(action==='opportunity'&&d.opportunityId){setSavedOpportunity({projectId:p.id,id:d.opportunityId});setFocusTarget({view:'opportunities',id:opportunityTarget(d.opportunityId,'opportunities'),at:Date.now()});}return d.project as Project;}catch(e){setOperationError((e as Error).message);toast.error((e as Error).message);if((e as Error).message.includes('刷新'))await load();return undefined;}finally{mutation.current=false;setBusy(false)}}
  async function create(demo=false){setBusy(true);try{const d=await api('/api/projects',{method:'POST',body:JSON.stringify(demo?{demo:true,title:'演示研究'}:brief)});put(d.project);setView('brief');setModal('');toast.success(demo?'虚构演示项目已创建':'研究项目已保存');}catch(e){setOperationError((e as Error).message);toast.error((e as Error).message)}finally{setBusy(false)}}
  function openNew(){setOperationError('');setBriefCopied(false);setEditing(false);setBrief(blankBrief);setModal('brief')}
