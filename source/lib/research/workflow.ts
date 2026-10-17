@@ -122,7 +122,7 @@ export function collectionCloseout(p:Project,w=p.workflow){
    next=newInGap?'reanalyze':'check';
  }else next=usable.length?'analyze':'partial';
  const unexecutedQueries=w.queries.slice(w.collectIndex).map(q=>q.query);
- const message=`采集预算已达到上限，剩余 ${unexecutedQueries.length} 个计划检索未执行。`+(next==='analyze'||next==='reanalyze'?'已有正文保留，下一步只分析可用资料；未采集部分保留为证据缺口。':next==='check'?'未取得新的补充正文，保留已有分析并转入本地校验；不追加模型请求。':'尚无可用正文，本轮保留部分成果，不生成机会判断。');
+ const message=`采集预算已达到上限，剩余 ${unexecutedQueries.length} 个计划检索未执行。`+(next==='analyze'||next==='reanalyze'?'已有正文保留，下一步只分析可用资料；未采集部分保留为证据缺口。':next==='check'?'未取得新的补充正文，保留已有分析并转入引用校验；不追加模型请求。':'尚无可用正文，本轮保留部分成果，不生成机会判断。');
  return {reason:reason as 'search_limit'|'project_search_limit'|'source_limit',unexecutedQueries,next,message};
 }
 export function closeCollectionAtLimit(p:Project,w:ResearchWorkflow,callId:string){
@@ -155,7 +155,7 @@ export function workflowRetryBlockReason(p:Project){
   if(['plan','analyze','gap','reanalyze'].includes(w.stage)&&w.budget.modelAttempts>=w.budget.modelLimit)return `本轮模型调用预算已用完（请求次数 ${w.budget.modelAttempts} / ${w.budget.modelLimit}），不能在原轮追加重试；账户余额和免费额度需在百炼核查。`;
   if(w.mode!=='four'&&stageBudgetBlock(w))return stageBudgetBlock(w);
   if(['collect','supplement'].includes(w.stage)&&(w.budget.sourceAttempts+workflowSourceCap(w)>w.budget.sourceLimit||w.budget.searches>=w.budget.searchLimit||p.budget.searches>=6))return '采集预算已用完，不能重试。';
-  if(['check','deliver'].includes(w.stage)){const t=w.analysisRun?.tasks.find(t=>t.id===w.stage);if(!t||t.attempts>=2)return '该本地步骤已达到重试上限。';}
+  if(['check','deliver'].includes(w.stage)){const t=w.analysisRun?.tasks.find(t=>t.id===w.stage);if(!t||t.attempts>=2)return '该校验与保存步骤已达到重试上限。';}
   return '';
 }
 export function controlWorkflow(p:Project,action:'pause'|'resume'|'cancel'|'retry'|'recover'){

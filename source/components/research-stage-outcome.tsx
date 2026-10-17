@@ -21,6 +21,6 @@ export function ResearchStageOutcome({outcome:o,onSources,onCheckpoint,onGoverna
   {o.withheld>0&&<p className="warning-text">{o.withheld} 份旧结果不能按保存的输入重新校验，未纳入本报告。</p>}
   <section className="outcome-next"><h3>下一步</h3><ul className="aligned-copy-list" role="list">{o.next.map((next,i)=><li key={i}>{next}</li>)}</ul><div className="toolbar">{onSources&&<button className="button secondary" onClick={onSources}>核对或补充原文</button>}{onCheckpoint&&<button className="button secondary" onClick={onCheckpoint}>前往研究检查点</button>}{onGovernance&&<button className="button subtle" onClick={onGovernance}>记录人工反思与纠正</button>}</div></section>
   <details><summary>查看全部所附原文（{o.sources.length} 份）</summary>{o.sources.map(s=><details key={s.key}><summary>[{s.id}] {s.title} · {s.origin==='input'?'输入快照':'当前项目资料，未据此补写分析'}</summary><p className="meta">{s.source} · {s.date||'日期未知'} · {s.current?'匹配当前片段':'历史输入'} · {s.kind==='synthetic'?'虚构样例':'来源及语境待核查'}</p><blockquote>{s.text}</blockquote></details>)}{!o.sources.length&&<p>尚无可交付原文。</p>}</details>
-  <p className="meta">本报告由本地规则自动整理，额外模型调用 0。不会把被拒输出、未完成步骤或模拟结果包装成已验证结论，不自动保存正式机会卡或确认记忆。</p>
+  <p className="meta">本报告汇总已保存的研究结果。未接受的输出和未完成的步骤不会纳入结论，机会卡与经验仍需人工确认。</p>
  </section>;
 }

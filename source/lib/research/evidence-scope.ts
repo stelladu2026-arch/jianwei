@@ -28,5 +28,5 @@ export function summarizeEvidenceScope(sources:readonly unknown[],refs:readonly 
 }
 export function renderEvidenceScope(sources:readonly unknown[],refs:readonly string[]){
  const s=summarizeEvidenceScope(sources,refs);
- return `## 结论引用范围（本地规则）\n已附原文 ${s.attached} / ${s.requested}；来源关联组：${s.relatedGroups===null?'未知':s.relatedGroups}；裁剪片段 ${s.truncated} 条。\n${s.warnings.map(w=>'- '+w).join('\n')}\n这些是范围提示，不是语义支持、客户独立性或商业可行性评分。逐项核查原文是否支持同一人群、问题及因果关系；访谈和付款仍待验证。`;
+ return `## 结论引用范围\n已附原文 ${s.attached} / ${s.requested}；来源关联组：${s.relatedGroups===null?'未知':s.relatedGroups}；裁剪片段 ${s.truncated} 条。\n${s.warnings.map(w=>'- '+w).join('\n')}\n这些是范围提示，不是语义支持、客户独立性或商业可行性评分。逐项核查原文是否支持同一人群、问题及因果关系；访谈和付款仍待验证。`;
 }
