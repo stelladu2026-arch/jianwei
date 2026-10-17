@@ -48,4 +48,5 @@ await import('./citation-recovery-smoke.mjs');
 await import('./product-presentation-smoke.mjs');
 await import('./wait-feedback-smoke.mjs');
 await import('./interaction-audit-smoke.mjs');
+await import('./desk-recovery-smoke.mjs');
 sqlite.close();
