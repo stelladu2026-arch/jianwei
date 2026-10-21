@@ -1,3 +1,4 @@
+import {claimKinds,claimKindLabels} from './claim-kinds';
 import {z} from 'zod';
 import type {Role} from './model-port';
 import {checkSchema,disagreementSchema} from './review-contract';
@@ -6,7 +7,7 @@ import {checkSchema,disagreementSchema} from './review-contract';
 // in its anchors. Saved results keep the existing internal/UI representation.
 export const REVIEW_FORMAT='claim-anchors/1';
 const str=z.string().trim().min(1).max(2000);
-const note=z.object({claim:str,kind:z.enum(['hypothesis','gap','counter'])}).strict();
+const note=z.object({claim:str,kind:z.enum(claimKinds)}).strict();
 const proposal=z.object({title:str,problem:str,audience:str,alternative:str,conclusion:str,decision:z.enum(['validate','evidence','pause']),payment:z.enum(['none','weak','medium']),counter:str,unknowns:str,plan:str}).strict();
 export function decodeReviewWire(raw:unknown,role:Role,diagnose?:(issues:string[])=>void){
   const common={notes:z.array(note).min(1).max(2),checks:z.array(checkSchema).max(4)};

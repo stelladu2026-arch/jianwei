@@ -32,7 +32,7 @@ x=await mutate(m,'opportunity',{...o,refs:[m.evidence[0].id],payment:'strong'});
 x=await mutate(m,'opportunity',{...o,refs:[m.evidence[0].id]});m=x.data.project;check('manual judgment saves with project citations',()=>{assert.equal(x.status,200);assert.equal(m.opportunities.length,1)});
 x=await mutate(m,'evidence',{id:m.evidence[0].id,excluded:true,stance:'counter'});m=x.data.project;
 x=await mutate(m,'opportunity',{...o,refs:[m.evidence[0].id]});check('excluded evidence cannot be cited',()=>assert.equal(x.status,400));
-x=await mutate(m,'step');check('unconfigured model does not fake analysis',()=>{assert.equal(x.status,400);assert.match(x.data.error,/文本模型/)});
+x=await mutate(m,'step');check('manual step does not fake analysis and points to the research workflow',()=>{assert.equal(x.status,400);assert.match(x.data.error,/一键研究/);assert.ok(!x.data.error.includes('尚未接入'))});
 x=await mutate(m,'archive');m=x.data.project;check('archive state survives reads',()=>assert.ok(m.archived));
 x=await mutate(m,'cancel');m=x.data.project;x=await mutate(m,'step');check('cancelled run cannot advance',()=>assert.equal(x.status,400));
 // Governance routes use the same real persistence and conflict boundary.
