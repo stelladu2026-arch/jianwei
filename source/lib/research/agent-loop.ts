@@ -50,7 +50,7 @@ export function parseToolCalls(raw:unknown,diagnose?:(issues:string[])=>void):Ag
 }
 
 
-type Turn={final:ModelResult|null;toolCalls:AgentToolCall[]};
+type Turn={final:ModelResult|null;toolCalls:AgentToolCall[];receipt?:{requestId?:string;usage?:ModelResult['usage']}};
 export type LoopInput={
   task:ModelTask;
   invoke:(task:ModelTask)=>Promise<Turn>;

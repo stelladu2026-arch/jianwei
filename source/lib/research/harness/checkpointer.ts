@@ -59,6 +59,6 @@ export class ResearchCheckpointSaver extends BaseCheckpointSaver {
     }
   }
   async deleteThread(threadId:string){
-    for(const table of ['research_harness_writes','research_harness_checkpoints','research_harness_operations','research_harness_threads'])await this.db.prepare(`DELETE FROM ${table} WHERE thread_id=?`).bind(threadId).run();
+    for(const table of ['research_harness_stage_inputs','research_harness_writes','research_harness_checkpoints','research_harness_operations','research_harness_threads'])await this.db.prepare(`DELETE FROM ${table} WHERE thread_id=?`).bind(threadId).run();
   }
 }

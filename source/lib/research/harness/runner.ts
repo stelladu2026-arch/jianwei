@@ -61,9 +61,18 @@ export async function runResearchHarness(input:HarnessInput){
   if(input.resume&&!existing)throw new Error('HARNESS_CHECKPOINT_MISSING');
   if(!input.resume&&existing)throw new Error('HARNESS_THREAD_EXISTS');
 
-  let spend=emptySpend(),finalTask=input.task,halted=false;
-  const model=new ResearchChatModel(async messages=>{
+  async function guard(){
     await input.guard?.();
+    const unknown=await input.database.prepare("SELECT COUNT(*) AS n FROM research_harness_operations WHERE thread_id=? AND state!='done'").bind(threadId).first<{n:number}>();
+    if(unknown?.n)throw Error('HARNESS_RESULT_UNCERTAIN');
+  }
+  let spend=emptySpend(),finalTask=input.task,halted=false;
+  async function savedReceipts(){
+    const rows=await input.database.prepare("SELECT operation_id,result FROM research_harness_operations WHERE thread_id=? AND state='done' AND operation_id LIKE 'model:%'").bind(threadId).all<{operation_id:string;result:string}>();
+    return rows.results.sort((a,b)=>Number(a.operation_id.slice(6))-Number(b.operation_id.slice(6))).flatMap(row=>{const turn=JSON.parse(row.result);return turn.receipt?[turn.receipt as {requestId?:string;usage?:ModelResult['usage']}]:[]});
+  }
+  const model=new ResearchChatModel(async messages=>{
+    await guard();
     const turn=messages.filter(m=>m instanceof AIMessage&&m.additional_kwargs.researchTurn===true).length;
     spend=restoredSpend(messages);
     const attempts=input.budget.modelAttempts+turn;
@@ -92,7 +101,7 @@ export async function runResearchHarness(input:HarnessInput){
   let toolTail=Promise.resolve<unknown>(undefined);
   const tools=[...AGENT_TOOLS,'refused_research_tool'].map(name=>tool(async(args,config)=>{
     const execute=async()=>{
-    await input.guard?.();
+    await guard();
     const toolCallId=config.toolCall?.id;
     if(!toolCallId)throw new Error('HARNESS_TOOL_ID_REQUIRED');
     const state=await journal.execute(`tool:${toolCallId}`,async()=>{
@@ -130,9 +139,9 @@ export async function runResearchHarness(input:HarnessInput){
     finalTask=withToolResults(input.task,spend,!!input.finalizeAtLimit&&(!input.allowFollowUp||input.budget.modelAttempts+modelMessages.length-1>=input.budget.modelLimit));
     const last=modelMessages.at(-1);
     const final=last&&!last.tool_calls?.length&&typeof last.content==='string'?JSON.parse(last.content) as ModelResult|null:null;
-    return {runtime:HARNESS_RUNTIME,version:HARNESS_VERSION,threadId,final,finalTask,spend};
+    return {runtime:HARNESS_RUNTIME,version:HARNESS_VERSION,threadId,final,finalTask,spend,receipts:await savedReceipts()};
   }catch(error){
-    if(halted)return {runtime:HARNESS_RUNTIME,version:HARNESS_VERSION,threadId,final:null,finalTask,spend};
+    if(halted)return {runtime:HARNESS_RUNTIME,version:HARNESS_VERSION,threadId,final:null,finalTask,spend,receipts:await savedReceipts()};
     throw new AgentStepFailure(error instanceof Error?error.message:'MODEL_REPORTED_ERROR',spend);
   }
 }

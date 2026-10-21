@@ -8,8 +8,16 @@ export interface HarnessStatement {
 }
 export interface HarnessDatabase {prepare(sql:string):HarnessStatement}
 
+const schemaReady=new WeakMap<HarnessDatabase,Promise<void>>();
 export async function initializeHarnessDatabase(db:HarnessDatabase){
+ let ready=schemaReady.get(db);
+ if(!ready){ready=createSchema(db);schemaReady.set(db,ready);}
+ try{await ready}catch(error){schemaReady.delete(db);throw error}
+}
+async function createSchema(db:HarnessDatabase){
   for(const sql of [
+    `CREATE TABLE IF NOT EXISTS research_harness_jobs (project_id TEXT PRIMARY KEY,run_id TEXT NOT NULL,revision INTEGER NOT NULL,request_id TEXT NOT NULL,token_hash TEXT NOT NULL,state TEXT NOT NULL,lease_owner TEXT,lease_until INTEGER NOT NULL,message TEXT NOT NULL,updated TEXT NOT NULL)`,
+    `CREATE TABLE IF NOT EXISTS research_harness_stage_inputs (thread_id TEXT PRIMARY KEY,input TEXT NOT NULL)`,
     `CREATE TABLE IF NOT EXISTS research_harness_checkpoints (
       thread_id TEXT NOT NULL, namespace TEXT NOT NULL, checkpoint_id TEXT NOT NULL,
       parent_id TEXT, checkpoint_type TEXT NOT NULL, checkpoint_data TEXT NOT NULL,

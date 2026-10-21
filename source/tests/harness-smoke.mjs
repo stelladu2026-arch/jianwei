@@ -83,5 +83,10 @@ try{
       assert.equal(requests,1);assert.equal(reservations,1);assert.equal(result.spend.trace[1].reason,'SOURCE_BUDGET');
     }finally{globalThis.fetch=async()=>{throw new Error('LIVE_NETWORK_FORBIDDEN')}}
   });
+  await check('an uncertain tool result cannot trigger another model request inside the SDK',async()=>{
+    let calls=0;
+    await assert.rejects(runResearchHarness(input('uncertain-tool',async()=>{calls++;return calls===1?{final:null,toolCalls:[call()]}:{final,toolCalls:[]}},{retrieve:async()=>{throw Error('SYNTHETIC_TOOL_RESPONSE_LOST')}})),/HARNESS_RESULT_UNCERTAIN|SYNTHETIC_TOOL_RESPONSE_LOST/);
+    assert.equal(calls,1);
+  });
   console.log(`Harness: ${passed} checks passed; real model calls: 0.`);
 }finally{globalThis.fetch=oldFetch;sqlite.close()}
