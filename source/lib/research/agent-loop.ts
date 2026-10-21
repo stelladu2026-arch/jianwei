@@ -51,7 +51,7 @@ export function parseToolCalls(raw:unknown,diagnose?:(issues:string[])=>void):Ag
 
 
 type Turn={final:ModelResult|null;toolCalls:AgentToolCall[]};
-type LoopInput={
+export type LoopInput={
   task:ModelTask;
   invoke:(task:ModelTask)=>Promise<Turn>;
   evidence:Evidence[];
@@ -64,11 +64,11 @@ type LoopInput={
   budget:{modelLimit:number;modelAttempts:number;sourceLimit:number;sourceAttempts:number;searchLimit:number;searches:number;paidBudget:0};
 };
 
-function emptySpend():AgentSpend{return {extraModelCalls:0,sourceAttempts:0,searches:0,trace:[],collections:[],retrieval:[],fetchedQueries:[]};}
+export function emptySpend():AgentSpend{return {extraModelCalls:0,sourceAttempts:0,searches:0,trace:[],collections:[],retrieval:[],fetchedQueries:[]};}
 
 function refuse(spend:AgentSpend,name:string,reason:string):AgentToolTrace{const row:AgentToolTrace={name,status:'refused',reason,requests:0};spend.trace.push(row);return row;}
 
-async function executeTool(call:AgentToolCall,input:LoopInput,spend:AgentSpend){
+export async function executeTool(call:AgentToolCall,input:LoopInput,spend:AgentSpend){
   const name=call.name,query=call.arguments.query.trim(),id=call.arguments.id.trim();
   if(!AGENT_TOOLS.includes(name as AgentToolName))return refuse(spend,name,'TOOL_NOT_ALLOWLISTED');
   if(UNSEARCHABLE.test(query)||UNSEARCHABLE.test(id))return refuse(spend,name,'UNSEARCHABLE');
@@ -94,7 +94,7 @@ async function executeTool(call:AgentToolCall,input:LoopInput,spend:AgentSpend){
   spend.trace.push({name,status:'executed',reason:'',requests:collection.requests});
 }
 
-function withToolResults(task:ModelTask,spend:AgentSpend,finalize=false):ModelTask{
+export function withToolResults(task:ModelTask,spend:AgentSpend,finalize=false):ModelTask{
   const next=structuredClone(task);
   next.context=next.context||{rules:[],memories:[],prior_results:[],simulation:false,attempt:1,scenario:'normal'};
   if(finalize){next.allow_tools=false;next.context.rules.push('这是本阶段最后一次可用模型请求。必须使用已提供资料与工具回执返回最终阶段结果，tool_calls 必须为 []；未取得的资料与证据保留为未知，不得编造或继续索取工具。');}

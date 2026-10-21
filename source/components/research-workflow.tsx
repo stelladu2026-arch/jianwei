@@ -11,6 +11,7 @@ import type {Project} from '@/lib/research/domain';
 import type {Proposal,Analysis} from '@/lib/research/execution';
 import {describeReviewIssue} from '@/lib/research/review-contract';
 import {errorLabels} from '@/lib/research/execution';
+import {ResearchHarnessStatus} from './research-harness-status';
 import {ResearchStageOutcome} from './research-stage-outcome';
 import {ConclusionSummary} from './conclusion-summary';
 import {ChineseSourceActions} from './chinese-source-actions';
@@ -109,6 +110,7 @@ export function ResearchWorkflowPanel({project:p,onUpdate,onBrief,onReview,onEvi
         <p className="meta">连续执行需要保持页面打开。关闭页面会在当前步骤结束后停下；重新打开后可从检查点继续。暂停不会撤销已发出的模型请求，未取得回执的用量按未知保留。</p>
       </section>
       {w.status==='completed'&&(proposal?.decision==='evidence'||w.analysisRun?.tasks.some(t=>t.output?.gaps.length))&&<p className="source-note">研究流程已完成，但草稿仍有证据缺口。请依据未知项安排验证；这不是机会已被证实，也不是执行失败。</p>}
+      {w.harnessVersion?<ResearchHarnessStatus projectId={p.id} projectVersion={p.version}/>:null}
       <ResearchStageOutcome outcome={workflowStageOutcome(p)} onSources={onSources} onGovernance={onGovernance}/>
       {w.report&&<section className="panel"><div className="panel-heading"><h2><CheckCircle2 size={20}/>本轮研究草稿</h2><div className="toolbar">{proposal&&w.status==='completed'&&<button className="button secondary" disabled={busy||working} onClick={()=>onReview(proposal)}>{savedCard?(savedCard.status==='draft'?'复核已保存的草稿':'编辑已保存的机会卡'):'人工复核并保存机会卡'}</button>}<button className="button secondary" onClick={()=>download(w.report)}><Download size={16}/>导出草稿</button></div></div>{proposal&&w.status==='completed'&&<p className="source-note">{savedCard?(savedCard.status==='draft'?'机会草稿已自动保存在“机会判断”，请人工复核并确认；再次保存会更新同一张卡。':'机会卡已保存。可编辑已有判断，或前往“机会判断”查看验证计划与删除操作。'):'核对原文后保存机会卡，随后可查看验证计划、导入验证资料或保存报告快照。'}</p>}{w.status==='stale'&&<p className="warning-text">范围或资料已改变，这份草稿需要复核。{w.conclusionReview?.reason?` ${w.conclusionReview.reason}`:''}</p>}<ConclusionSummary proposal={proposal} checks={conclusion?.group?.checks} sources={conclusion?.sources.filter(s=>conclusion.group?.sourceKeys.includes(s.key))} gaps={conclusion?.groups.flatMap(g=>g.gaps)} analysisCount={conclusion?.groups.length} scope={w.status==='stale'||w.conclusionReview||conclusion?.historical?'historical':w.analysisRun?.simulation?'simulation':w.status==='completed'?'draft':'stage'} onEvidence={onEvidence}/>{!!conclusion?.withheld&&<p className="warning-text">部分旧输出未通过原输入检查，未纳入摘要。</p>}<details><summary>完整研究记录与原文</summary><pre className="report-preview">{presentReport(w.report)}</pre></details></section>}
       <section className="panel"><h3>来源边界与执行记录</h3><ul className="aligned-copy-list" role="list">{w.limitations.map((line,i)=><li key={i}>{presentSystemCopy(line)}</li>)}</ul>{w.records.map(r=><details key={r.id}><summary>{workflowStages[r.stage]} · {r.collectionCloseout?'采集收尾（有未执行检索）':r.state==='done'?'完成':r.state==='failed'?'失败':'执行中'} · {(r.elapsedMs/1000).toFixed(1)} 秒</summary><pre className="governance-json">{presentRecord(r)}</pre></details>)}</section>
