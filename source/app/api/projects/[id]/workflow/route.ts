@@ -1,4 +1,4 @@
-import {env} from 'cloudflare:workers';
+import {env} from '@/lib/deployment/runtime-env';
 import {QwenEmbedding,retrieveSemanticEvidence} from '@/lib/research/semantic-retrieval';
 import {saveOpportunityDraft} from '@/lib/research/opportunity-drafts';
 import {initializeFour,fourTask,locateChecks,checkFour,saveHumanReview,reviewInput} from '@/lib/research/collaboration';
@@ -25,6 +25,7 @@ const sourceStages=new Set(['collect','supplement']);
 const safeError=(code:string)=>code in errorLabels||code==='NO_USABLE_EVIDENCE'?code:'MODEL_REPORTED_ERROR';
 function addAction(p:Project,id:string){p.actions=[...p.actions.slice(-49),id];}
 function afterAnalyze(p:Project){const w=p.workflow!;if(w.allowSupplement&&w.stage==='analyze'&&w.budget.modelAttempts+2<=w.budget.modelLimit&&w.budget.sourceAttempts+SOURCE_REQUEST_CAP<=w.budget.sourceLimit&&w.budget.searches<w.budget.searchLimit&&p.budget.searches<6)w.stage='gap';else{if(w.allowSupplement&&w.stage==='analyze')w.limitations.push('剩余预算不足以同时补搜和重新分析，本轮保留证据缺口。');w.stage='check';}}
+export const maxDuration=300;
 export async function POST(request:Request,context:{params:Promise<{id:string}>}){try{
   if(request.headers.get('sec-fetch-site')==='cross-site')return NextResponse.json({error:'请求来源不正确'},{status:403});
   const b=input.parse(await request.json()),{id}=await context.params,p=await get(id);if(!p)return NextResponse.json({error:'项目不存在'},{status:404});
@@ -36,7 +37,7 @@ export async function POST(request:Request,context:{params:Promise<{id:string}>}
     qwenCredentials(b.freeTierOnlyConfirmed);
     const next=restartExistingAnalysis(p),previous=p.workflow!;
     p.workflowHistory=[previous,...(p.workflowHistory||[])].slice(0,2);p.workflow=next;
-    addAction(p,b.callId);log(p,'保留停止记录，使用当前原文重新分析；新轮最多 2 次模型请求，未重新采集或重置累计用量');
+    addAction(p,b.callId);log(p,'保留原轮记录，使用当前原文重新分析；新轮最多 2 次模型请求，未重新采集或重置累计用量');
     return response(await save(p,b.version));
   }
   if(b.action==='start'||b.action==='restart'){
@@ -150,8 +151,8 @@ export async function POST(request:Request,context:{params:Promise<{id:string}>}
         const ids:string[]=[],usableIds:string[]=[];let added=0,duplicate=0,titleOnly=0,requests=0,failed=0,skipped=0;
         for(const item of spend.collections){const merged=mergeCollected(current,cw,item);ids.push(...merged.newIds);usableIds.push(...item.usableIds);added+=merged.added;duplicate+=merged.duplicate;titleOnly+=merged.titleOnly;requests+=item.requests;failed+=item.failed;skipped+=item.skipped;}
         if(ids.length)cw.freshIds=ids;
-        cr.collection={query:spend.fetchedQueries.join('；')||'agent',requests,failed,skipped,limited:spend.collections.some(item=>item.limited),since:cw.since,titleOnly,usableIds,added:added+(priorCollection?.added||0),duplicate:Math.max(0,duplicate-(priorCollection?.added||0))};
-        cw.agentFetchedQueries=[...new Set([...(cw.agentFetchedQueries||[]),...spend.fetchedQueries])];
+        cr.collection={query:spend.fetchedQueries.join('；')||'agent',requests,failed,skipped,limited:spend.collections.some(item=>item.limited),since:cw.since,added:added+(priorCollection?.added||0),duplicate:Math.max(0,duplicate-(priorCollection?.added||0)),titleOnly,usableIds,sourceDetails:spend.collections.flatMap(item=>item.sourceDetails||[]),sourceErrors:spend.collections.flatMap(item=>item.sourceErrors||[])};
+        cw.agentFetchedQueries=[...new Set([...(cw.agentFetchedQueries||[]),...(spend.fullSourceQueries||[])])];
       }
       if(spend.retrieval.length)cw.retrieval=spend.retrieval.filter(hit=>current.evidence.some(item=>item.id===hit.id&&!item.excluded));
     }

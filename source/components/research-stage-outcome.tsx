@@ -5,13 +5,13 @@ import {claimKindLabels} from '@/lib/research/claim-kinds';
 import {judgmentLabels} from '@/lib/research/review-contract';
 import {ConclusionSummary} from './conclusion-summary';
 function download(outcome:StageOutcome){const url=URL.createObjectURL(new Blob([outcome.report],{type:'text/markdown;charset=utf-8'})),a=document.createElement('a');a.href=url;a.download=outcome.simulation?'模拟阶段成果.md':'研究阶段成果.md';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
-export function ResearchStageOutcome({outcome:o,onSources,onCheckpoint,onGovernance}:{outcome:StageOutcome|null;onSources?:()=>void;onCheckpoint?:()=>void;onGovernance?:()=>void}){
+export function ResearchStageOutcome({outcome:o,onSources,onCheckpoint,onGovernance,showFailure=true,showConclusion=true}:{showFailure?:boolean;showConclusion?:boolean;outcome:StageOutcome|null;onSources?:()=>void;onCheckpoint?:()=>void;onGovernance?:()=>void}){
  if(!o)return null;
  const candidate=[...o.groups].reverse().find(g=>g.data.proposal),lineage=candidate||o.groups.at(-1);
  return <section className="panel stage-outcome research-typesetting" aria-label="阶段成果报告"><div className="panel-heading"><div><h2>{o.title}</h2><p className="meta">研究 / 资料版本 {o.revision} / {o.evidenceVersion} · {o.historical?'历史输入':o.simulation?'模拟流程':'待人工核查'}</p></div><button className="button secondary" onClick={()=>download(o)}>导出阶段成果</button></div>
   <p className="source-note">{o.summary}</p>
-  {o.failure&&<p className="warning-text">停止原因：{o.failure}。执行失败不能用于判断有没有需求。</p>}
-  <ConclusionSummary proposal={candidate?.data.proposal} notes={lineage?.data.notes} checks={candidate?.checks} sources={o.sources.filter(s=>candidate?.sourceKeys.includes(s.key))} gaps={o.groups.flatMap(g=>g.gaps)} next={o.next} analysisCount={o.groups.length} scope={o.historical?'historical':o.simulation?'simulation':o.researchComplete?'draft':'stage'}/>
+  {showFailure&&o.failure&&<p className="warning-text">停止原因：{o.failure}。执行失败不能用于判断有没有需求。</p>}
+  {showConclusion&&<ConclusionSummary proposal={candidate?.data.proposal} notes={lineage?.data.notes} checks={candidate?.checks} sources={o.sources.filter(s=>candidate?.sourceKeys.includes(s.key))} gaps={o.groups.flatMap(g=>g.gaps)} next={o.next} analysisCount={o.groups.length} scope={o.historical?'historical':o.simulation?'simulation':o.researchComplete?'draft':'stage'}/>}
   <div className="budget-row"><span>已有阶段分析 / 原文版本</span><strong>{o.groups.length} 份 / {o.sources.length} 份</strong></div>
   <p className="meta">同编号不同文本按输入版本分别保留，不计为多个客户。所附输入快照可直接展开，删除原文后仍可追溯。</p>
   <div className="outcome-overview"><section className="copy-section"><h3>已获得什么</h3><p>{o.completed.length?'已完成：'+o.completed.join('、'):'尚无完成的研究步骤。'}</p></section>

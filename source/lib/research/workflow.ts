@@ -1,3 +1,4 @@
+import {EXPANDED_SOURCE_NAMES,EXPANDED_SOURCE_SCOPE} from './source-catalog';
 import {collectionStartBlocker} from './workflow-start';
 import type {Project,Evidence} from './domain';
 import type {ModelTask,ModelResult} from './model-port';
@@ -36,11 +37,11 @@ export function makeWorkflow(p:Project,allowSupplement:boolean,mode:'single'|'fo
   if(useExistingEvidence&&(mode!=='single'||!existingAnalysisSources(p).length))throw new Error('请先补充至少一条当前可用的真实正文。');
   if(mode==='single'&&!useExistingEvidence){const blocked=collectionStartBlocker(p,sourceProfile);if(blocked)throw new Error(blocked.message);}
   const since=sinceForPeriod(p.period);
-  return {...(useExistingEvidence?{useExistingEvidence:true as const}:{}),...(sourceProfile==='v2ex'?{sourceProfile,sourceNode}:{}),mode,harnessVersion:'research-harness/1',id:crypto.randomUUID(),version:WORKFLOW_VERSION,revision:p.revision,evidenceVersion:p.evidenceVersion||0,created:new Date().toISOString(),status:'ready',stage:useExistingEvidence?'analyze':mode==='four'?'needs':sourceProfile==='v2ex'?'collect':'plan',allowSupplement:mode==='single'&&allowSupplement,queries:sourceProfile==='v2ex'?[{query:sourceNode,purpose:'initial',reason:'操作者选择的公开节点订阅，非关键词搜索'}]:[],collectIndex:0,usableIds:useExistingEvidence?existingAnalysisSources(p).map(e=>e.id):[],freshIds:[],limitations:useExistingEvidence?['本轮只分析当前已保存原文，不重新规划、采集或调用工具；来源及人群覆盖仍需核查。','正常分析使用 1 次模型请求；新轮最多 2 次，仅在失败后由用户显式准备重试；不自动重试、不改变旧轮用量。']:sourceProfile==='v2ex'?['公开来源为 V2EX 中文技术社区的节点订阅，不代表全体国内用户或目标客户。',`本轮仅采样「${V2EX_NODES[sourceNode]}」订阅，最多 6 篇有正文的主题；不按关键词搜全站，不读评论、不翻页、不访问外链。`,'未采样的历史讨论、反例和付费事实仍未知。先核查主题与研究范围是否相关；无相关线索不等于没有需求。','单角色只分析采样及已有导入原文，最多 1 次模型请求，不追加工具或补搜。']:mode==='four'?['本轮只复核冻结的已有资料；来源、人群、地域与时间覆盖需结合原始采集记录核查。']:['公开来源只有 Hacker News 与中文维基百科，不能代表目标地域或国内用户。','Hacker News 每个检索词最多 3 帖、每帖最多 2 条一级评论；中文维基百科最多 2 篇条目正文。两者共享 10 次来源请求，不访问外链。','单角色模型步骤由 LangGraph.js 执行工具循环。模型只能请求 Hacker News 检索或阅读、中文维基百科摘录，以及本项目已保存资料的词面检索。',...(since===null&&!/不限|全部|所有时间/.test(p.period)?['无法把当前时间描述转换为日期过滤，原始日期已保留，时间匹配需人工核查。']:[])],records:[],budget:{modelLimit:useExistingEvidence?2:sourceProfile==='v2ex'?1:mode==='four'||allowSupplement?4:2,modelAttempts:0,sourceLimit:30,sourceAttempts:0,searchLimit:3,searches:0},error:'',needsRetry:false,report:'',since};
+  return {...(useExistingEvidence?{useExistingEvidence:true as const}:{}),...(sourceProfile==='v2ex'?{sourceProfile,sourceNode}:{}),mode,harnessVersion:'research-harness/1',id:crypto.randomUUID(),version:WORKFLOW_VERSION,revision:p.revision,evidenceVersion:p.evidenceVersion||0,created:new Date().toISOString(),status:'ready',stage:useExistingEvidence?'analyze':mode==='four'?'needs':sourceProfile==='v2ex'?'collect':'plan',allowSupplement:mode==='single'&&allowSupplement,queries:sourceProfile==='v2ex'?[{query:sourceNode,purpose:'initial',reason:'操作者选择的公开节点订阅，非关键词搜索'}]:[],collectIndex:0,usableIds:useExistingEvidence?existingAnalysisSources(p).map(e=>e.id):[],freshIds:[],limitations:useExistingEvidence?['本轮只分析当前已保存原文，不重新规划、采集或调用工具；来源及人群覆盖仍需核查。','正常分析使用 1 次模型请求；新轮最多 2 次，仅在失败后由用户显式准备重试；不自动重试、不改变旧轮用量。']:sourceProfile==='v2ex'?['公开来源为 V2EX 中文技术社区的节点订阅，不代表全体国内用户或目标客户。',`本轮仅采样「${V2EX_NODES[sourceNode]}」订阅，最多 6 篇有正文的主题；不按关键词搜全站，不读评论、不翻页、不访问外链。`,'未采样的历史讨论、反例和付费事实仍未知。先核查主题与研究范围是否相关；无相关线索不等于没有需求。','单角色只分析采样及已有导入原文，最多 1 次模型请求，不追加工具或补搜。']:mode==='four'?['本轮只复核冻结的已有资料；来源、人群、地域与时间覆盖需结合原始采集记录核查。']:['公开来源包括中国新闻网、国家统计局、少数派、博客园、OSCHINA、GitHub Issues、Hacker News 与中文维基百科；新闻、技术社区与资讯不能代表目标地域或全部国内用户。','每个检索词最多 10 次来源请求，多渠道共享上限。按关键词语言分配来源，中文优先国家统计局，英文保留 Hacker News 帖子和评论；未安排的渠道单独标记。中国新闻网按关键词搜索公开报道；中文订阅只筛选近期条目。在剩余请求内取得中国新闻网、少数派或博客园正文，未取得全文时标记摘要，不访问任意外链。','单角色模型步骤由受限研究执行器运行工具循环。模型可请求多渠道公开检索、Hacker News 阅读、中文维基百科摘录及本项目资料检索；沿用原有次数上限，不自动追加请求。',...(since===null&&!/不限|全部|所有时间/.test(p.period)?['无法把当前时间描述转换为日期过滤，原始日期已保留，时间匹配需人工核查。']:[])],records:[],budget:{modelLimit:useExistingEvidence?2:sourceProfile==='v2ex'?1:mode==='four'||allowSupplement?4:2,modelAttempts:0,sourceLimit:30,sourceAttempts:0,searchLimit:3,searches:0},error:'',needsRetry:false,report:'',since};
 }
 export function existingAnalysisSources(p:Project){return p.evidence.filter(e=>!e.excluded&&e.kind!=='synthetic'&&e.text.trim().length>=40&&!/^该(帖子|条目)只有标题/.test(e.text));}
 export function existingAnalysisBlockReason(p:Project){
- if(p.workflow?.mode==='four'||p.workflow?.status!=='failed'||p.workflow.lease)return '仅支持从已停止且没有执行中请求的单角色研究重新分析。';
+ if(!p.workflow||p.workflow.mode==='four'||!['failed','completed'].includes(p.workflow.status)||p.workflow.lease)return '仅支持从已停止或已保存草稿、且没有执行中请求的单角色研究重新分析。';
  if(!p.confirmed||p.archived||p.mode!=='manual'||['paused','cancelled','completed'].includes(p.status))return '请先确认并恢复当前真实研究范围。';
  if(p.evidence.some(e=>e.kind==='synthetic')||!existingAnalysisSources(p).length)return '至少需要一条当前可用的真实正文；只有标题或被排除的资料不能用于分析。';
  if(p.run&&['ready','running','paused','failed'].includes(p.run.status))return '请先结束执行与评测中的任务。';
@@ -52,7 +53,7 @@ export function restartExistingAnalysis(p:Project){
  return makeWorkflow({...p,workflow:undefined},false,'single','public','programmer',true);
 }
 export function currentWorkflow(p:Project){const w=p.workflow;if(!w)throw new Error('尚未创建一键研究。');if(w.revision!==p.revision||w.evidenceVersion!==(p.evidenceVersion||0)||w.status==='stale')throw new Error('研究范围或资料已改变，请取消旧流程并重新开始。');return w;}
-function brief(p:Project,w:ResearchWorkflow){return {title:p.title,audience:p.audience,region:p.region,period:p.period,exclusions:p.exclusions,decision:p.decision,source_scope:w.useExistingEvidence?'本轮只分析当前已保存的原文，不重新规划或采集。来源、人群、地域及时间覆盖沿用原始记录，不能把已有资料当作新采样或全体目标客户。':w.sourceProfile==='v2ex'?`V2EX 中文技术社区「${V2EX_NODES[w.sourceNode||'programmer']}」节点的公开订阅主题。仅有主题正文，无评论或全站关键词搜索，不代表全体国内用户；与目标研究无关的主题必须保留为无关，不得强行归纳机会。付款仍未经核实。`:'公开来源只有 Hacker News 英语技术社区和中文维基百科条目。中文维基百科不是国内用户原话。无法证实目标地域、人群及交易，必须说明覆盖偏差。',source_time_filter:w.useExistingEvidence?'本轮未重新按日期采样，需核对所用原文的资料日期':w.since===null?'未按日期过滤':new Date(w.since*1000).toISOString().slice(0,10)+' 至检索当日'};}
+function brief(p:Project,w:ResearchWorkflow){return {title:p.title,audience:p.audience,region:p.region,period:p.period,exclusions:p.exclusions,decision:p.decision,source_scope:w.useExistingEvidence?'本轮只分析当前已保存的原文，不重新规划或采集。来源、人群、地域及时间覆盖沿用原始记录，不能把已有资料当作新采样或全体目标客户。':w.sourceProfile==='v2ex'?`V2EX 中文技术社区「${V2EX_NODES[w.sourceNode||'programmer']}」节点的公开订阅主题。仅有主题正文，无评论或全站关键词搜索，不代表全体国内用户；与目标研究无关的主题必须保留为无关，不得强行归纳机会。付款仍未经核实。`:`公开来源包括 ${EXPANDED_SOURCE_NAMES}。${EXPANDED_SOURCE_SCOPE} 摘要不能冒充完整原文；百科和资讯不能当作目标客户需求原话。`,source_time_filter:w.useExistingEvidence?'本轮未重新按日期采样，需核对所用原文的资料日期':w.since===null?'未按日期过滤':new Date(w.since*1000).toISOString().slice(0,10)+' 至检索当日'};}
 export function plannerTask(p:Project,w:ResearchWorkflow,id:string):ModelTask{
   const previous=w.stage==='gap'?w.analysisRun?.tasks.find(t=>t.role==='coordinator')?.output:undefined;
   const b=brief(p,w);if(w.stage==='gap')b.title+='（根据已有草稿判断是否需要一次可检索补证）';
@@ -83,18 +84,22 @@ export function planningQueries(output:ModelResult&{data:Analysis},w:ResearchWor
     if(w.stage==='gap'&&q==='STOP')issues.push(`data.notes.${i}.claim:not_keyword`);
     else if(q.length<2||q.length>100)issues.push(`data.notes.${i}.claim:keyword_length`);
     else if(q.split(/\s+/).length>3)issues.push(`data.notes.${i}.claim:keyword_count`);
-    else if(!/[A-Za-z]/.test(q)||/[^\x20-\x7E]|https?:|www\.|@/.test(q))issues.push(`data.notes.${i}.claim:keyword_charset`);
+    else if(!/[A-Za-z\p{Script=Han}]/u.test(q)||/[^\p{Script=Han}\x20-\x7E]|https?:|www\.|@/u.test(q))issues.push(`data.notes.${i}.claim:keyword_charset`);
   });
   if(new Set(queries.map(normalize)).size!==queries.length)issues.push('data.notes:duplicate');
   queries.forEach((q,i)=>{if(w.queries.some(old=>normalize(old.query)===normalize(q)))issues.push(`data.notes.${i}.claim:repeated`);});
   fail();return queries;
+}
+function balanceSources(items:Evidence[]){
+  const groups=new Map<string,Evidence[]>();for(const item of items){const key=item.source||item.kind;const rows=groups.get(key)||[];rows.push(item);groups.set(key,rows);}
+  const ordered:Evidence[]=[];let index=0;while(ordered.length<items.length){for(const rows of groups.values())if(rows[index])ordered.push(rows[index]);index++;}return ordered;
 }
 function analysisEvidence(p:Project,w:ResearchWorkflow){
   const allowed=new Set([...w.usableIds,...p.evidence.filter(e=>e.kind==='imported').map(e=>e.id)]),fresh=new Set(w.freshIds);
   const current=p.evidence.filter(e=>allowed.has(e.id)&&!e.excluded&&e.kind!=='synthetic');
   const cited=new Set(w.initialAnalysis?.tasks.find(t=>t.role==='coordinator')?.output?.data.proposal?.refs||[]);
   // Keep cited earlier items, new bodies and different threads before duplicate contexts.
-  return [...current.filter(e=>cited.has(e.id)).slice(0,4),...current.filter(e=>fresh.has(e.id)&&!cited.has(e.id)),...current.filter(e=>!fresh.has(e.id)&&!cited.has(e.id))].filter((e,i,all)=>all.findIndex(x=>x.id===e.id)===i);
+  return [...current.filter(e=>cited.has(e.id)).slice(0,4),...balanceSources(current.filter(e=>fresh.has(e.id)&&!cited.has(e.id))),...balanceSources(current.filter(e=>!fresh.has(e.id)&&!cited.has(e.id)))].filter((e,i,all)=>all.findIndex(x=>x.id===e.id)===i);
 }
 export function analysisTask(p:Project,w:ResearchWorkflow,id:string){
   const evidence=analysisEvidence(p,w);if(!evidence.length)throw new Error('NO_USABLE_EVIDENCE');

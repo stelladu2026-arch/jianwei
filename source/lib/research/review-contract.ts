@@ -32,8 +32,8 @@ export function describeReviewIssue(issue:string){
   if(issue==='status:not_ok')return '初次规划的 status 必须为 ok。';
   if(issue==='data.notes.0.claim:not_stop')return '不需要补搜时，唯一一条 claim 必须是 STOP。';
   if(issue.endsWith(':keyword_length'))return '检索词长度不在 2 至 100 字符。';
-  if(issue.endsWith(':keyword_count'))return '检索词超过 3 个英文关键词。';
-  if(issue.endsWith(':keyword_charset'))return '检索词必须是 1 至 3 个英文关键词，不能是中文、长句或网址。';
+  if(issue.endsWith(':keyword_count'))return '检索词超过 3 个中文或英文关键词。';
+  if(issue.endsWith(':keyword_charset'))return '检索词必须是 1 至 3 个中文或英文短关键词，不能包含网址或特殊控制字符。';
   if(issue.endsWith(':not_gap'))return '规划检索词的 kind 必须为 gap。';
   if(issue.endsWith('.refs:not_empty')||issue==='evidence_ids:not_empty'||issue==='data.proposal:forbidden')return '规划结果不能包含引用、证据编号或草稿。';
   if(issue.endsWith(':not_allowed_for_role'))return '模型返回了当前角色不允许生成的字段。';
@@ -41,6 +41,10 @@ export function describeReviewIssue(issue:string){
   if(issue.endsWith('.target:unknown_claim'))return '核查条目指向不存在的主张。';
   const reference=issue.match(/^data\.checks\.(\d+)\.anchors\.(\d+)\.evidence_id:not_in_claim$/);
   if(reference)return `第 ${Number(reference[1])+1} 个核查条目的第 ${Number(reference[2])+1} 段引文，使用的资料编号不在该主张的引用中。`;
+  const optional=issue.match(/^data\.proposal\.(demand\.(who|problem|effect|workaround)(\.text)?|interview\.decision_evidence):too_small$/);
+  if(optional)return '可选的需求或验证字段为空。本次结果未接受；已有原文保留。更新后可复用已有资料重新分析，空白字段会保留为未提供，旧失败记录不改写。';
+  const field=issue.match(/^([A-Za-z0-9_.-]{1,160}):(too_small|too_big|invalid_type|invalid_enum_value|unrecognized_keys|invalid_union)$/);
+  if(field){const reasons:Record<string,string>={too_small:'内容为空或未达到最小长度',too_big:'超过长度或条数上限',invalid_type:'字段缺失或类型不符',invalid_enum_value:'选项不在允许范围内',unrecognized_keys:'包含未约定字段',invalid_union:'结构不符合允许格式'};return `字段 ${field[1]}：${reasons[field[2]]}。本阶段结果未接受，已有成果保留。`;}
   return '输出字段未通过检查，具体字段位置见失败详情。';
 }
 export type ClaimCheck={target:string;judgment:typeof judgments[number];reason:string;anchors:{evidence_id:string;quote:string}[]};

@@ -1,5 +1,7 @@
 # 见微：Cursor 开发交接包
 
+> **2026-10-22 更新**：正式版源码与 Harness 恢复入口、后台推进已整合，完整回归在两种数据库边界各通过 569 项，Next/Sites 构建及类型检查通过。尚未部署或执行本轮真实 Qwen/Turso 联调；发布需完成一次 Vercel CLI 设备授权。最新交付、验收边界和接续步骤见 [Harness 整合记录](source/docs/HARNESS_INTEGRATION_20261022.md)。以下为 2026-10-05 历史交接记录。
+
 交接时间：2026-10-05（北京时间）。源码版本：`6d8f00c73d44e329708c6e625d75382f0145ee7e`。
 
 这一版本已发布至 https://opportunity-research-lab.stelladu2026.chatgpt.site 。本次协调引用修复后，202 项离线检查、TypeScript 和托管生产构建通过；本次新增真实模型调用 0。完整真实四角色研究仍未通过验收。

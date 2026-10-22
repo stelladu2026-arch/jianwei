@@ -1,5 +1,7 @@
 # 研究 Agent Harness 接入记录
 
+> **当前状态（2026-10-22）**：正式版与 Harness 恢复、后台推进已整合并通过离线回归及构建，尚未发布和真实联调。以 [最新整合记录](HARNESS_INTEGRATION_20261022.md) 为准；以下是早期版本历史说明。
+
 ## 当前状态
 
 第一阶段实现已完成，尚未发布到 Vercel 正式站点。实现基于可恢复的 Sites 源码 `efed350f430099dc9adaa1fb44bc6aafb30da92c`（2026-10-17），不是 Vercel 正式部署 `dpl_2DxitJ7qUUsegNQhhDZSkwXfJKRW` 的完整源代码。后者包含更新的渠道、可选输出字段及 Vercel/Turso 迁移，不能用本分支覆盖。

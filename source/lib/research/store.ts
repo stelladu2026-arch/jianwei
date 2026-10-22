@@ -1,4 +1,4 @@
-import {env} from 'cloudflare:workers';
+import {env} from '@/lib/deployment/runtime-env';
 import {storageOperation} from './storage-errors';
 import type {Project} from './domain';
 export function db(){if(!env.DB)throw new Error('研究数据暂时不可用，请稍后重试。');return env.DB;}

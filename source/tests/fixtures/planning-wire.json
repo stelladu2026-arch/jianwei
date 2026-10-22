@@ -21,7 +21,7 @@
     "status": "ok",
     "data": {
       "notes": [
-        {"claim": "小团队客户支持重复劳动", "refs": [], "kind": "gap"}
+        {"claim": "customer 🤖", "refs": [], "kind": "gap"}
       ],
       "framing": {
         "target_user": "Independent software teams",

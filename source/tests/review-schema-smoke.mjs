@@ -168,7 +168,7 @@ check('planning schema matches the prompt wire and keyword failures keep their o
   for(const name of ['charset','sentence','looseCount','wrongKind','partialStatus']){
     const item=planningFixture[name];let seen;assert.throws(()=>planningQueries(wire(item),plan('plan'),issues=>{seen=issues}),/INVALID_MODEL_OUTPUT/);assert.deepEqual(seen,item.issues);assert.doesNotMatch(item.issues.join(','),/outside_input|INVALID_MODEL_REFERENCE/);
   }
-  assert.match(describeReviewIssue(planningFixture.charset.issues[0]),/英文关键词/);
+  assert.match(describeReviewIssue(planningFixture.charset.issues[0]),/中文或英文/);
   const foreign={status:'ok',data:{notes:[{claim:'customer support',refs:['FOREIGN'],kind:'gap'}]},evidence_ids:['FOREIGN'],gaps:[],errors:[],revision:1,usage:{input_tokens:1,output_tokens:1},model:'synthetic'};
   let reference;assert.throws(()=>validateResult(foreign,{role:'needs',revision:1,evidence_ids:[],evidence:[]},issues=>{reference=issues}),/INVALID_MODEL_REFERENCE/);
   assert.deepEqual(reference,['refs:outside_input']);

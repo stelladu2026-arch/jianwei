@@ -1,0 +1,1220 @@
+{
+  "deployment": "dpl_2DxitJ7qUUsegNQhhDZSkwXfJKRW",
+  "recovered": "2026-10-22",
+  "baseline": "7e06b4c",
+  "method": "Deployment source UI and previously verified deployment file UID responses; generated tsbuildinfo is not runtime input. Harness additions are tracked separately.",
+  "files": [
+    {
+      "path": "source/.gitignore",
+      "sha1": "cca382f83028a99eeabe03e13a5cdf0cc3989411"
+    },
+    {
+      "path": "source/.npmrc",
+      "sha1": "0bc97ee1a5f41148e16988044264bedc31d0cc3c"
+    },
+    {
+      "path": "source/.openai/hosting.json",
+      "sha1": "5fdbb7dee9202b2e6aa6bf427fb744e65aaa21f3"
+    },
+    {
+      "path": "source/README.md",
+      "sha1": "67ca543b8dcb50add380f97862335882cfa80627"
+    },
+    {
+      "path": "source/app/api/model-status/route.ts",
+      "sha1": "a925e4a7231ae1a7c8f90686a1ce3285b24aa14f"
+    },
+    {
+      "path": "source/app/api/projects/[id]/conclusion-review/route.ts",
+      "sha1": "8c472e8d21018886a0d25e57d2371a9312d3328f"
+    },
+    {
+      "path": "source/app/api/projects/[id]/context/route.ts",
+      "sha1": "d6e64f76b651fb05e4911d778ce4e6da925b3ae6"
+    },
+    {
+      "path": "source/app/api/projects/[id]/harness/route.ts",
+      "sha1": "da39a3ee5e6b4b0d3255bfef95601890afd80709"
+    },
+    {
+      "path": "source/app/api/projects/[id]/route.ts",
+      "sha1": "67cc374a12f4e08b7902c4f2de1e962905238d6c"
+    },
+    {
+      "path": "source/app/api/projects/[id]/run/route.ts",
+      "sha1": "c9cdda843f6f06e10667fc487ed0f64cfae62273"
+    },
+    {
+      "path": "source/app/api/projects/[id]/workflow/route.ts",
+      "sha1": "e13cfed404043c97095502553540095efb868844"
+    },
+    {
+      "path": "source/app/api/projects/route.ts",
+      "sha1": "319202832a73963ecd412a9282e98b3d68cf08d1"
+    },
+    {
+      "path": "source/app/api/search/route.ts",
+      "sha1": "42b7134ba6d6517f6a2862fc63830b51ae1f9940"
+    },
+    {
+      "path": "source/app/chatgpt-auth.ts",
+      "sha1": "57f95eac1484855c670eb7ac96bc160e7b030dea"
+    },
+    {
+      "path": "source/app/globals.css",
+      "sha1": "7ab019b776ec06a79d6a12447347aee232a82d1e"
+    },
+    {
+      "path": "source/app/layout.tsx",
+      "sha1": "0469282e54001d3357e31c3596a35910a517ed0e"
+    },
+    {
+      "path": "source/app/page.tsx",
+      "sha1": "5fcd37c96a3d67b35252fc3ff094f84d3e545b4e"
+    },
+    {
+      "path": "source/app/research-desk.css",
+      "sha1": "baed61b771d8a21bb16fe16600bdb300c2fad32c"
+    },
+    {
+      "path": "source/app/sidebar-row-fix.css",
+      "sha1": "9ee71aa419416904ebe147bf4f24b2db7f3c8545"
+    },
+    {
+      "path": "source/build/connector-preview-plugin.mjs",
+      "sha1": "bf1a8bc716ae6610ce74f807b51d1dad11091ad3"
+    },
+    {
+      "path": "source/build/connector-preview-worker.mjs",
+      "sha1": "0985157153650ce517a33f6285d808ba957fdc4d"
+    },
+    {
+      "path": "source/build/sites-vite-plugin.LICENSE",
+      "sha1": "b4005d826078e5a519e83677c1609982f6b6be1b"
+    },
+    {
+      "path": "source/build/sites-vite-plugin.ts",
+      "sha1": "b0fe5a7e8d411a0383b9cfcf7f744285273cc14f"
+    },
+    {
+      "path": "source/build/sites-worker.ts",
+      "sha1": "c9baa0536b9fe652ee3bdb44ea421d4951b93daf"
+    },
+    {
+      "path": "source/cloudflare-env.d.ts",
+      "sha1": "abceb73228d464ed6bb1ba509bdd846ef3d6cf1d"
+    },
+    {
+      "path": "source/components.json",
+      "sha1": "071e3c0866fa155a273f08565e761a9e6c91b97e"
+    },
+    {
+      "path": "source/components/chinese-source-actions.tsx",
+      "sha1": "460d5734b5fc224603e048752d1726c4d57987e6"
+    },
+    {
+      "path": "source/components/conclusion-audit.tsx",
+      "sha1": "b6549412c74e97f0cd46da6571514872a8d027d8"
+    },
+    {
+      "path": "source/components/conclusion-summary.tsx",
+      "sha1": "775c233b007048d1d5e8254a7a2cb289c7b69edf"
+    },
+    {
+      "path": "source/components/connector-error.tsx",
+      "sha1": "0b54f3e16fb4cd1b93b9452f7d9cac3b0c2fe842"
+    },
+    {
+      "path": "source/components/model-request-summary.tsx",
+      "sha1": "6c326e720d5cf12b6137311f7b21d3fc48b99c46"
+    },
+    {
+      "path": "source/components/opportunity-next-step.tsx",
+      "sha1": "70f6f12ce0f8e3c7e6441847d1dafb1c1a07cf2e"
+    },
+    {
+      "path": "source/components/public-source-summary.tsx",
+      "sha1": "f34a6b3ea120381644d867dcb6f0b5244e9334ea"
+    },
+    {
+      "path": "source/components/research-activity.tsx",
+      "sha1": "d3a2ea612c58a08a2af28e600d89311fb5294fb9"
+    },
+    {
+      "path": "source/components/research-collaboration.tsx",
+      "sha1": "12a94e4ebe5866a94ce98e09da4eeb3b9fa5130f"
+    },
+    {
+      "path": "source/components/research-desk.tsx",
+      "sha1": "02f9cc15ae78330e008b004defc446ca6bfed872"
+    },
+    {
+      "path": "source/components/research-execution.tsx",
+      "sha1": "1cd47a7c0576f7a61cc8a6a8ee83beb41b976dde"
+    },
+    {
+      "path": "source/components/research-governance.tsx",
+      "sha1": "b3dff9f9bfc7179eda2e137940c3337d43743b78"
+    },
+    {
+      "path": "source/components/research-overview-pulse.tsx",
+      "sha1": "ef24af693dc61b396d06873c10b090bf03a8f9bf"
+    },
+    {
+      "path": "source/components/research-stage-outcome.tsx",
+      "sha1": "551dd17458eef018dc7bae6a8ff7a02f3a9392ac"
+    },
+    {
+      "path": "source/components/research-workflow.tsx",
+      "sha1": "777901fc571fe5a282c5bf114bf671e5236f8c17"
+    },
+    {
+      "path": "source/components/scope-confirmation-actions.tsx",
+      "sha1": "2db7c4703571aaa7c8fbf7779532badcd2003069"
+    },
+    {
+      "path": "source/components/ui/accordion.tsx",
+      "sha1": "539f4b0bf4704818ad1352b328e68dbe57f5471a"
+    },
+    {
+      "path": "source/components/ui/alert-dialog.tsx",
+      "sha1": "870fc4c64b209e677dfe94958e901a4d50a2d4e9"
+    },
+    {
+      "path": "source/components/ui/alert.tsx",
+      "sha1": "80ac45632c53358992bbfb955370ae87e9e107fb"
+    },
+    {
+      "path": "source/components/ui/aspect-ratio.tsx",
+      "sha1": "186021629af4684f62369c6d8410338465b091a7"
+    },
+    {
+      "path": "source/components/ui/attachment.tsx",
+      "sha1": "2771dc56985fee6818a3ae372e8707262ab1de64"
+    },
+    {
+      "path": "source/components/ui/avatar.tsx",
+      "sha1": "057e4ec5f9a85b7aeb0bd55b2a3ceb7c81f26553"
+    },
+    {
+      "path": "source/components/ui/badge.tsx",
+      "sha1": "dd14174bad0e7cd658d5f0c0479d48697c9b50f5"
+    },
+    {
+      "path": "source/components/ui/breadcrumb.tsx",
+      "sha1": "20195df0d0f9f85db00e57fd6865e12b0d6167cf"
+    },
+    {
+      "path": "source/components/ui/bubble.tsx",
+      "sha1": "f0e2cf88c1cb506c24f1a703eb95c862dfe37ed7"
+    },
+    {
+      "path": "source/components/ui/button-group.tsx",
+      "sha1": "58144148969b5fe227d349e8afe697c2f25508ae"
+    },
+    {
+      "path": "source/components/ui/button.tsx",
+      "sha1": "2ee6bfd1bae7f37ec48c0fbe8812d956f72968c0"
+    },
+    {
+      "path": "source/components/ui/calendar.tsx",
+      "sha1": "3ec93352f855f99aeaafb8c2c4748635b3a56b12"
+    },
+    {
+      "path": "source/components/ui/card.tsx",
+      "sha1": "1f9a9a608a0985d7f22ef37cb5c965bb68c4e5ce"
+    },
+    {
+      "path": "source/components/ui/carousel.tsx",
+      "sha1": "46588b1ac2efd1668d18a59b24741ac2452fa9f9"
+    },
+    {
+      "path": "source/components/ui/chart.tsx",
+      "sha1": "56660512d82d5ac19eba4c05f6d94adbb3ac6c98"
+    },
+    {
+      "path": "source/components/ui/checkbox.tsx",
+      "sha1": "9f40ef7e1f43606bd8e6d8558ee4e5d06bb2a736"
+    },
+    {
+      "path": "source/components/ui/collapsible.tsx",
+      "sha1": "e9fc6a0cf48b2b363a4b544490c2663e9793a545"
+    },
+    {
+      "path": "source/components/ui/combobox.tsx",
+      "sha1": "0fb8cdfed6c09ae8153af8222f29477ce9bd8e3c"
+    },
+    {
+      "path": "source/components/ui/command.tsx",
+      "sha1": "532ad0e19ea88e2e1837111e547fe755bcaed12b"
+    },
+    {
+      "path": "source/components/ui/context-menu.tsx",
+      "sha1": "3f4a73c4a676744180c2b1c7e2c23a47046f444d"
+    },
+    {
+      "path": "source/components/ui/dialog.tsx",
+      "sha1": "d5d93691062ae4f522b682cce1fc7b4ac5b634ba"
+    },
+    {
+      "path": "source/components/ui/direction.tsx",
+      "sha1": "f5c285ee85de720559125212021f181b2425ce0c"
+    },
+    {
+      "path": "source/components/ui/drawer.tsx",
+      "sha1": "16e744a88b565c22b399512517f489da26592fed"
+    },
+    {
+      "path": "source/components/ui/dropdown-menu.tsx",
+      "sha1": "e2b3b7d0e773eb7248a2f82a05b47dcaec7d2dd7"
+    },
+    {
+      "path": "source/components/ui/empty.tsx",
+      "sha1": "04918d70011b844e59fbe82718ed22630feeeedb"
+    },
+    {
+      "path": "source/components/ui/field.tsx",
+      "sha1": "e670bd471562ad48d64ee64d61a5abf65bb729fa"
+    },
+    {
+      "path": "source/components/ui/form.tsx",
+      "sha1": "2cf37958326fc7b95821bbbc5f78b18bc6ea1e21"
+    },
+    {
+      "path": "source/components/ui/hover-card.tsx",
+      "sha1": "afd73957d5dd9c0940bda9013c2cf1901eca1d39"
+    },
+    {
+      "path": "source/components/ui/input-group.tsx",
+      "sha1": "1bcc305fbda7ecdddeb8e220abea23ef523b6ef2"
+    },
+    {
+      "path": "source/components/ui/input-otp.tsx",
+      "sha1": "23a2174867d61f5d26e5dc2ff084e134ea405590"
+    },
+    {
+      "path": "source/components/ui/input.tsx",
+      "sha1": "06c34b72fef9dc67cd6b5af1e0ce5305f0cdb56d"
+    },
+    {
+      "path": "source/components/ui/item.tsx",
+      "sha1": "68654e49bdc8f28cfc44032709290987edb0b0ff"
+    },
+    {
+      "path": "source/components/ui/kbd.tsx",
+      "sha1": "526205369e35330fae576d34a115138d7a911668"
+    },
+    {
+      "path": "source/components/ui/label.tsx",
+      "sha1": "a99938256badeaa5f000f008140391c7e61c3d19"
+    },
+    {
+      "path": "source/components/ui/marker.tsx",
+      "sha1": "2d934e568f0743d71dd242f72f1a1c77b92fa74f"
+    },
+    {
+      "path": "source/components/ui/menubar.tsx",
+      "sha1": "dbb362a2dbac0cc593a46a08bc1f90f6a6f256f5"
+    },
+    {
+      "path": "source/components/ui/message-scroller.tsx",
+      "sha1": "a761ec08c37bc473abc816f97bc43b7d91c27391"
+    },
+    {
+      "path": "source/components/ui/message.tsx",
+      "sha1": "d80cd40eb488371e33b32caff60213ebe8b4aba0"
+    },
+    {
+      "path": "source/components/ui/native-select.tsx",
+      "sha1": "0b01089407e5c5ac13e3e11c54bfab09bd691f16"
+    },
+    {
+      "path": "source/components/ui/navigation-menu.tsx",
+      "sha1": "4b12065be4faf144deec6ada9aa8d817bde57c1f"
+    },
+    {
+      "path": "source/components/ui/pagination.tsx",
+      "sha1": "53c460ab54ad675036c7d9e80edfc53ea1c3f7b0"
+    },
+    {
+      "path": "source/components/ui/popover.tsx",
+      "sha1": "ec814498a0efcca5c51efe9ba76cb3bd992d968e"
+    },
+    {
+      "path": "source/components/ui/progress.tsx",
+      "sha1": "097c7400942bb55ae5b93e5e51beda3e07a4aab8"
+    },
+    {
+      "path": "source/components/ui/radio-group.tsx",
+      "sha1": "096a64f0005023206cf9271bc8ca6625529d25ba"
+    },
+    {
+      "path": "source/components/ui/resizable.tsx",
+      "sha1": "847fb071da9c752315617aa399d3ba434e1e80bd"
+    },
+    {
+      "path": "source/components/ui/scroll-area.tsx",
+      "sha1": "4aaa43f6cd28194551dd86533731fccbc5e0763e"
+    },
+    {
+      "path": "source/components/ui/select.tsx",
+      "sha1": "60ccee176393e5fc0471921cf40a45c31f347004"
+    },
+    {
+      "path": "source/components/ui/separator.tsx",
+      "sha1": "b3c5437c3d6ecf3e9720a07a18249d232b5d32a6"
+    },
+    {
+      "path": "source/components/ui/sheet.tsx",
+      "sha1": "928f0a396f78253608b3a5996fed5fa56b64e965"
+    },
+    {
+      "path": "source/components/ui/sidebar.tsx",
+      "sha1": "4c22cbad22e3841536f1179377f476cc128cd81d"
+    },
+    {
+      "path": "source/components/ui/skeleton.tsx",
+      "sha1": "b6519faed74d6c006f6174911b766c0e15e28713"
+    },
+    {
+      "path": "source/components/ui/slider.tsx",
+      "sha1": "b48db732996f51569efb1fc281e7d98a672d8ffb"
+    },
+    {
+      "path": "source/components/ui/sonner.tsx",
+      "sha1": "5dca69a0e1a5ded1ab58b2f7504f5d17ecb2f2eb"
+    },
+    {
+      "path": "source/components/ui/spinner.tsx",
+      "sha1": "698020d2553ad0b4d840e98d117d5007fd4f1aad"
+    },
+    {
+      "path": "source/components/ui/switch.tsx",
+      "sha1": "6d1415d4c12600632ed80c276263cb42fe925310"
+    },
+    {
+      "path": "source/components/ui/table.tsx",
+      "sha1": "a8c83829252031e7d8d004f4155ea318e51eb43a"
+    },
+    {
+      "path": "source/components/ui/tabs.tsx",
+      "sha1": "e85c28393783c6ca68a51b43de856be5d23ed17d"
+    },
+    {
+      "path": "source/components/ui/textarea.tsx",
+      "sha1": "e3ee46f069b757baa95302d1a30e03c2927edcc1"
+    },
+    {
+      "path": "source/components/ui/toggle-group.tsx",
+      "sha1": "cff2c3706d481ecdfedd177e8c848deed663e111"
+    },
+    {
+      "path": "source/components/ui/toggle.tsx",
+      "sha1": "fe98a386ffb1ca975f675410ab4a3f6adb1c14fb"
+    },
+    {
+      "path": "source/components/ui/tooltip.tsx",
+      "sha1": "7b503022ca77ae37a5a27006dcacf0779fc0c2f2"
+    },
+    {
+      "path": "source/components/workflow-start-help.tsx",
+      "sha1": "0cc7b928ea9fd392442fd44f049e2dd8d4d3b521"
+    },
+    {
+      "path": "source/components/workspace-notice.tsx",
+      "sha1": "65fcdce7531e10af009159ec997f1ba81c1e5955"
+    },
+    {
+      "path": "source/components/workspace-sidebar-actions.tsx",
+      "sha1": "d3efbf02865acd87d44b437cd7524ee7ef30b30d"
+    },
+    {
+      "path": "source/db/index.ts",
+      "sha1": "80bcd8bb420ad3b5086f10cd4497d776b637669a"
+    },
+    {
+      "path": "source/db/schema.ts",
+      "sha1": "dae7a9721ef2c7d3cd2d7db580c6dbef423508c5"
+    },
+    {
+      "path": "source/docs/AUTOMATED_RESEARCH.md",
+      "sha1": "688bf2c2be9c6aef786c53f70eab7ef1a11183a8"
+    },
+    {
+      "path": "source/docs/AUTOMATED_RESEARCH_LIVE_RESULT.json",
+      "sha1": "4fe51a5fbef19a24f0cec736432ba2760cbd466e"
+    },
+    {
+      "path": "source/docs/BUDGET_POLICY_20261015.md",
+      "sha1": "8a5a40c8559f2240fe510375dd1072e4164908e2"
+    },
+    {
+      "path": "source/docs/CAPABILITY_GAPS_20261013.md",
+      "sha1": "1900c0e4899a5564236e59b290af315e05ce192d"
+    },
+    {
+      "path": "source/docs/CHINESE_SOURCE_ENTRY_20261015.md",
+      "sha1": "ca5d03b9afb3480b144fadb1eb44f81f233c9da2"
+    },
+    {
+      "path": "source/docs/CITATION_RECOVERY_20261017.md",
+      "sha1": "6b754d5cba3f0040264c846e6a30b698e4e177a0"
+    },
+    {
+      "path": "source/docs/COLLECTION_CLOSEOUT_20261016.md",
+      "sha1": "8acc1891c70516c0d444db4ec758cadbff8f85cc"
+    },
+    {
+      "path": "source/docs/CONCLUSION_AUDIT_20261014.md",
+      "sha1": "de1d50c85af781bceea911799f6bb04133c28d5e"
+    },
+    {
+      "path": "source/docs/CONCLUSION_UI_AND_SOURCES_20261014.md",
+      "sha1": "81462b966092a0fd21372c0292a6ec9b76770cdf"
+    },
+    {
+      "path": "source/docs/CONCLUSION_UI_LIVE_20261014.json",
+      "sha1": "28b267087956997b720d9a0ef14626226010d6d0"
+    },
+    {
+      "path": "source/docs/CONSUMER_SOURCES_20261019.md",
+      "sha1": "0f3362aab1cad67d9609350474afdb5aff4c499a"
+    },
+    {
+      "path": "source/docs/CONTRACTS.md",
+      "sha1": "36355a589e38e09242ce02b3017e2e84ee91a681"
+    },
+    {
+      "path": "source/docs/DESK_RECOVERY_20261017.md",
+      "sha1": "c722217047542e6271b70af97f4b1e404dc49368"
+    },
+    {
+      "path": "source/docs/EVIDENCE_SCOPE_20261017.md",
+      "sha1": "ea7d3c445408a992056f0e594538a716c6102f8a"
+    },
+    {
+      "path": "source/docs/EXECUTION_AND_EVALUATION.md",
+      "sha1": "0bbef9d978c8f28a6e8abfb770b9d7d9edff5cea"
+    },
+    {
+      "path": "source/docs/FOUR_ROLE_SELECTIONS_20261015.md",
+      "sha1": "6714a5c70081677433e9ed75725c5a039152668e"
+    },
+    {
+      "path": "source/docs/GOVERNANCE.md",
+      "sha1": "a8b2ba4b498b94533484d9cab3179e2b3af3217a"
+    },
+    {
+      "path": "source/docs/INTERACTION_AUDIT_20261017.md",
+      "sha1": "ef54784bab857cc41fe97b3436bf2c362d497110"
+    },
+    {
+      "path": "source/docs/LIST_ALIGNMENT_20261016.md",
+      "sha1": "2f4d22f445819c41399d9544ede1fdd6ac1c4f1f"
+    },
+    {
+      "path": "source/docs/MULTI_AGENT_REVIEW.md",
+      "sha1": "8745263579abb124cbb64f70d5f0ce79f3aa2301"
+    },
+    {
+      "path": "source/docs/OPPORTUNITY_CARD_FLOW_20261017.md",
+      "sha1": "8305b44af195ac6cf0ec74cb3fc273629bc7d5ad"
+    },
+    {
+      "path": "source/docs/OPTIONAL_OUTPUT_FIX_20261019.md",
+      "sha1": "2fb582fdc78c9d69d58feaf931861adad83d0dab"
+    },
+    {
+      "path": "source/docs/ORIGINAL_DESIGN.md",
+      "sha1": "09ef0ddba7c8077c2f3f041a2cce87423bae4714"
+    },
+    {
+      "path": "source/docs/PRODUCT_COPY_20261017.md",
+      "sha1": "8cd920c83c15b1781d8faf9ca743b16e02a5c185"
+    },
+    {
+      "path": "source/docs/PROSE_COMPLETENESS_FIX_20261019.md",
+      "sha1": "2b0b930cedfc6feb26d9cd682a042372d106417c"
+    },
+    {
+      "path": "source/docs/QWEN_FIRST_LIVE_RESULT.json",
+      "sha1": "b771bec7511efe41749e80aad048b2bf2c24029f"
+    },
+    {
+      "path": "source/docs/QWEN_SETUP.md",
+      "sha1": "b37920e56afaf36116409efe35d05d0bb756e1c3"
+    },
+    {
+      "path": "source/docs/RECOVERY_UX_AUDIT.md",
+      "sha1": "1798822cb11f9803e008b2ccf64aa96008689c96"
+    },
+    {
+      "path": "source/docs/RESEARCH_DESK_DESIGN_20261017.md",
+      "sha1": "025f35616d8be463f6809665df5bb6ae46e8f410"
+    },
+    {
+      "path": "source/docs/RESEARCH_UI_20261016.md",
+      "sha1": "c8a3b234a45ee69a5fb3538fea64480a735f5b9c"
+    },
+    {
+      "path": "source/docs/SCORING_AND_EVALUATION.md",
+      "sha1": "1777f04afe700a73dbd055264c5e413253c922dd"
+    },
+    {
+      "path": "source/docs/SIDEBAR_RELEASE_20261018.md",
+      "sha1": "87dc5aa7966f1aa67d4f3c5ce7291bd907b0f3e8"
+    },
+    {
+      "path": "source/docs/SIDEBAR_SIMPLIFICATION_20261018.md",
+      "sha1": "54101b94de42ef6de32041f7232aea6001d8a8d6"
+    },
+    {
+      "path": "source/docs/SOURCE_EXPANSION_20261018.md",
+      "sha1": "6b3e8480d0d76b5108090014b777e046a0fc9acd"
+    },
+    {
+      "path": "source/docs/STAGE_OUTCOMES_20261014.md",
+      "sha1": "f67b62910b482cd92d1258f554f18e2aa94ef0d9"
+    },
+    {
+      "path": "source/docs/START_RECOVERY_20261016.md",
+      "sha1": "6e8a94c443c787b84b72ce3bf8eba07fdc91ac2c"
+    },
+    {
+      "path": "source/docs/STATUS_COPY_AUDIT_20261019.md",
+      "sha1": "6b676a22111bc77c1c27a410a975efa5897fe966"
+    },
+    {
+      "path": "source/docs/STORAGE_DIAGNOSIS_20261018.md",
+      "sha1": "c8ccbec79d3ec80fb0ad7c130f27f80afe5015dd"
+    },
+    {
+      "path": "source/docs/TYPOGRAPHY_PRINCIPLES_20261016.md",
+      "sha1": "4df565d6b072e746d185751d74b5f1e074fbdc80"
+    },
+    {
+      "path": "source/docs/V6_COORDINATOR_REFERENCE_FAILURE.json",
+      "sha1": "84a1c79d1abf5607eba2d268537e1b1f89403af5"
+    },
+    {
+      "path": "source/docs/V6_MULTI_AGENT_LIVE_RESULT.json",
+      "sha1": "86d8fb4f8bc10602bc993e851191a93cbf4fb925"
+    },
+    {
+      "path": "source/docs/V6_MULTI_AGENT_ROUND2_LIVE_RESULT.json",
+      "sha1": "36a0a3e65fdef3fbbc645f52cf953dac4af01a18"
+    },
+    {
+      "path": "source/docs/V6_NEEDS_ANCHOR_FAILURE.json",
+      "sha1": "afc3d25ea94f70e8aa7d83941d25b1acc095f0bf"
+    },
+    {
+      "path": "source/docs/VERCEL_DEPLOYMENT_20261017.md",
+      "sha1": "227071b2da61737acd9e2df8ca020870a03ef925"
+    },
+    {
+      "path": "source/docs/VERCEL_LIVE_DEPLOYMENT_20261017.md",
+      "sha1": "438793e97c128616a1f6b923ae26aeeae05f5113"
+    },
+    {
+      "path": "source/docs/VERIFICATION.md",
+      "sha1": "820dc30d415a09f30d7c7e1d0455388674c19f6c"
+    },
+    {
+      "path": "source/docs/WAIT_FEEDBACK_20261017.md",
+      "sha1": "511af5ee268077062fbf59a678a319a50e71db5c"
+    },
+    {
+      "path": "source/docs/WORKSPACE_LAYOUT_20261016.md",
+      "sha1": "122f866678e795eb618cc07b39382b032bf4e461"
+    },
+    {
+      "path": "source/drizzle.config.ts",
+      "sha1": "5df729a362aff2748c00427a87289295269df66a"
+    },
+    {
+      "path": "source/drizzle/0000_stormy_archangel.sql",
+      "sha1": "7d1f636c8cf037d7603ebafaa0f73666634bfb3d"
+    },
+    {
+      "path": "source/drizzle/meta/0000_snapshot.json",
+      "sha1": "cf19f07b69cbf0c2cbd08571d5ec8cef80d50125"
+    },
+    {
+      "path": "source/drizzle/meta/_journal.json",
+      "sha1": "1f349421d436e0e450cd0debc6889e47a17a59ee"
+    },
+    {
+      "path": "source/eslint.config.mjs",
+      "sha1": "4cabe66146f961658a3c76465bcb57e80314404e"
+    },
+    {
+      "path": "source/examples/d1/app/api/notes/route.ts",
+      "sha1": "79967ad93a9ff68f48f82828078ab85ad00e2ec8"
+    },
+    {
+      "path": "source/examples/d1/db/schema.ts",
+      "sha1": "766d1eb792e84dadf6ff4b9ecc5c65e3e68ab70a"
+    },
+    {
+      "path": "source/hooks/use-mobile.ts",
+      "sha1": "cdb9aae9ca8d354d767e8da4731ff7eb4a16d532"
+    },
+    {
+      "path": "source/lib/connector-context.ts",
+      "sha1": "37e5f8814bee1b8c593568625fb326a6b987693e"
+    },
+    {
+      "path": "source/lib/connector-contract.mts",
+      "sha1": "4b21e8ed0f67c503e7879621ef28c028c84ad2f0"
+    },
+    {
+      "path": "source/lib/connector-errors.mts",
+      "sha1": "6b41d854777fdb49e35f0ef80cc2b88e929ba728"
+    },
+    {
+      "path": "source/lib/connector-preview.d.ts",
+      "sha1": "0e7f8ba6bc5d77a03c99f5b2b35b3f70e0ab508a"
+    },
+    {
+      "path": "source/lib/connectors.ts",
+      "sha1": "f8b9142852a059be4f8807b32435d6cfdb511e4e"
+    },
+    {
+      "path": "source/lib/deployment/database-config.mjs",
+      "sha1": "174ec0c4d456d477be99628129b86bb300ee8e9f"
+    },
+    {
+      "path": "source/lib/deployment/node-env.ts",
+      "sha1": "c4c68dd605fd5db87620c791762f566c20012300"
+    },
+    {
+      "path": "source/lib/deployment/private-access.ts",
+      "sha1": "a83bbfe84d2cbf3a50cbffdfacf38328963d2c20"
+    },
+    {
+      "path": "source/lib/deployment/private-proxy.ts",
+      "sha1": "81c0c9b696be425ed7a256fe7c85f8cfcfe58f77"
+    },
+    {
+      "path": "source/lib/deployment/runtime-env.ts",
+      "sha1": "7b4092cabd7eb28639ae9249a11652c10298cbb0"
+    },
+    {
+      "path": "source/lib/deployment/turso-database.ts",
+      "sha1": "b525747a9e747092d829c5f93973355452870adf"
+    },
+    {
+      "path": "source/lib/research/agent-loop.ts",
+      "sha1": "596f8a7acf9b5b18712de945b4b55b507d6e90b9"
+    },
+    {
+      "path": "source/lib/research/browser-api.ts",
+      "sha1": "2b7bb44f6f6ca62467a7389700d78be08e528501"
+    },
+    {
+      "path": "source/lib/research/citation-selections.ts",
+      "sha1": "a0c6b83a06cb5db42255498b0ef2fd92fa56a567"
+    },
+    {
+      "path": "source/lib/research/claim-kinds.ts",
+      "sha1": "ece1ed17810320dc54e0258b24dc61e08d57d89b"
+    },
+    {
+      "path": "source/lib/research/collaboration.ts",
+      "sha1": "3f50676edf25eff18c408bea84b48a83e1ae31a9"
+    },
+    {
+      "path": "source/lib/research/collection.ts",
+      "sha1": "335bf9090119539c0ab49e0b18f849bbc0ffb63c"
+    },
+    {
+      "path": "source/lib/research/conclusion-audit.ts",
+      "sha1": "bfe98585b4dfcf562152e9dc9d591a00d428dcc3"
+    },
+    {
+      "path": "source/lib/research/domain.ts",
+      "sha1": "778bee646031d4cab6319fa0e226328f3212e879"
+    },
+    {
+      "path": "source/lib/research/domestic-sources.ts",
+      "sha1": "eb78445506db77e3e4c5d52c27d1ec6af439a50b"
+    },
+    {
+      "path": "source/lib/research/draft-cards.ts",
+      "sha1": "09268516c09a64aba46d495dbfcb80a5ea814a9f"
+    },
+    {
+      "path": "source/lib/research/evaluation.ts",
+      "sha1": "9204e44b0b71b77a0045532343dc434de8c30dbc"
+    },
+    {
+      "path": "source/lib/research/evidence-citations.ts",
+      "sha1": "880d6066687926a8e90f6fcb952f230bcd0e2fdc"
+    },
+    {
+      "path": "source/lib/research/evidence-file.ts",
+      "sha1": "c90f7cc907b03d8f970920fe92c701d4761ed7e2"
+    },
+    {
+      "path": "source/lib/research/evidence-scope.ts",
+      "sha1": "491b70cef0e9bc073efa855acd8218cb9388f0d4"
+    },
+    {
+      "path": "source/lib/research/execution-controls.ts",
+      "sha1": "3e1829679b2a0ef607f7c1cf066e5caadae5b09d"
+    },
+    {
+      "path": "source/lib/research/execution-start.ts",
+      "sha1": "a3509ba0237f2a675cea6c62d1a349335c7c9fa4"
+    },
+    {
+      "path": "source/lib/research/execution.ts",
+      "sha1": "4049674c62c1f6eaa877a6c3aab6af341c2af869"
+    },
+    {
+      "path": "source/lib/research/expanded-sources.ts",
+      "sha1": "a6ed81ef34bc77d284959092dd42079f5d989ea4"
+    },
+    {
+      "path": "source/lib/research/governance-actions.ts",
+      "sha1": "7d3e845c2f9ce719431d5a833f9ed27d147cb7e9"
+    },
+    {
+      "path": "source/lib/research/governance.ts",
+      "sha1": "af1b5a395b15990ca6c5bcfb74a3d6437b3257f8"
+    },
+    {
+      "path": "source/lib/research/model-configuration.ts",
+      "sha1": "5628dc4545048e6c803d4c2bd0b25873c433d924"
+    },
+    {
+      "path": "source/lib/research/model-port.ts",
+      "sha1": "aecd78f36f74dc6f6a2bbb6a35891162cd3f0ead"
+    },
+    {
+      "path": "source/lib/research/news-search.ts",
+      "sha1": "da589c316203ef294c8c5365fc92b049df8061cd"
+    },
+    {
+      "path": "source/lib/research/official-statistics.ts",
+      "sha1": "8a698fc3d9f3c9187a10929da07c63afdcb55209"
+    },
+    {
+      "path": "source/lib/research/opportunity-actions.ts",
+      "sha1": "48e4ca836b573815b2602d70cb596f99cbbf0be2"
+    },
+    {
+      "path": "source/lib/research/opportunity-drafts.ts",
+      "sha1": "713d4dc06aef7a0a648592c4dcfdd5f96599f525"
+    },
+    {
+      "path": "source/lib/research/opportunity-lifecycle.ts",
+      "sha1": "c830c3c7d8a1749348bf82903528f54bbf8d42ff"
+    },
+    {
+      "path": "source/lib/research/optional-output.ts",
+      "sha1": "40a03d98e0850729500cd38477931ecdc44a82bc"
+    },
+    {
+      "path": "source/lib/research/product-presentation.ts",
+      "sha1": "ed92c3911b99a02c6f4b8b273bfd70cb06ea2ab9"
+    },
+    {
+      "path": "source/lib/research/project-desk-state.ts",
+      "sha1": "dcb29fcd33b507e10c5d4a2fb62b4049c0c8cb17"
+    },
+    {
+      "path": "source/lib/research/project-updates.ts",
+      "sha1": "1e934dc32f6f7194e063ac82d780ebe8fa4df0ed"
+    },
+    {
+      "path": "source/lib/research/proposal-completeness.ts",
+      "sha1": "7baa4315c7d4c505b752dca923367b95cb749f34"
+    },
+    {
+      "path": "source/lib/research/provider-config.ts",
+      "sha1": "a117ecaa80ebe5e4c27fd2db2931dfbbe2046933"
+    },
+    {
+      "path": "source/lib/research/qwen-model.ts",
+      "sha1": "19ac0da2d81e04cf5da829ea9562f24b86833312"
+    },
+    {
+      "path": "source/lib/research/qwen-schema.ts",
+      "sha1": "50bb42fe0dd161eff9752f5f7e8bb2837a134351"
+    },
+    {
+      "path": "source/lib/research/qwen-settings.ts",
+      "sha1": "c8c5ec28b9a200d10a39485f537cb4058d4cef8c"
+    },
+    {
+      "path": "source/lib/research/retrieval.ts",
+      "sha1": "579258fdcb55191cb58414a1b55a45bc1dd0f406"
+    },
+    {
+      "path": "source/lib/research/review-contract.ts",
+      "sha1": "2524b7cd45f93722b5b15f3e70627ad82d0f79ba"
+    },
+    {
+      "path": "source/lib/research/review-selections.ts",
+      "sha1": "f68bc832c0ced51beb7e27a3b95a3dde03e70898"
+    },
+    {
+      "path": "source/lib/research/review-wire.ts",
+      "sha1": "b8661ab37c47d436bbf46880eb51aee1cbaa5025"
+    },
+    {
+      "path": "source/lib/research/semantic-retrieval.ts",
+      "sha1": "2d1cd98e79992626c37daf846f604d8de7d16883"
+    },
+    {
+      "path": "source/lib/research/source-catalog.ts",
+      "sha1": "77ff39331e00cf09b5898a6793f65a43d6288831"
+    },
+    {
+      "path": "source/lib/research/source-coverage.ts",
+      "sha1": "1a42db55b7a62d1ec89c61cb8cd73ecaa0d3d26f"
+    },
+    {
+      "path": "source/lib/research/source-facts.ts",
+      "sha1": "4559b9b249d555d80b4258162f68e6dca10ecc42"
+    },
+    {
+      "path": "source/lib/research/stage-outcomes.ts",
+      "sha1": "2c718ea11cfc274f851a2fe4cf44e1d4a54ba97f"
+    },
+    {
+      "path": "source/lib/research/storage-errors.ts",
+      "sha1": "63da57f62b5bfd43a6fda60f3be18e6346928b7c"
+    },
+    {
+      "path": "source/lib/research/store.ts",
+      "sha1": "96c58727f45f264be36351e48a2d976b0923c8fd"
+    },
+    {
+      "path": "source/lib/research/v2ex-feed.ts",
+      "sha1": "2bce299cdac72d47ba8dec14fafc173663e328c5"
+    },
+    {
+      "path": "source/lib/research/wait-feedback.ts",
+      "sha1": "3f8133d50b3b210a56bc9c0a78d31cd617ec3e39"
+    },
+    {
+      "path": "source/lib/research/workflow-start.ts",
+      "sha1": "43b24fb4000c221b550dd800dfffd5c17df7b8e3"
+    },
+    {
+      "path": "source/lib/research/workflow-usage.ts",
+      "sha1": "a34098c9af47658ad065d534a3297700b74e157e"
+    },
+    {
+      "path": "source/lib/research/workflow.ts",
+      "sha1": "22f519b9c59a09a438b5890c608df2434053d55b"
+    },
+    {
+      "path": "source/lib/utils.ts",
+      "sha1": "edf351d874d6710ffff09bbbad7de26cace8fd8c"
+    },
+    {
+      "path": "source/next.config.ts",
+      "sha1": "b1307d9f7043d4507161a59a60fb795526ce6a7d"
+    },
+    {
+      "path": "source/package.json",
+      "sha1": "a790fe3c72e3ae6c18ff22eb05bfd265024e4642"
+    },
+    {
+      "path": "source/pnpm-lock.yaml",
+      "sha1": "eb6a4579ce165677f174ee4d3bca8b8f502de19a"
+    },
+    {
+      "path": "source/pnpm-workspace.yaml",
+      "sha1": "7af5f9368cecf2fd6cce8a09f1b904e03e6376ad"
+    },
+    {
+      "path": "source/postcss.config.mjs",
+      "sha1": "8f8be689e9af58f80351df6e6b551146822f42a4"
+    },
+    {
+      "path": "source/proxy.ts",
+      "sha1": "43408c272e8aa11df6b95e1fdd9bcaac0681bbe2"
+    },
+    {
+      "path": "source/public/favicon.svg",
+      "sha1": "dac11467581f6ffc9b2f66cecfc085bb560fded0"
+    },
+    {
+      "path": "source/public/file.svg",
+      "sha1": "43e2751ad2c3e5f28ebe755f2863e8d505827106"
+    },
+    {
+      "path": "source/public/globe.svg",
+      "sha1": "bc7491d499a6d08cd34d102fab946adda3316864"
+    },
+    {
+      "path": "source/public/window.svg",
+      "sha1": "aaa393c36db17afe79aa846c53d64832d3ef55d6"
+    },
+    {
+      "path": "source/scripts/build-verified.sh",
+      "sha1": "317eb841a67f69fc70a01444a1a46e8541aad436"
+    },
+    {
+      "path": "source/scripts/check-public-sources.mjs",
+      "sha1": "cb08779c23cf4c0b7ee24ddf66bf31d61e6ff629"
+    },
+    {
+      "path": "source/scripts/connector-preview/connector-preview-session.mjs",
+      "sha1": "6c8549cfd2aaf10cdf919f345bc9ecdd4f24a5f0"
+    },
+    {
+      "path": "source/scripts/connector-preview/host-binding.mjs",
+      "sha1": "6dbe39ccdf80d18c40de4419796849a9b66f4f3f"
+    },
+    {
+      "path": "source/scripts/connector-preview/protocol.mjs",
+      "sha1": "dc934c99a67ad8ebefcbd31757a212a75c6d7bb5"
+    },
+    {
+      "path": "source/scripts/execution-profile.mjs",
+      "sha1": "d17e3a523e3052c4cea081cfe1cd1189d2fcce2b"
+    },
+    {
+      "path": "source/scripts/init-vercel-db.mjs",
+      "sha1": "6d42b291604bcc0fccea568452532db8aa4d2db8"
+    },
+    {
+      "path": "source/scripts/install-ci.mjs",
+      "sha1": "05498ae1a57a03a510c6aa413bc870c47609dbce"
+    },
+    {
+      "path": "source/scripts/install-ci.sh",
+      "sha1": "c72a5dd68768125fc48797b3823369803110f6f9"
+    },
+    {
+      "path": "source/scripts/install-pnpm.sh",
+      "sha1": "1f0a3e3f2d186c4abc23a3f835c3114f0b17ed78"
+    },
+    {
+      "path": "source/scripts/npm-install.mjs",
+      "sha1": "acb4ea6cbc5a57dc0e25595246f5c4fa7c702946"
+    },
+    {
+      "path": "source/scripts/pnpm-install.mjs",
+      "sha1": "de278e41e8e345c2b956f41835b2d2f7957159cb"
+    },
+    {
+      "path": "source/scripts/run-framework.mjs",
+      "sha1": "0b4706c22091d9668bf3446674b6237c1c3b363f"
+    },
+    {
+      "path": "source/scripts/sites-env.mjs",
+      "sha1": "b81973dd33c1d5f10527eb8c3e8ab78242248960"
+    },
+    {
+      "path": "source/scripts/sites-env.sh",
+      "sha1": "a3adb314556d4b08d475f89f27c914498154b553"
+    },
+    {
+      "path": "source/scripts/vercel-release-check.mjs",
+      "sha1": "a3ab4af389b48cfcc64b904421488ba56f2855c9"
+    },
+    {
+      "path": "source/scripts/vercel-storage-check.mjs",
+      "sha1": "1c694ab68316f68702a07a6eb1721d0d5cac6960"
+    },
+    {
+      "path": "source/tests/agent-loop-smoke.mjs",
+      "sha1": "9316f6021e0c3654cd7740fd35be68af3849ed8d"
+    },
+    {
+      "path": "source/tests/api-smoke.mjs",
+      "sha1": "fffb6f5e05debf6399ca85dec41cac005f4640e4"
+    },
+    {
+      "path": "source/tests/capability-gaps-smoke.mjs",
+      "sha1": "ddf9d3f375ef17e61036d2d9014f0de69eb5eb4c"
+    },
+    {
+      "path": "source/tests/citation-recovery-smoke.mjs",
+      "sha1": "55b9d81813573fcd44ae1d51e55754a47269bebf"
+    },
+    {
+      "path": "source/tests/collaboration-smoke.mjs",
+      "sha1": "aae1afc76bf8165f8dbc7211f8ac5d73c9673759"
+    },
+    {
+      "path": "source/tests/collection-closeout-smoke.mjs",
+      "sha1": "f2de14ba8209e9ae58fe6b9674051607d1d80bb3"
+    },
+    {
+      "path": "source/tests/conclusion-audit-smoke.mjs",
+      "sha1": "0fc9326169032c6d4addad24a45877c4a5fae877"
+    },
+    {
+      "path": "source/tests/conclusion-ui-smoke.mjs",
+      "sha1": "eacfde7ddbac9dd5638012618cfcc36d6dd90540"
+    },
+    {
+      "path": "source/tests/desk-recovery-smoke.mjs",
+      "sha1": "8b74c707871407ae65cb0288308e1aeb14962132"
+    },
+    {
+      "path": "source/tests/domestic-source-smoke.mjs",
+      "sha1": "ca51c81c963bae5264b44bc0b925de35af1028fb"
+    },
+    {
+      "path": "source/tests/evidence-scope-smoke.mjs",
+      "sha1": "d28d9e328d90953af8bd306ab15b36d7a59b71f1"
+    },
+    {
+      "path": "source/tests/execution-smoke.mjs",
+      "sha1": "626f1a862d46ab92fea5f08aeb54981b3df4d029"
+    },
+    {
+      "path": "source/tests/expanded-source-smoke.mjs",
+      "sha1": "cd6b2d5e4041f8bb0b3556e912b0e3503436a4c1"
+    },
+    {
+      "path": "source/tests/fixtures/planning-wire.json",
+      "sha1": "f05444818c142e617cb488f95efaae4c25d9b44b"
+    },
+    {
+      "path": "source/tests/fixtures/semantic-cases.json",
+      "sha1": "9988685f77e14252ad289336c78f3b2e53d7cd72"
+    },
+    {
+      "path": "source/tests/interaction-audit-smoke.mjs",
+      "sha1": "6e3de48ef22df08ee49cd45e486f9e66ba47fd62"
+    },
+    {
+      "path": "source/tests/model-configuration-smoke.mjs",
+      "sha1": "bf387e685ae2cd90eaf24a9a6603d9a0dcdb3410"
+    },
+    {
+      "path": "source/tests/model-contract-fixes-smoke.mjs",
+      "sha1": "c107544591e111ce31f1333d0f2f8d9994513648"
+    },
+    {
+      "path": "source/tests/news-sources-smoke.mjs",
+      "sha1": "afa5bd2847b2acf0d4d903176c944cb4efc3e9f9"
+    },
+    {
+      "path": "source/tests/official-statistics-smoke.mjs",
+      "sha1": "17703604aa3f8fb9df8fc72b093dee6beb7803d3"
+    },
+    {
+      "path": "source/tests/opportunity-lifecycle-smoke.mjs",
+      "sha1": "c36bbcecf67dbb66a05e9866750eed7946966305"
+    },
+    {
+      "path": "source/tests/optional-output-smoke.mjs",
+      "sha1": "fe7bd544cd5e7a2ba2a2fc5c823b5f02c6b02c6a"
+    },
+    {
+      "path": "source/tests/product-presentation-smoke.mjs",
+      "sha1": "eb5caabb0ee194aa9e25a52dde5d4c44dbfb7699"
+    },
+    {
+      "path": "source/tests/prose-completeness-smoke.mjs",
+      "sha1": "f53eb2ae90f8cd0f8f702d2f4b9ab85abfc8ea55"
+    },
+    {
+      "path": "source/tests/qwen-schema-smoke.mjs",
+      "sha1": "d6c6f7815520984f17490a68b9da8be0b2304194"
+    },
+    {
+      "path": "source/tests/qwen-smoke.mjs",
+      "sha1": "9527f46d03190a1126f1839dccd19abafd6368a2"
+    },
+    {
+      "path": "source/tests/recovery-smoke.mjs",
+      "sha1": "c43be8651aee6ae3e9116f82752ce2dc7403665a"
+    },
+    {
+      "path": "source/tests/render-component.mjs",
+      "sha1": "8cb098aae9fa0d4d60217f1d2cfffee012b14b94"
+    },
+    {
+      "path": "source/tests/research-activity-ui-smoke.mjs",
+      "sha1": "bfe0a1d429e8831a643198a4c0f8c9c1ade16fff"
+    },
+    {
+      "path": "source/tests/review-schema-smoke.mjs",
+      "sha1": "2d35adc65dedd88d062ad737fbbc3cf1432c7c2d"
+    },
+    {
+      "path": "source/tests/review-selections-smoke.mjs",
+      "sha1": "9999238894c959ef80c7237ba13e788d019fd6f7"
+    },
+    {
+      "path": "source/tests/run-local-api.mjs",
+      "sha1": "1a8d865d1be67ac0b34cb817f3c59e6fb787eea5"
+    },
+    {
+      "path": "source/tests/source-facts-smoke.mjs",
+      "sha1": "1db1abca52d377e11b8736cde907a2f341ddff53"
+    },
+    {
+      "path": "source/tests/stage-outcomes-smoke.mjs",
+      "sha1": "74153ed5dc081f5ec8723374d5a921d3d7874a43"
+    },
+    {
+      "path": "source/tests/status-copy-smoke.mjs",
+      "sha1": "f1e065c14bc2edb2530baba9d884e6e54d62e403"
+    },
+    {
+      "path": "source/tests/storage-configuration-smoke.mjs",
+      "sha1": "5b3fce3b12da60c67bc3158f4efa76a63bc33bad"
+    },
+    {
+      "path": "source/tests/turso-sqlite-transport.mjs",
+      "sha1": "10409d3b0dfa9bf5bc9d7551d99e8633a46f1b4e"
+    },
+    {
+      "path": "source/tests/vercel-target-smoke.mjs",
+      "sha1": "eac582a212a96b78458809743db133f1a716a7e3"
+    },
+    {
+      "path": "source/tests/wait-feedback-smoke.mjs",
+      "sha1": "670e7bd3a3b2b9368d718e7290511c87c198baaa"
+    },
+    {
+      "path": "source/tests/workflow-budget-smoke.mjs",
+      "sha1": "042c7e2ea75246c56ba865c60e8149ec33ccf57a"
+    },
+    {
+      "path": "source/tests/workflow-smoke.mjs",
+      "sha1": "d8fc690a8170000dd8312569ada8aa2f14271e58"
+    },
+    {
+      "path": "source/tests/workflow-start-smoke.mjs",
+      "sha1": "cf51f68032e136185a441533098331d0438dc5c3"
+    },
+    {
+      "path": "source/tsconfig.json",
+      "sha1": "9a455427ceb248f68de8ec4f1afe1416581e4323"
+    },
+    {
+      "path": "source/tsconfig.tsbuildinfo",
+      "sha1": "e1864598ffef03674b5a3f3912c16cd39dbc9795"
+    },
+    {
+      "path": "source/vendor/shadcn-tailwind-4.13.0.LICENSE.md",
+      "sha1": "8845c7b4958bee400b5d89c797425f16dbe53b41"
+    },
+    {
+      "path": "source/vendor/shadcn-tailwind-4.13.0.css",
+      "sha1": "131855a652a1e62ae57b04b704a153a2c6eebe55"
+    },
+    {
+      "path": "source/vercel.json",
+      "sha1": "c77d07700d8f45772b7ff95fe12bf312bde07cc2"
+    },
+    {
+      "path": "source/vite.config.ts",
+      "sha1": "bf0df216a96bf736fb93f35cd560eef4f7dbf576"
+    }
+  ]
+}

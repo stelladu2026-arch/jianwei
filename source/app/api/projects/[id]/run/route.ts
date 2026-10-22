@@ -15,6 +15,7 @@ import {QWEN_MODEL,QWEN_MAX_ATTEMPTS,QWEN_TIMEOUT_MS} from '@/lib/research/provi
 const schema=z.object({version:z.number().int().positive(),callId:z.string().uuid(),action:z.enum(['start','advance','pause','resume','cancel','retry','recover','evaluate']),adapter:z.enum(['simulation','qwen','unconfigured']).default('simulation'),mode:z.enum(['single','four']).default('single'),scenario:z.enum(['normal','timeout_once','invalid_once','foreign_reference']).default('normal'),freeTierOnlyConfirmed:z.boolean().default(false),limit:z.number().int().min(1).max(12).optional()}).strict();
 function record(p:Project,id:string){p.actions=[...p.actions.slice(-49),id];}
 const response=(p:Project)=>NextResponse.json({project:p});
+export const maxDuration=300;
 export async function POST(req:Request,ctx:{params:Promise<{id:string}>}){try{
   if(req.headers.get('sec-fetch-site')==='cross-site')return NextResponse.json({error:'请求来源不正确'},{status:403});
   const b=schema.parse(await req.json()),{id}=await ctx.params,p=await get(id);if(!p)return NextResponse.json({error:'项目不存在'},{status:404});

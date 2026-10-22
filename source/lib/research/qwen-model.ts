@@ -9,6 +9,7 @@ import {externalDataRule,roleRules,researchLanguageRule} from './model-port';
 import {decodeReviewWire,REVIEW_FORMAT} from './review-wire';
 import {QWEN_BASE_URL,QWEN_MAX_OUTPUT_TOKENS,QWEN_MODEL} from './provider-config';
 import {AGENT_TOOLS,AgentToolCalls,parseToolCalls,type AgentToolCall} from './agent-loop';
+import {omitBlankOptionalOutput} from './optional-output';
 
 export type Receipt={usage?:{input_tokens:number;output_tokens:number};requestId?:string;outputIssues?:string[];normalizations?:string[]};
 export class ProviderError extends Error{
@@ -16,8 +17,8 @@ export class ProviderError extends Error{
   constructor(code:string,receipt:Receipt={}){super(code);this.receipt=receipt;}
 }
 const planningRules={
- search_plan:'你负责把模糊的研究方向写成结构化研究问题，再给出英文检索词。data.framing 必须包含 target_user、scenario，以及 1 至 3 条 research questions。data.notes 只包含 1 至 2 条检索词，每条 claim 为 2 至 100 字符、仅 1 至 3 个英文关键词（例如 customer support、help desk），不得用长句或堆叠人群及修饰词，refs 为空数组，kind 为 gap。同一检索词会由应用查询 Hacker News，并读取中文维基百科条目正文；百科条目不是国内用户原话。tool_calls 最多 2 个，只能使用白名单工具；不需要工具时为空数组。不得生成 URL、市场结论，也不得把主张标成事实或观察。用不同角度覆盖具体痛点、已有替代或反例。status 为 ok，evidence_ids 为空数组；gaps 可说明来源、人群或地域覆盖限制。',
- gap_plan:'你负责判断当前研究缺口是否能通过额外一次公开检索改善。公开搜索只覆盖 Hacker News 与中文维基百科，不能验证个人付款承诺、真实账单、访谈和地域代表性。若缺口属于这些不可检索项或不需要补搜，status 为 ok，data.notes 仅一条 claim=STOP、refs=[]、kind=gap，tool_calls 为空数组。若存在可检索缺口且能改变判断，status 为 partial，data.notes 仅一条 claim 为 2 至 100 字符、仅 1 至 3 个英文关键词的检索词、refs=[]、kind=gap，必须不同于此前的检索词；也可以在 tool_calls 里请求一次白名单检索。gaps 简述此检索可以补什么及不能验证什么。不得编造新证据，不得把主张标成事实或观察。'
+ search_plan:'你负责把模糊的研究方向写成结构化研究问题，再给出中英文检索词；研究国内人群时，优先一条中文短词和一条英文短词。data.framing 必须包含 target_user、scenario，以及 1 至 3 条 research questions。data.notes 只包含 1 至 2 条检索词，每条 claim 为 2 至 100 字符、仅 1 至 3 个中文或英文关键词（例如 customer support、help desk），不得用长句或堆叠人群及修饰词，refs 为空数组，kind 为 gap。同一检索词会搜索中国新闻网公开报道、GitHub Issues、Hacker News、中文维基百科，并筛选少数派、博客园与 OSCHINA 的近期公开订阅。中文关键词优先国家统计局相关报告，英文关键词保留 Hacker News 评论采集。中国新闻网支持关键词搜索；订阅不是全站历史检索，搜索摘要和订阅摘要都不等于全文，百科、新闻和企业宣传不是客户需求原话。需要工具预检时优先使用 public_source_search；单站检索不能视作完成多渠道采集。tool_calls 最多 2 个，只能使用白名单工具；不需要工具时为空数组。不得生成 URL、市场结论，也不得把主张标成事实或观察。用不同角度覆盖具体痛点、已有替代或反例。status 为 ok，evidence_ids 为空数组；gaps 可说明来源、人群或地域覆盖限制。',
+ gap_plan:'你负责判断当前研究缺口是否能通过额外一次公开检索改善。公开搜索覆盖 GitHub Issues、Hacker News、中文维基百科和中文公开订阅，不能验证个人付款承诺、真实账单、访谈和地域代表性。若缺口属于这些不可检索项或不需要补搜，status 为 ok，data.notes 仅一条 claim=STOP、refs=[]、kind=gap，tool_calls 为空数组。若存在可检索缺口且能改变判断，status 为 partial，data.notes 仅一条 claim 为 2 至 100 字符、仅 1 至 3 个中文或英文关键词的检索词、refs=[]、kind=gap，必须不同于此前的检索词；也可以在 tool_calls 里请求一次白名单检索。gaps 简述此检索可以补什么及不能验证什么。不得编造新证据，不得把主张标成事实或观察。'
 } as const;
 const string={type:'string'};
 function object(properties:Record<string,unknown>,required=Object.keys(properties)){return {type:'object',properties,required,additionalProperties:false};}
@@ -36,7 +37,7 @@ function noteSchema(claim:unknown,refs:unknown,review:boolean,evidence?:ModelTas
 }
 
 function planningResponseSchema(purpose:'search_plan'|'gap_plan',allowTools=true){
-  const claim={type:'string',minLength:2,maxLength:100,pattern:'^[A-Za-z][A-Za-z0-9-]*( [A-Za-z0-9][A-Za-z0-9-]*){0,2}$'};
+  const claim={type:'string',minLength:2,maxLength:100,pattern:'^[A-Za-z\\u3400-\\u9FFF][A-Za-z0-9\\u3400-\\u9FFF-]*( [A-Za-z0-9\\u3400-\\u9FFF][A-Za-z0-9\\u3400-\\u9FFF-]*){0,2}$'};
   const note=object({claim,refs:emptyIdList(),kind:{type:'string',enum:['gap']}});
   const notes={type:'array',minItems:1,maxItems:purpose==='search_plan'?2:1,items:note};
   const data=purpose==='search_plan'?object({notes,framing:object({target_user:{type:'string',minLength:1,maxLength:200},scenario:{type:'string',minLength:1,maxLength:500},questions:{type:'array',minItems:1,maxItems:3,items:{type:'string',minLength:1,maxLength:200}}})}):object({notes});
@@ -79,7 +80,7 @@ export function legacyResponseSchema(role:Role,allowedIds?:readonly string[],rev
   if(purpose==='search_plan'||purpose==='gap_plan')return planningResponseSchema(purpose,allowTools);
   const refs=allowedIds?allowedIds.length?{type:'array',items:{type:'string',enum:[...new Set(allowedIds)]},maxItems:30}:{type:'array',items:{type:'string'},maxItems:0}:{type:'array',items:{type:'string'},maxItems:30};
   // Review text limits match decodeReviewWire. Selected facts reserve space inside the unchanged four-citation limit.
-  const claim=review?{type:'string',minLength:1,maxLength:2000}:string;
+  const claim={type:'string',minLength:1,maxLength:2000};
   const note=noteSchema(claim,refs,review,evidence,allowedIds);
   const proposalFields={title:claim,problem:claim,audience:claim,alternative:claim,conclusion:claim,decision:{type:'string',enum:['validate','evidence','pause']},payment:{type:'string',enum:['none','weak','medium']},...(review?{}:{refs}),counter:claim,unknowns:claim,plan:claim};
   if(!review){
@@ -165,15 +166,17 @@ export class QwenModel implements ResearchModelAdapter{
     if(choice?.finish_reason==='length')throw new ProviderError('MODEL_OUTPUT_TRUNCATED',this.receipt);
     if(choice?.finish_reason!=='stop'||typeof choice?.message?.content!=='string'||!this.receipt.usage)throw new ProviderError('INVALID_PROVIDER_RESPONSE',this.receipt);
     let parsed:any;try{parsed=JSON.parse(choice.message.content);}catch{this.receipt.outputIssues=['root:invalid_json'];throw new ProviderError('INVALID_MODEL_OUTPUT',this.receipt);}
+    const optional=omitBlankOptionalOutput(parsed);parsed=optional.value;
+    if(optional.normalizations.length)this.receipt.normalizations=optional.normalizations;
     if(task.purpose==='conclusion_review'){
       try{parsed=decodeAuditWire(parsed,issues=>{this.receipt.outputIssues=issues;});}catch{throw new ProviderError('INVALID_MODEL_OUTPUT',this.receipt);}
       return {status:parsed.status,data:parsed.data,gaps:parsed.gaps,evidence_ids:[...new Set<string>(parsed.data.checks.flatMap((c:any)=>c.anchors.map((a:any)=>a.evidence_id)))],errors:[],revision:task.revision,usage:this.receipt.usage,model:QWEN_MODEL};
     }
     if(task.review&&isSelectionReviewFormat(parsed?.review_format)){
-      try{parsed=decodeSelectionReview(parsed,task.role,catalog,issues=>{this.receipt.outputIssues=issues;});this.receipt.normalizations=['claim_selections_expanded'];}catch(error){throw new ProviderError((error as Error).message==='INVALID_MODEL_REFERENCE'?'INVALID_MODEL_REFERENCE':'INVALID_MODEL_OUTPUT',this.receipt);}
+      try{parsed=decodeSelectionReview(parsed,task.role,catalog,issues=>{this.receipt.outputIssues=issues;});this.receipt.normalizations=[...(this.receipt.normalizations||[]),'claim_selections_expanded'];}catch(error){throw new ProviderError((error as Error).message==='INVALID_MODEL_REFERENCE'?'INVALID_MODEL_REFERENCE':'INVALID_MODEL_OUTPUT',this.receipt);}
       return {...parsed,errors:[],revision:task.revision,usage:this.receipt.usage,model:QWEN_MODEL};
     }
-    if(!task.review&&!task.purpose){try{const selected=parsed?.citation_format===CITATION_SELECTION_FORMAT;parsed=decodeCitationSelections(parsed,catalog,issues=>{this.receipt.outputIssues=issues});if(selected)this.receipt.normalizations=['citation_selections_expanded'];}catch(error){throw new ProviderError((error as Error).message==='INVALID_MODEL_REFERENCE'?'INVALID_MODEL_REFERENCE':'INVALID_MODEL_OUTPUT',this.receipt)}}
+    if(!task.review&&!task.purpose){try{const selected=parsed?.citation_format===CITATION_SELECTION_FORMAT;parsed=decodeCitationSelections(parsed,catalog,issues=>{this.receipt.outputIssues=issues});if(selected)this.receipt.normalizations=[...(this.receipt.normalizations||[]),'citation_selections_expanded'];}catch(error){throw new ProviderError((error as Error).message==='INVALID_MODEL_REFERENCE'?'INVALID_MODEL_REFERENCE':'INVALID_MODEL_OUTPUT',this.receipt)}}
     try{parsed=expandSourceFacts(parsed,catalog,!!task.review,issues=>{this.receipt.outputIssues=issues;});}catch{throw new ProviderError('INVALID_MODEL_OUTPUT',this.receipt);}
     if(task.review){
       try{parsed=decodeReviewWire(parsed,task.role,issues=>{this.receipt.outputIssues=issues;});}

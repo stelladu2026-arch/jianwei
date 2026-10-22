@@ -169,3 +169,11 @@ input:focus, textarea:focus { outline-color: #537d8e; }
 @media(prefers-reduced-motion:reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }.drawing-page-front { transform: none !important; }.waiting-track span { animation: none !important; }.activity-orbit i, .activity-orbit b { animation: none !important; } }
 
 .workspace-sidebar-actions{display:contents}.import-fields{display:flex;flex-direction:column;gap:18px;min-width:0;border:0;padding:0;margin:0}.import-fields:disabled{opacity:.6}
+/* Research prose must wrap in place, including long source identifiers. */
+.conclusion-summary :is(h4, .conclusion-statement, .conclusion-question p, .conclusion-grid p) { min-width: 0; max-width: 100%; overflow-wrap: anywhere; white-space: pre-wrap; }
+.conclusion-summary .conclusion-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+.conclusion-summary :is(.conclusion-action, .conclusion-risk, .conclusion-question) { min-width: 0; }
+.conclusion-summary .evidence-scope .spread { flex-wrap: wrap; gap: 8px 16px; }
+@media (max-width: 767px) { .conclusion-summary .conclusion-grid { grid-template-columns: minmax(0,1fr); } }
+
+.panel-bottom > [role=status] { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 6px; }

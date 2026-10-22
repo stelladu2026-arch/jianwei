@@ -1,0 +1,26 @@
+// Render actual UI states without network or model calls.
+import assert from 'node:assert/strict';
+import React from 'react';
+import {renderToStaticMarkup} from 'react-dom/server';
+import {createRequire} from 'node:module';
+import {pathToFileURL} from 'node:url';
+import {componentURL} from './render-component.mjs';
+import {newProject} from '../lib/research/domain.ts';
+import {makeWorkflow} from '../lib/research/workflow.ts';
+import {workflowStageOutcome} from '../lib/research/stage-outcomes.ts';
+const require=createRequire(import.meta.url);
+const scopeURL=componentURL(new URL('../components/scope-confirmation-actions.tsx',import.meta.url));
+const scopeJS=Buffer.from(scopeURL.split(',')[1],'base64').toString().replace(/from (["'])lucide-react\1/g,'from '+JSON.stringify(pathToFileURL(require.resolve('lucide-react')).href));
+const {ScopeConfirmationActions}=await import('data:text/javascript;base64,'+Buffer.from(scopeJS).toString('base64'));
+const {WorkflowStartHelp}=await import(componentURL(new URL('../components/workflow-start-help.tsx',import.meta.url)));
+const {ResearchStageOutcome}=await import(componentURL(new URL('../components/research-stage-outcome.tsx',import.meta.url)));
+const {WorkspaceNotice}=await import(componentURL(new URL('../components/workspace-notice.tsx',import.meta.url)));
+const html=(Component,props)=>renderToStaticMarkup(React.createElement(Component,props));
+let passed=0;function check(name,fn){fn();passed++;console.log('PASS '+name)}
+check('confirmed scope has exactly one success label and no disabled confirmation button',()=>{const result=html(ScopeConfirmationActions,{confirmed:true,canResearch:true,busy:false,onConfirm:()=>{},onResearch:()=>{}});assert.equal(result.split('范围已确认').length-1,1);assert.equal(result.split('<button').length-1,1);assert.ok(result.includes('开始一键研究'));assert.ok(result.includes('编辑后需重新确认'));assert.ok(!result.includes('disabled'));assert.ok(!result.includes('确认研究范围'))});
+check('unconfirmed scope retains confirmation action and hides launch until confirmed',()=>{let calls=0;const props={confirmed:false,canResearch:true,busy:false,onConfirm:()=>calls++,onResearch:()=>{throw Error('Not allowed')}};const result=html(ScopeConfirmationActions,props);assert.ok(result.includes('确认研究范围'));assert.ok(!result.includes('开始一键研究'));const element=ScopeConfirmationActions(props),fragment=element.props.children[0];fragment.props.children[1].props.onClick();assert.equal(calls,1);assert.ok(html(ScopeConfirmationActions,{...props,busy:true}).includes('disabled'))});
+check('demo and saving states never introduce an extra active research action',()=>{const props={confirmed:true,canResearch:false,busy:false,onConfirm:()=>{},onResearch:()=>{throw Error('Not allowed')}};assert.ok(!html(ScopeConfirmationActions,props).includes('<button'));assert.ok(html(ScopeConfirmationActions,{...props,canResearch:true,busy:true}).includes('disabled'))});
+check('ready start is quiet rather than adding a second success banner',()=>{const result=html(WorkflowStartHelp,{issues:[],busy:false,onAction:()=>{}});assert.ok(!result.includes('role="status"'));assert.ok(!result.includes('开始条件已满足'));assert.ok(!result.includes('<button'));assert.ok(result.includes('research-start-reasons'))});
+check('covered service notice appears once while scope and resource blockers keep direct actions',()=>{const provider={code:'provider',message:'Synthetic configuration issue',action:'provider',label:'刷新服务状态'},scope={code:'scope',message:'请先确认当前研究范围。',action:'brief',label:'去确认研究范围'};const notice=html(WorkspaceNotice,{title:'研究服务',children:provider.message}),help=html(WorkflowStartHelp,{issues:[provider,scope],coveredCodes:['provider','provider_loading'],busy:false,onAction:()=>{}});assert.equal((notice+help).split(provider.message).length-1,1);assert.ok(help.includes('开始前还需完成 1 项'));assert.ok(help.includes('去确认研究范围'));const allCovered=html(WorkflowStartHelp,{issues:[provider],coveredCodes:['provider'],busy:false,onAction:()=>{}});assert.ok(!allCovered.includes('开始条件已满足'));assert.ok(!allCovered.includes('<button'));assert.ok(html(WorkflowStartHelp,{issues:[provider],busy:false,onAction:()=>{}}).includes('刷新服务状态'))});
+check('embedded stage report omits repeated failure and summary but retains accepted results and next steps',()=>{const p=newProject({title:'Synthetic stopped copy fixture'});p.confirmed=true;p.workflow=makeWorkflow(p,false);p.workflow.status='failed';p.workflow.error='MODEL_TIMEOUT';const outcome=workflowStageOutcome(p),original=JSON.stringify(outcome);const standalone=html(ResearchStageOutcome,{outcome});assert.ok(standalone.includes('停止原因：'));assert.ok(standalone.includes('aria-label="结论摘要"'));const embedded=html(ResearchStageOutcome,{outcome,showFailure:false,showConclusion:false});assert.ok(!embedded.includes('停止原因：'));assert.ok(!embedded.includes('aria-label="结论摘要"'));assert.ok(embedded.includes('已获得什么'));assert.ok(embedded.includes('还不能判断什么'));assert.ok(embedded.includes('查看全部所附原文'));assert.ok(embedded.includes('下一步'));assert.equal(JSON.stringify(outcome),original)});
+console.log(JSON.stringify({status_copy_checks:passed,actual_model_calls:0,scope:'React states, preserved actions, embedded report deduplication; no production data or browser clicks'}));

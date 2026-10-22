@@ -10,6 +10,7 @@ import {QWEN_TIMEOUT_MS} from '@/lib/research/provider-config';
 const input=z.object({version:z.number().int().positive(),callId:z.string().uuid(),action:z.enum(['start','advance','cancel','recover']),freeTierOnlyConfirmed:z.boolean().default(false)}).strict();
 const response=(p:Project)=>NextResponse.json({project:p});
 function remember(p:Project,id:string){p.actions=[...p.actions.slice(-49),id];}
+export const maxDuration=300;
 export async function POST(request:Request,ctx:{params:Promise<{id:string}>}){try{
  if(request.headers.get('sec-fetch-site')==='cross-site')return NextResponse.json({error:'请求来源不正确'},{status:403});
  const b=input.parse(await request.json()),{id}=await ctx.params,p=await get(id);if(!p)return NextResponse.json({error:'项目不存在'},{status:404});

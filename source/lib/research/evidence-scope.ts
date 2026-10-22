@@ -8,10 +8,11 @@ export function summarizeEvidenceScope(sources:readonly unknown[],refs:readonly 
   if(!value||typeof value!=='object')continue;
   const s=value as Partial<Evidence>;
   if(s.excluded===true||typeof s.id!=='string'||!requested.includes(s.id)||typeof s.text!=='string'||!s.text.trim()||rows.some(r=>r.id===s.id))continue;
-  rows.push({id:s.id,title:typeof s.title==='string'?s.title:'',text:s.text,source:typeof s.source==='string'?s.source:'',date:typeof s.date==='string'?s.date:'',fetched:'',author:typeof s.author==='string'?s.author:'',thread:typeof s.thread==='string'?s.thread:'',url:'',kind:s.kind==='public'?'public':s.kind==='synthetic'?'synthetic':'imported',stance:'context',excluded:false,truncated:s.truncated===true,contentType:s.contentType});
+  rows.push({id:s.id,title:typeof s.title==='string'?s.title:'',text:s.text,source:typeof s.source==='string'?s.source:'',date:typeof s.date==='string'?s.date:'',fetched:'',author:typeof s.author==='string'?s.author:'',thread:typeof s.thread==='string'?s.thread:'',url:'',kind:s.kind==='public'?'public':s.kind==='synthetic'?'synthetic':'imported',stance:'context',excluded:false,truncated:s.truncated===true,contentType:s.contentType,contentBasis:s.contentBasis});
  }
  const unknownRelations=rows.filter(s=>!s.author.trim()&&!s.thread.trim()).length;
  const relatedGroups=rows.length&&!unknownRelations?sourceCoverage(rows).independentSamples:null;
+ const excerpts=rows.filter(s=>s.contentBasis==='excerpt').length;
  const truncated=rows.filter(s=>s.truncated).length;
  const showcases=rows.filter(s=>/^show hn\s*:/i.test(s.title.trim())).length;
  const publicOnly=rows.length>0&&rows.every(s=>s.kind==='public');
@@ -22,6 +23,7 @@ export function summarizeEvidenceScope(sources:readonly unknown[],refs:readonly 
  if(relatedGroups!==null&&relatedGroups<rows.length)warnings.push(`${rows.length} 条原文保守合并为 ${relatedGroups} 个来源关联组，不是多个独立客户。`);
  if(unknownRelations)warnings.push(`${unknownRelations} 条原文缺少作者及线程信息，资料独立性无法判断；不借用当前资料补齐历史身份。`);
  if(showcases)warnings.push(`${showcases} 条标题标注 Show HN，属于项目展示线索，不能直接当作客户需求已验证。`);
+ if(excerpts)warnings.push(`${excerpts} 条引用仅取得摘要，未取得全文；不能把摘要当作完整原文。`);
  if(truncated)warnings.push(`${truncated} 条原文已裁剪，需核查完整语境。`);
  if(publicOnly)warnings.push('结论引用全部来自公开资料，不能证明真实付费或目标人群代表性。');
  return {requested:requested.length,attached:rows.length,relatedGroups,truncated,showcases,publicOnly,missing,warnings};
