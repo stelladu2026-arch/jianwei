@@ -76,6 +76,7 @@ await import('./expanded-source-smoke.mjs');await import('./news-sources-smoke.m
 }
 await import('./harness-acceptance-smoke.mjs');
 await import('./harness-node-env-smoke.mjs');
+await import('./qwen-network-check-smoke.mjs');
 await import('./harness-recovery-smoke.mjs');
 sqlite.close();
 suiteComplete=true;clearTimeout(deadline);

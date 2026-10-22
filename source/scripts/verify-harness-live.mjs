@@ -71,6 +71,8 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){
  const runId=value('--run-id'),buildRef=value('--ref');
  if(!flags.has('--live')||!flags.has('--max-model-calls=2')||!flags.has('--paid-budget=0')||!uuid.test(runId)||!/^[a-f0-9]{40}$/.test(buildRef)){
   console.error('未执行：需要 --live --max-model-calls=2 --paid-budget=0 --run-id=<UUID> --ref=<commit SHA>；仅在已授权的服务端环境执行。');process.exitCode=2;
+ }else if(process.env.VERCEL_GIT_COMMIT_SHA&&process.env.VERCEL_GIT_COMMIT_SHA!==buildRef){
+  console.error(JSON.stringify({test:VERSION,passed:false,errorCode:'ACCEPTANCE_BUILD_REF_MISMATCH',modelRequestAttempts:0}));process.exitCode=1;
  }else try{
   const {QwenModel,requireQwenCredentials}=await import('../lib/research/qwen-model.ts');
   const {tursoDatabase}=await import('../lib/deployment/turso-database.ts');
