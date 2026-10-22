@@ -11,7 +11,7 @@ const steps=[
 // Opt-in for one explicitly authorized deployment only. The SQL grant keeps
 // the same run from obtaining another allowance if the build is restarted.
 if(process.env.JIANWEI_HARNESS_LIVE_ACCEPTANCE==='1'){
- steps.push([process.execPath,['--experimental-strip-types','scripts/qwen-network-check.mjs','--live']]);
+ steps.push([process.execPath,['--experimental-strip-types','scripts/qwen-network-check.mjs','--live','--auth']]);
  steps.push([
  process.execPath,['--experimental-strip-types','scripts/verify-harness-live.mjs','--live','--max-model-calls=2','--paid-budget=0',
   '--run-id='+(process.env.JIANWEI_HARNESS_ACCEPTANCE_ID||''),'--ref='+(process.env.JIANWEI_HARNESS_ACCEPTANCE_REF||'')]

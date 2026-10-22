@@ -1,11 +1,21 @@
 import {pathToFileURL} from 'node:url';
 import {QWEN_BASE_URL} from '../lib/research/provider-config.ts';
 
-// Anonymous, fixed-address HEAD only: no key, prompt, model or redirects.
+// Fixed-address preflight: anonymous HEAD; optional server-only empty JSON auth.
+// No model, prompt, generation fields or redirect following.
 export async function checkQwenNetwork(fetcher=fetch){
+ return probeQwen(fetcher,{method:'HEAD'});
+}
+export async function checkQwenAuth(rawKey,fetcher=fetch){
+ const key=typeof rawKey==='string'?rawKey.trim():'';
+ if(!key||/[\s"'\x00-\x1f\x7f]/.test(key))return {reachable:false,code:'CREDENTIAL_NOT_CONFIGURED',modelRequests:0};
+ // Empty JSON cannot request generation; credentials stay inside the server.
+ return probeQwen(fetcher,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+key},body:'{}'});
+}
+async function probeQwen(fetcher,request){
  const started=Date.now(),controller=new AbortController(),timer=setTimeout(()=>controller.abort(),10000);
  try{
-  const response=await fetcher(QWEN_BASE_URL+'/chat/completions',{method:'HEAD',redirect:'manual',signal:controller.signal});
+  const response=await fetcher(QWEN_BASE_URL+'/chat/completions',{...request,redirect:'manual',signal:controller.signal});
   return {reachable:true,httpStatus:response.status,redirect:response.status>=300&&response.status<400,modelRequests:0,elapsedMs:Date.now()-started};
  }catch(error){
   const codes=[error?.code,error?.cause?.code,...(Array.isArray(error?.cause?.errors)?error.cause.errors.map(x=>x?.code):[])];
@@ -15,6 +25,8 @@ export async function checkQwenNetwork(fetcher=fetch){
  }finally{clearTimeout(timer)}
 }
 if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){
- if(!process.argv.includes('--live')){console.error('未执行：需要显式 --live；只发送无凭据 HEAD，不调用模型。');process.exitCode=2;}
- else{const result=await checkQwenNetwork();console.log('[jianwei-qwen-network]',JSON.stringify(result));if(!result.reachable)process.exitCode=1;}
+ if(!process.argv.includes('--live')){console.error('未执行：需要显式 --live；默认无凭据 HEAD，--auth 追加空 JSON 鉴权；不调用模型。');process.exitCode=2;}
+ else{const result=await checkQwenNetwork();console.log('[jianwei-qwen-network]',JSON.stringify(result));if(!result.reachable)process.exitCode=1;
+  else if(process.argv.includes('--auth')){const auth=await checkQwenAuth(process.env.DASHSCOPE_API_KEY);console.log('[jianwei-qwen-auth-empty-json]',JSON.stringify(auth));if(!auth.reachable||[401,403].includes(auth.httpStatus))process.exitCode=1;}
+ }
 }
