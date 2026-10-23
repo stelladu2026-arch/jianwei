@@ -6,7 +6,7 @@ import {componentURL} from './render-component.mjs';
 import {canonicalNewsArticle,newsSearchRows,parseNewsSearch,collectNewsSearch,enrichNewsArticle} from '../lib/research/news-search.ts';
 import {sourceCoverage} from '../lib/research/source-coverage.ts';
 const {PublicSourceSummary}=await import(componentURL(new URL('../components/public-source-summary.tsx',import.meta.url)));
-const text='宠物用品仍然依赖人工比较售后和价格，报道只描述市场背景，不是实际用户访谈，也未核实任何交易，仍须进一步验证。';
+const text='宠物社交和用品仍然依赖人工比较售后和价格，报道只描述市场背景，不是实际用户访谈，也未核实任何交易，仍须进一步验证。';
 const date=new Date(Date.now()-60000).toISOString().slice(0,19).replace('T',' ');
 const item=(extra={})=>({title:['宠物用品行业观察'],url:'http://www.chinanews.com.cn/cj/2026/10-18/10710001.shtml',pubtime:date,content_without_tag:text,...extra});
 const page=rows=>'<html><script>var docArr = '+JSON.stringify(rows)+'; var totalNum=20;</script></html>';

@@ -1,7 +1,7 @@
 import type {Evidence} from './domain';
 import {collectNewsSearch,enrichNewsArticle,NEWS_SOURCE} from './news-search';
 import {collectOfficialStatistics,STATISTICS_SOURCE} from './official-statistics';
-import {collectPublicFeed,collectGithubIssues,enrichFeedArticle,type SourceReceipt} from './expanded-sources';
+import {collectPublicFeed,collectGithubIssues,enrichFeedArticle,matchesSourceQuery,type SourceReceipt} from './expanded-sources';
 import {FEED_SOURCES,type FeedSource} from './source-catalog';
 export const SOURCE_REQUEST_CAP=10;
 export const WIKI_SOURCE='中文维基百科';
@@ -51,6 +51,7 @@ export async function collectHN(query:string,since:number|null,cap=SOURCE_REQUES
     if(result.status==='rejected'){out.failed++;continue;}
     const {id,item}=result.value;if(!item||String(item.id)!==id||item.deleted||item.dead||typeof item.time!=='number'||!Number.isFinite(item.time)||item.time<0||item.time>Date.now()/1000+300||(since!==null&&item.time<since)){out.skipped++;continue;}
     const title=plainSource(typeof item.title==='string'?item.title:'无标题讨论');
+    if(!matchesSourceQuery(title+' '+plainSource(typeof item.text==='string'?item.text:''),query)){out.skipped++;continue;}
     await evidence(item,id,id,title,false);
     const kids=[...new Set((Array.isArray(item.kids)?item.kids:[]).map(String).filter((x:string)=>/^\d{1,12}$/.test(x)))].slice(0,2) as string[];
     const comments=await Promise.allSettled(take(kids).map(async child=>({id:child,item:await json('https://hacker-news.firebaseio.com/v0/item/'+child+'.json')})));
@@ -90,7 +91,9 @@ export async function collectZhWiki(query:string,since:number|null,cap=WIKI_MAX_
     const page=rows[0],revision=Array.isArray(page.revisions)?page.revisions[0]:undefined,stamp=typeof revision?.timestamp==='string'?Date.parse(revision.timestamp):NaN,time=Number.isFinite(stamp)?Math.floor(stamp/1000):NaN;
     if(!Number.isFinite(time)||time<0||time>Date.now()/1000+300||(since!==null&&time<since)){out.skipped++;continue;}
     const raw=plainSource(typeof page.extract==='string'?page.extract:''),text=/^#(redirect|重定向)\b/i.test(raw)?'':raw,author=typeof revision?.user==='string'?revision.user:'';
-    const e:Evidence={id:'WP'+id,title:plainSource(typeof page.title==='string'?page.title:'无标题条目').slice(0,180),text:text.slice(0,5000)||'该条目只有标题或重定向，未取得百科正文；不能据此形成需求结论。',source:WIKI_SOURCE,date:new Date(time*1000).toISOString().slice(0,10),fetched:new Date().toISOString(),author:await anonAuthor(author),thread:'zhwiki:'+id,url:'https://zh.wikipedia.org/?curid='+id,kind:'public',stance:'context',excluded:false,truncated:!text||text.length>5000,contentType:'article'};
+    const title=plainSource(typeof page.title==='string'?page.title:'无标题条目').slice(0,180);
+    if(!matchesSourceQuery(title+' '+text,query)){out.skipped++;continue;}
+    const e:Evidence={id:'WP'+id,title,text:text.slice(0,5000)||'该条目只有标题或重定向，未取得百科正文；不能据此形成需求结论。',source:WIKI_SOURCE,date:new Date(time*1000).toISOString().slice(0,10),fetched:new Date().toISOString(),author:await anonAuthor(author),thread:'zhwiki:'+id,url:'https://zh.wikipedia.org/?curid='+id,kind:'public',stance:'context',excluded:false,truncated:!text||text.length>5000,contentType:'article'};
     out.evidence.push(e);if(text.length>=40)out.usableIds.push(e.id);
   }
   return out;

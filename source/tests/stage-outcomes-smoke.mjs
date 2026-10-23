@@ -23,7 +23,7 @@ function coorData(refs){return {notes:[{claim:'Synthetic conditional pain point.
 function envelope(wire){return Response.json({usage:{prompt_tokens:100,completion_tokens:80},choices:[{finish_reason:'stop',message:{content:JSON.stringify(wire)}}]},{headers:{'x-request-id':'fixture-outcome'}})}
 globalThis.fetch=async(url,init)=>{
  if(String(url).startsWith('https://hn.algolia.com/'))return Response.json({hits:[{objectID:'771001'}]});
- if(String(url).startsWith('https://hacker-news.firebaseio.com/'))return Response.json({id:771001,type:'story',title:'Synthetic tool original',by:'fixture-user',time:Math.floor(Date.now()/1000),text:'Synthetic tool-acquired original describes repeated setup questions, and does not establish actual payments or verified demand.'});
+ if(String(url).startsWith('https://hacker-news.firebaseio.com/'))return Response.json({id:771001,type:'story',title:'Synthetic setup friction tool original',by:'fixture-user',time:Math.floor(Date.now()/1000),text:'Synthetic tool-acquired original describes repeated setup questions, and does not establish actual payments or verified demand.'});
  assert.equal(url,QWEN_BASE_URL+'/chat/completions');calls++;lastBody=JSON.parse(init.body);const task=JSON.parse(lastBody.messages[1].content);modelTurn++;
  if(mode==='tool'){
   if(modelTurn===1){const d=coorData(task.evidence_ids);return envelope({status:'partial',data:d,evidence_ids:task.evidence_ids,gaps:['Synthetic unresolved question'],tool_calls:[{name:'hacker_news_search',arguments:{query:'setup friction',id:''}}]})}

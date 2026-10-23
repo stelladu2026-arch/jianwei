@@ -48,7 +48,7 @@ await check('a provisional final with tool calls is not accepted until tool resu
 });
 await check('public source bodies return to the model and final refs validate against that exact input',async()=>{
   const oldFetch=globalThis.fetch;let calls=0;
-  globalThis.fetch=async url=>String(url).includes('algolia')?Response.json({hits:[{objectID:'100'}]}):Response.json({id:100,type:'story',title:'Synthetic',by:'fixture',time:Math.floor(Date.now()/1000),text:quote});
+  globalThis.fetch=async url=>String(url).includes('algolia')?Response.json({hits:[{objectID:'100'}]}):Response.json({id:100,type:'story',title:'Synthetic setup',by:'fixture',time:Math.floor(Date.now()/1000),text:quote});
   try{
     const loop=await runSingleRoleAgent({task:{...task,evidence_ids:[],evidence:[]},evidence:[],since:null,allowFollowUp:true,budget,invoke:async next=>{calls++;if(calls===1)return {final:null,toolCalls:[{name:'hacker_news_search',arguments:{query:'setup',id:''}}]};assert.ok(next.evidence_ids.includes('HN100'));assert.equal(next.evidence.find(e=>e.id==='HN100').text,quote);return {final:{...raw,data:{notes:[{claim:quote,refs:['HN100'],kind:'fact'}],citations:[{evidence_id:'HN100',quote}]},evidence_ids:['HN100']},toolCalls:[]}}});
     assert.doesNotThrow(()=>acceptAgentFinal(loop.final,loop.finalTask));

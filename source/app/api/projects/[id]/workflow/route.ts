@@ -69,7 +69,18 @@ export async function POST(request:Request,context:{params:Promise<{id:string}>}
   if(isModel&&!resuming){
     if(w.budget.modelAttempts>=w.budget.modelLimit)throw new Error('已达到本轮模型调用上限。');
     key=qwenCredentials(b.freeTierOnlyConfirmed);
-    task=w.mode==='four'?fourTask(p,w,b.callId):stage==='plan'||stage==='gap'?plannerTask(p,w,b.callId):analysisTask(p,w,b.callId);
+    const previousRun=w.analysisRun?structuredClone(w.analysisRun):undefined;
+    try{task=w.mode==='four'?fourTask(p,w,b.callId):stage==='plan'||stage==='gap'?plannerTask(p,w,b.callId):analysisTask(p,w,b.callId);}
+    catch(e){
+      const code=e instanceof Error?e.message:'';
+      if(!['CONTEXT_LIMIT','FROZEN_MEMORY_EXPIRED','NO_USABLE_EVIDENCE','MISSING_ROLE_OUTPUT'].includes(code))throw e;
+      // Task construction precedes every reservation and provider call. Roll back
+      // its in-memory task mutations, and persist a visible, zero-request failure.
+      w.analysisRun=previousRun;w.status='failed';w.error=code;w.needsRetry=true;
+      w.records.push({id:b.callId,stage,kind:'local',preparation:true,state:'failed',started:new Date().toISOString(),elapsedMs:0,error:code});
+      addAction(p,b.callId);log(p,`一键研究：${workflowStages[stage]}准备失败；尚未发起模型请求，请处理检查点`);
+      return response(await save(p,b.version));
+    }
     reserveStageModel(w.budget,w.stage);p.budget.modelCalls++;
     if(w.analysisRun&&['analyze','reanalyze','needs','commercial','verifier','synthesis'].includes(stage))w.analysisRun.budget.requests=(w.analysisRun.budget.requests||0)+1;
   }

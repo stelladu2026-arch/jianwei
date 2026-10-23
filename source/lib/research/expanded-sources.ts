@@ -11,7 +11,10 @@ function empty(query:string,since:number|null):ExpandedCollection{return {query,
 export function decodeEntities(text:string){return text.replace(/&(#x[\da-f]+|#\d+|amp|lt|gt|quot|apos|nbsp);/gi,(_,entity:string)=>{const names:Record<string,string>={amp:'&',lt:'<',gt:'>',quot:'"',apos:"'",nbsp:' '};if(entity[0]!=='#')return names[entity.toLowerCase()]||_;const code=entity[1].toLowerCase()==='x'?parseInt(entity.slice(2),16):parseInt(entity.slice(1),10);return Number.isInteger(code)&&code>0&&code<=0x10ffff&&!(code>=0xd800&&code<=0xdfff)?String.fromCodePoint(code):' ';});}
 export function articleText(html:string){return decodeEntities(html.replace(/<!--[^]*?-->/g,'').replace(/<(script|style|noscript|svg|form)\b[^>]*>[^]*?<\/\1\s*>/gi,' ').replace(/<(?:br|hr)\b[^>]*>|<\/(?:p|div|li|h[1-6]|section)>/gi,'\n').replace(/<[^>]*>/g,' ')).replace(/[\t\r ]+/g,' ').replace(/ *\n */g,'\n').replace(/\n{3,}/g,'\n\n').trim();}
 function terms(query:string){return [...new Set(query.normalize('NFKC').toLowerCase().match(/[\p{Script=Han}]{2,}|[a-z][a-z0-9+#.-]{1,}/gu)||[])].slice(0,10);}
-export function matchesSourceQuery(text:string,query:string){const haystack=text.normalize('NFKC').toLowerCase();return terms(query).some(term=>haystack.includes(term));}
+// Query terms are conjunctive. A generic word such as “整理” cannot admit an
+// otherwise unrelated article when the query also asks for “客户反馈”. This is
+// a lexical relevance boundary, not a claim of semantic support or user demand.
+export function matchesSourceQuery(text:string,query:string){const haystack=text.normalize('NFKC').toLowerCase(),required=terms(query);return required.length>0&&required.every(term=>haystack.includes(term));}
 function validTime(value:string,since:number|null){const time=Date.parse(value);return Number.isFinite(time)&&time>=0&&time<=Date.now()+300000&&(since===null||time>=since*1000)?time:null;}
 function canonicalArticle(key:FeedSource,value:string){try{const u=new URL(value),source=FEED_SOURCES[key];if(u.origin!==source.origin||u.protocol!=='https:'||u.username||u.password||u.port||!source.path.test(u.pathname))return null;return u.origin+u.pathname;}catch{return null;}}
 export async function sourceResponse(url:string,maxBytes:number,fetcher:typeof fetch=fetch,accept='application/xml, application/rss+xml, application/atom+xml'){
