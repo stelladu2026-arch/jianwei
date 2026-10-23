@@ -6,7 +6,7 @@ import {stageRecovery} from '../lib/research/harness/recovery.ts';
 const originalDb=globalThis.__testEnv.DB,originalFetch=globalThis.fetch,originalKey=globalThis.__testEnv.DASHSCOPE_API_KEY,originalGate=globalThis.__testEnv.QWEN_FREE_TIER_ONLY_CONFIRMED;
 const owned=[];let passed=0,calls=0,inject=false,uncertain=false,faultProjectId='';
 const check=async(name,fn)=>{await fn();passed++;console.log('PASS '+name)};
-async function api(p,action,callId=crypto.randomUUID()){const response=await globalThis.__apiTestFetch(`http://test.local/api/projects/${p.id}/workflow`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({version:p.version,action,callId,allowSupplement:false,freeTierOnlyConfirmed:true})});return {status:response.status,...await response.json()}}
+async function api(p,action,callId=crypto.randomUUID(),options={}){const response=await globalThis.__apiTestFetch(`http://test.local/api/projects/${p.id}/workflow`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({version:p.version,action,callId,allowSupplement:false,freeTierOnlyConfirmed:true,...options})});return {status:response.status,...await response.json()}}
 async function project(){const p=fixtureProject('baseline');p.id=crypto.randomUUID();p.mode='manual';p.evidence=p.evidence.map(e=>({...e,kind:'imported'}));owned.push(p.id);return create(p)}
 function faultDb(){return {prepare(sql){const statement=originalDb.prepare(sql);return {bind(...args){statement.bind(...args);return this},first(){return statement.first()},all(){return statement.all()},async run(){if(inject&&sql.startsWith('INSERT INTO research_harness_checkpoints')){const known=await originalDb.prepare("SELECT COUNT(*) AS n FROM research_harness_operations WHERE state='done' AND operation_id='model:0' AND thread_id LIKE ?").bind(faultProjectId+':%').first();if(known.n){inject=false;throw Error('SYNTHETIC_CHECKPOINT_FAILURE')}}return statement.run()}}}}}
 globalThis.__testEnv.DASHSCOPE_API_KEY='sk-synthetic-harness-recovery-only';globalThis.__testEnv.QWEN_FREE_TIER_ONLY_CONFIRMED='true';
@@ -42,6 +42,22 @@ try{
  uncertain=true;p=(await api(await project(),'start')).project;p=(await api(p,'advance')).project;
  await check('lost provider responses have no stage recovery or automatic replay',async()=>{const n=calls;const permission=await stageRecovery(originalDb,p);assert.equal(permission.allowed,false);const r=await api(p,'recover-stage');assert.equal(r.status,400);assert.equal(calls,n);assert.equal(p.workflow.budget.modelAttempts,1)});
  uncertain=false;
+ await check('workflow route executes attached Qwen JSON tools and records both bounded model receipts',async()=>{
+  const previousFetch=globalThis.fetch;let requests=0;
+  try{
+   globalThis.fetch=async(url,init)=>{
+    if(!String(url).endsWith('/chat/completions'))return previousFetch(url,init);
+    requests++;
+    const next=JSON.parse(JSON.parse(init.body).messages[1].content);
+    if(requests===2)assert.match(JSON.stringify(next.context.rules),/retrieve_project_evidence/);
+    const content={status:'ok',data:{notes:[{claim:'fixture research',refs:[],kind:'gap'}],framing:{target_user:'Fixture teams',scenario:'Synthetic retrieval',questions:['What is repeated?']}},evidence_ids:[],gaps:[],tool_calls:requests===1?[{name:'retrieve_project_evidence',arguments:{query:'fixture research'}}]:[]};
+    return Response.json({usage:{prompt_tokens:11,completion_tokens:3},choices:[{finish_reason:'stop',message:{content:JSON.stringify(content)}}]},{headers:{'x-request-id':'synthetic-attached-'+requests}});
+   };
+   const started=(await api(await project(),'start',undefined,{allowSupplement:true})).project,result=await api(started,'advance');
+   assert.equal(result.status,200,JSON.stringify(result));assert.equal(result.project.workflow.status,'ready',JSON.stringify(result.project.workflow));assert.equal(result.project.workflow.stage,'collect');assert.equal(requests,2);assert.equal(result.project.workflow.budget.modelAttempts,2);
+   const record=result.project.workflow.records[0];assert.ok(record.agentTools.some(t=>t.name==='retrieve_project_evidence'&&t.status==='executed'));assert.equal(record.agentModelReceipts.length,2);assert.deepEqual(record.usage,{input_tokens:22,output_tokens:6});assert.equal(record.requestId,'synthetic-attached-2');
+  }finally{globalThis.fetch=previousFetch;}
+ });
  // Reconstruct an expired in-flight state from a confirmed checkpoint. Guards
  // operate before invoking the SDK and never consume a new model reservation.
  const recoverable=structuredClone(before);

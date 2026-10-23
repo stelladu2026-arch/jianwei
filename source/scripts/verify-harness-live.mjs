@@ -12,8 +12,8 @@ export async function verifyHarnessAcceptance({db,adapter,runId,buildRef}){
  const {runResearchHarness}=await import('../lib/research/harness/runner.ts');
  const {ResearchCheckpointSaver}=await import('../lib/research/harness/checkpointer.ts');
  const {saveStageInput}=await import('../lib/research/harness/recovery.ts');
- const {executeModel}=await import('../lib/research/execution.ts');
- const {AgentToolCalls,acceptAgentFinal}=await import('../lib/research/agent-loop.ts');
+ const {executeAgentTurn}=await import('../lib/research/model-turn.ts');
+ const {acceptAgentFinal}=await import('../lib/research/agent-loop.ts');
  const {QWEN_MODEL}=await import('../lib/research/provider-config.ts');
  const binding=VERSION+':'+buildRef;
  // Retain a small receipt tombstone after fixture cleanup. A restarted build
@@ -36,8 +36,7 @@ export async function verifyHarnessAcceptance({db,adapter,runId,buildRef}){
   if(calls>=2)throw Error('MODEL_BUDGET');
   const reserved=await db.prepare("UPDATE research_harness_acceptance_runs SET model_attempts=model_attempts+1,updated=? WHERE run_id=? AND binding=? AND state='started' AND model_attempts<2").bind(new Date().toISOString(),runId,binding).run();
   if(!reserved.meta.changes)throw Error('MODEL_BUDGET');calls++;
-  try{return {final:await executeModel(next,adapter,45000),toolCalls:[],receipt:{...adapter.receipt}}}
-  catch(error){if(error instanceof AgentToolCalls)return {final:null,toolCalls:error.calls,receipt:{...adapter.receipt}};throw error}
+  return executeAgentTurn(next,adapter,45000);
  }};
  let report={test:VERSION,passed:false,buildRef,model:QWEN_MODEL,paidBudget:0,maxModelCalls:2,sourceRequests:0};
  try{
