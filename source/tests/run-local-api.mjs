@@ -78,6 +78,7 @@ await import('./harness-acceptance-smoke.mjs');
 await import('./harness-node-env-smoke.mjs');
 await import('./qwen-network-check-smoke.mjs');
 await import('./harness-recovery-smoke.mjs');
+await import('./stage-budget-smoke.mjs');
 sqlite.close();
 suiteComplete=true;clearTimeout(deadline);
 console.log('RESEARCH_API_SUITE_COMPLETE');

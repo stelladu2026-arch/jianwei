@@ -7,6 +7,7 @@ import {z} from 'zod';
 import {db,get,save} from '@/lib/research/store';
 import {loadStageInput,saveStageInput,stageRecovery,type StageInput} from '@/lib/research/harness/recovery';
 import {runResearchHarness,HARNESS_RUNTIME} from '@/lib/research/harness/runner';
+import {reserveStageModel} from '@/lib/research/stage-budget';
 import {executeAgentTurn} from '@/lib/research/model-turn';
 import {log,type Project} from '@/lib/research/domain';
 import {scanReflections} from '@/lib/research/governance';
@@ -69,7 +70,7 @@ export async function POST(request:Request,context:{params:Promise<{id:string}>}
     if(w.budget.modelAttempts>=w.budget.modelLimit)throw new Error('已达到本轮模型调用上限。');
     key=qwenCredentials(b.freeTierOnlyConfirmed);
     task=w.mode==='four'?fourTask(p,w,b.callId):stage==='plan'||stage==='gap'?plannerTask(p,w,b.callId):analysisTask(p,w,b.callId);
-    w.budget.modelAttempts++;p.budget.modelCalls++;
+    reserveStageModel(w.budget,w.stage);p.budget.modelCalls++;
     if(w.analysisRun&&['analyze','reanalyze','needs','commercial','verifier','synthesis'].includes(stage))w.analysisRun.budget.requests=(w.analysisRun.budget.requests||0)+1;
   }
   if(isSource){
@@ -95,7 +96,7 @@ export async function POST(request:Request,context:{params:Promise<{id:string}>}
     const live=await get(id);
     if(!live||live.version!==expectedVersion||live.workflow?.id!==w.id||live.workflow.lease?.callId!==b.callId||live.workflow.status!=='running'||Date.parse(live.workflow.lease.expires)<=Date.now())throw new Error('EXECUTION_INTERRUPTED');
     const bw=live.workflow.budget;
-    if(kind==='model'){if(bw.modelAttempts>=bw.modelLimit)throw new Error('MODEL_BUDGET');if(bw.modelAttempts>=workflowModelCeiling(live.workflow))throw new Error('MODEL_STAGE_BUDGET');bw.modelAttempts++;live.budget.modelCalls++;reservedExtraModels++;if(live.workflow.analysisRun)live.workflow.analysisRun.budget.requests=(live.workflow.analysisRun.budget.requests||0)+1;}
+    if(kind==='model'){if(bw.modelAttempts>=bw.modelLimit)throw new Error('MODEL_BUDGET');if(bw.modelAttempts>=workflowModelCeiling(live.workflow))throw new Error('MODEL_STAGE_BUDGET');reserveStageModel(bw,live.workflow.stage);live.budget.modelCalls++;reservedExtraModels++;if(live.workflow.analysisRun)live.workflow.analysisRun.budget.requests=(live.workflow.analysisRun.budget.requests||0)+1;}
     if(kind==='source'){if(bw.sourceAttempts+amount>bw.sourceLimit||bw.searches>=bw.searchLimit||live.budget.searches>=6)throw new Error('SOURCE_BUDGET');bw.sourceAttempts+=amount;bw.searches++;live.budget.requests+=amount;live.budget.searches++;reservedToolRequests+=amount;reservedToolSearches++;}
     if(kind==='embedding'){if((bw.embeddingAttempts||0)>=2)throw new Error('EMBEDDING_BUDGET');bw.embeddingAttempts=(bw.embeddingAttempts||0)+1;}
     live.workflow.records.find(r=>r.id===b.callId)!.harnessReservations={models:reservedExtraModels,sources:reservedToolRequests,searches:reservedToolSearches};

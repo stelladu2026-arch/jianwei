@@ -26,8 +26,8 @@ export async function POST(req:Request,ctx:{params:Promise<{id:string}>}){try{
   if(p.workflow?.conclusionAudit&&['ready','running'].includes(p.workflow.conclusionAudit.status))throw new Error('请先完成或结束结论复核，再进行独立执行或评测。');
   if(b.action==='start'){
     if(p.workflow?.conclusionAudit&&['ready','running'].includes(p.workflow.conclusionAudit.status))throw new Error('请先完成或结束结论复核，再开始新执行。');
-    if(b.adapter==='qwen'){const reason=realExecutionStartReason(p,b.mode,b.limit??(b.mode==='single'?1:4));if(reason)throw new Error(reason);qwenCredentials(b.freeTierOnlyConfirmed);if(b.scenario!=='normal')throw new Error('研究执行不支持流程测试场景。');if((b.limit??(b.mode==='single'?1:4))>QWEN_MAX_ATTEMPTS)throw new Error('本次执行最多四次请求。');}
-    const run=makeRun(p,b.mode,b.scenario,b.limit??(b.adapter==='qwen'?(b.mode==='single'?1:4):undefined));if(b.adapter==='qwen'){run.adapter='qwen';run.model=QWEN_MODEL;run.simulation=false;run.paidBudget=0;run.freeTierOnlyConfirmed=true;}if(p.run)p.runHistory=[p.run,...(p.runHistory||[])].slice(0,3);p.run=run;log(p,b.adapter==='qwen'?'创建研究执行；尚未调用研究服务':'创建模拟研究执行；没有真实模型调用');
+    if(b.adapter==='qwen'){const reason=realExecutionStartReason(p,b.mode,b.limit??(b.mode==='single'?1:8));if(reason)throw new Error(reason);qwenCredentials(b.freeTierOnlyConfirmed);if(b.scenario!=='normal')throw new Error('研究执行不支持流程测试场景。');if((b.limit??(b.mode==='single'?1:8))>QWEN_MAX_ATTEMPTS)throw new Error('本次执行最多八次请求，每阶段最多两次。');}
+    const run=makeRun(p,b.mode,b.scenario,b.limit??(b.adapter==='qwen'?(b.mode==='single'?1:8):undefined));if(b.adapter==='qwen'){run.budget.stageLimit=2;run.adapter='qwen';run.model=QWEN_MODEL;run.simulation=false;run.paidBudget=0;run.freeTierOnlyConfirmed=true;}if(p.run)p.runHistory=[p.run,...(p.runHistory||[])].slice(0,3);p.run=run;log(p,b.adapter==='qwen'?'创建研究执行；尚未调用研究服务':'创建模拟研究执行；没有真实模型调用');
   }else if(b.action==='evaluate'){
     if(p.run?.lease)throw new Error('请等待当前步骤完成或先暂停执行，再进行评测。');
     p.evaluations=[await evaluateFixtures(),...(p.evaluations||[])].slice(0,3);log(p,'运行固定虚构评测集；结果为流程检查，不代表模型质量');
