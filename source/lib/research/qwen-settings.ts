@@ -1,5 +1,5 @@
 // Server-only module. No environment values or credentials are returned to clients.
-import {env} from 'cloudflare:workers';
+import {env} from '@/lib/deployment/runtime-env';
 import {isQwenCredentialConfigured,requireQwenCredentials} from './qwen-model';
 import {QWEN_BASE_URL,QWEN_MODEL} from './provider-config';
 export function qwenStatus(){

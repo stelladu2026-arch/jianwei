@@ -1,9 +1,23 @@
 import {z} from 'zod';
 import type {Role} from './model-port';
+export const LITERAL_STATEMENT_REASON='该项仅复述本轮输入的原文片段；可定位不代表来源、市场或交易已独立核实。';
+export function checkAssessmentLabel(c:{judgment:typeof judgments[number];reason:string;claim?:string;anchors?:{quote:string}[]}){return c.reason===LITERAL_STATEMENT_REASON&&c.judgment==='supports'&&!!c.claim&&!!c.anchors?.some(a=>a.quote===c.claim)?'原文陈述已定位（未独立核实）':'模型判断：'+judgmentLabels[c.judgment]}
 export const judgments=['supports','partial','insufficient','contradicts'] as const;
 export const judgmentLabels={supports:'支持',partial:'部分支持',insufficient:'证据不足',contradicts:'存在矛盾'};
 export const targetLabels:Record<string,string>={'proposal:problem':'机会问题','proposal:conclusion':'机会判断'};
 export function describeReviewIssue(issue:string){
+  if(issue.endsWith('.reason:too_big'))return '核查说明超过长度上限，本轮结果未接受。新格式已改为选择受控原因项；旧说明不截断或修补，已有通过阶段仍可查看与导出。';
+  if(issue.endsWith(':invalid_selected_fact_check'))return '旧格式中，资料事实笔记对应的核查条目不符合约定。失败记录保留；新格式通过原文片段编号生成定位证明，可明确新轮预算后重新研究。';
+  if(issue.startsWith('provider_schema'))return '当前结构化格式含服务不支持的约束，需要更新应用格式；无需重新填写密钥，不会自动重试。';
+  if(issue.startsWith('provider.http:'))return '模型服务在生成前拒绝了请求参数，未取得用量回执；请保留本轮记录并核查应用配置。';
+  if(/^data\.notes\.\d+:invalid_union$/.test(issue))return '笔记未按当前格式填写：资料事实只需原文片段编号；假设、未知和反例需在本条笔记内附核查信息。该结果未接受。';
+  if(/^data\.proposal\.(problem_check|conclusion_check)/.test(issue))return '机会问题或机会结论缺少合规的自身核查信息；请选择本轮原文编号，依据不足时明确保留证据不足。';
+  if(issue.startsWith('citation_format')||issue.startsWith('data.citation_quote_ids')||issue==='data.citations:forbidden_in_selection_format')return '引文编号未通过检查：只能选择本次输入的原文片段，且对应资料必须已被该判断引用；不能混入抄写引文、未知编号或重复编号。结果未接受，已有原文保留。';
+  if(issue.startsWith('fact_format'))return '模型缺少或使用了未知的原文编号格式标记，结果未接受。旧失败记录保留；核对原文后可按新轮预算重新研究。';
+  if(issue.includes('source_selection')||issue.includes('quote_id'))return '原文编号或确定性引用不符合约定。编号只能选择本次输入，单角色最多两条笔记及两条模型引用，应用会补齐编号对应的原文引用。结果未接受。';
+  if(issue==='data.citations:too_big')return '引用条数超过四条上限，结果未接受。新格式已为原文编号生成的引用预留空间；旧失败记录不会改写。';
+  if(issue.startsWith('tool_calls'))return '工具请求参数未通过检查。检索/摘录只需 query，读取主题只需 id；必需参数缺失、错误类型或未知字段会停止。字段位置见详情，已有成果可导出。';
+  if(issue.endsWith(':fact_requires_literal_source'))return '模型把概括或推断标成了资料事实，或没有附该主张自己的支持引文。资料事实必须逐字选择本轮原文，并引用同一片段；解释和概括应标为假设。该结果未接受。';
   const anchor=issue.match(/^data\.checks\.(\d+)\.anchors:required_for_judgment$/);
   if(anchor)return `第 ${Number(anchor[1])+1} 个核查条目给出了支持、部分支持或存在矛盾的判断，却没有附原文片段。该结果已拒绝；重新生成时须附引用，无法找到依据就应标为证据不足。`;
   const quote=issue.match(/^data\.checks\.(\d+)\.anchors\.(\d+)\.quote:not_in_input$/);
@@ -18,8 +32,8 @@ export function describeReviewIssue(issue:string){
   if(issue==='status:not_ok')return '初次规划的 status 必须为 ok。';
   if(issue==='data.notes.0.claim:not_stop')return '不需要补搜时，唯一一条 claim 必须是 STOP。';
   if(issue.endsWith(':keyword_length'))return '检索词长度不在 2 至 100 字符。';
-  if(issue.endsWith(':keyword_count'))return '检索词超过 3 个英文关键词。';
-  if(issue.endsWith(':keyword_charset'))return '检索词必须是 1 至 3 个英文关键词，不能是中文、长句或网址。';
+  if(issue.endsWith(':keyword_count'))return '检索词超过 3 个中文或英文关键词。';
+  if(issue.endsWith(':keyword_charset'))return '检索词必须是 1 至 3 个中文或英文短关键词，不能包含网址或特殊控制字符。';
   if(issue.endsWith(':not_gap'))return '规划检索词的 kind 必须为 gap。';
   if(issue.endsWith('.refs:not_empty')||issue==='evidence_ids:not_empty'||issue==='data.proposal:forbidden')return '规划结果不能包含引用、证据编号或草稿。';
   if(issue.endsWith(':not_allowed_for_role'))return '模型返回了当前角色不允许生成的字段。';
@@ -27,6 +41,10 @@ export function describeReviewIssue(issue:string){
   if(issue.endsWith('.target:unknown_claim'))return '核查条目指向不存在的主张。';
   const reference=issue.match(/^data\.checks\.(\d+)\.anchors\.(\d+)\.evidence_id:not_in_claim$/);
   if(reference)return `第 ${Number(reference[1])+1} 个核查条目的第 ${Number(reference[2])+1} 段引文，使用的资料编号不在该主张的引用中。`;
+  const optional=issue.match(/^data\.proposal\.(demand\.(who|problem|effect|workaround)(\.text)?|interview\.decision_evidence):too_small$/);
+  if(optional)return '可选的需求或验证字段为空。本次结果未接受；已有原文保留。更新后可复用已有资料重新分析，空白字段会保留为未提供，旧失败记录不改写。';
+  const field=issue.match(/^([A-Za-z0-9_.-]{1,160}):(too_small|too_big|invalid_type|invalid_enum_value|unrecognized_keys|invalid_union)$/);
+  if(field){const reasons:Record<string,string>={too_small:'内容为空或未达到最小长度',too_big:'超过长度或条数上限',invalid_type:'字段缺失或类型不符',invalid_enum_value:'选项不在允许范围内',unrecognized_keys:'包含未约定字段',invalid_union:'结构不符合允许格式'};return `字段 ${field[1]}：${reasons[field[2]]}。本阶段结果未接受，已有成果保留。`;}
   return '输出字段未通过检查，具体字段位置见失败详情。';
 }
 export type ClaimCheck={target:string;judgment:typeof judgments[number];reason:string;anchors:{evidence_id:string;quote:string}[]};

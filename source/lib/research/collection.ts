@@ -1,9 +1,13 @@
 import type {Evidence} from './domain';
+import {collectNewsSearch,enrichNewsArticle,NEWS_SOURCE} from './news-search';
+import {collectOfficialStatistics,STATISTICS_SOURCE} from './official-statistics';
+import {collectPublicFeed,collectGithubIssues,enrichFeedArticle,matchesSourceQuery,type SourceReceipt} from './expanded-sources';
+import {FEED_SOURCES,type FeedSource} from './source-catalog';
 export const SOURCE_REQUEST_CAP=10;
 export const WIKI_SOURCE='中文维基百科';
 export const WIKI_MAX_REQUESTS=3;
 export const WIKI_FETCH_HEADERS={'Accept':'application/json','User-Agent':'JianweiResearch/0.7 (public encyclopedia extract; no account)'};
-const HN_WITHIN_CAP=SOURCE_REQUEST_CAP-WIKI_MAX_REQUESTS;
+
 export function plainSource(s:string){return s.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,'').replace(/<[^>]+>/g,' ').replace(/&quot;/g,'"').replace(/&#x27;|&#39;/g,"'").replace(/&amp;/g,'&').replace(/\s+/g,' ').trim();}
 function allowedSource(url:string){
   const parsed=new URL(url);
@@ -21,7 +25,7 @@ export async function publicJSON(url:string,signal?:AbortSignal){
   if(!response.ok)throw new Error('SOURCE_'+response.status);
   return response.json() as Promise<any>;
 }
-export type Collection={query:string;evidence:Evidence[];usableIds:string[];requests:number;failed:number;skipped:number;limited:boolean;since:number|null};
+export type Collection={query:string;evidence:Evidence[];usableIds:string[];requests:number;failed:number;skipped:number;limited:boolean;since:number|null;sourceErrors?:string[];sourceDetails?:SourceReceipt[]};
 function blank(query:string,since:number|null):Collection{return {query,evidence:[],usableIds:[],requests:0,failed:0,skipped:0,limited:false,since};}
 async function anonAuthor(name:string){if(!name)return '';const hash=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(name));return Array.from(new Uint8Array(hash)).slice(0,6).map(x=>x.toString(16).padStart(2,'0')).join('');}
 // Search and source items are fixed public destinations. Links inside posts or articles are never fetched.
@@ -33,7 +37,7 @@ export async function collectHN(query:string,since:number|null,cap=SOURCE_REQUES
   async function json(url:string){out.requests++;return publicJSON(url,signal);}
   const filter=since===null?'':'&numericFilters='+encodeURIComponent('created_at_i>='+since);
   let search:any;try{search=await json('https://hn.algolia.com/api/v1/search?tags=story&hitsPerPage=3&query='+encodeURIComponent(query)+filter);}catch{out.failed++;return out;}
-  const ids=[...new Set((Array.isArray(search?.hits)?search.hits:[]).map((h:any)=>String(h.objectID)).filter((id:string)=>/^\d{1,12}$/.test(id)))].slice(0,3) as string[];
+  const ids=[...new Set((Array.isArray(search?.hits)?search.hits:[]).map((h:any)=>String(h.objectID)).filter((id:string)=>/^\d{1,12}$/.test(id)))].slice(0,cap<=4?1:3) as string[];
   async function evidence(item:any,id:string,root:string,title:string,isComment:boolean){
     if(!item||String(item.id)!==id||item.deleted||item.dead||(isComment?item.type!=='comment'||String(item.parent)!==root:item.type!=='story')){out.skipped++;return;}
     if(typeof item.time!=='number'||!Number.isFinite(item.time)||item.time<0||item.time>Date.now()/1000+300||(since!==null&&item.time<since)){out.skipped++;return;}
@@ -47,6 +51,7 @@ export async function collectHN(query:string,since:number|null,cap=SOURCE_REQUES
     if(result.status==='rejected'){out.failed++;continue;}
     const {id,item}=result.value;if(!item||String(item.id)!==id||item.deleted||item.dead||typeof item.time!=='number'||!Number.isFinite(item.time)||item.time<0||item.time>Date.now()/1000+300||(since!==null&&item.time<since)){out.skipped++;continue;}
     const title=plainSource(typeof item.title==='string'?item.title:'无标题讨论');
+    if(!matchesSourceQuery(title+' '+plainSource(typeof item.text==='string'?item.text:''),query)){out.skipped++;continue;}
     await evidence(item,id,id,title,false);
     const kids=[...new Set((Array.isArray(item.kids)?item.kids:[]).map(String).filter((x:string)=>/^\d{1,12}$/.test(x)))].slice(0,2) as string[];
     const comments=await Promise.allSettled(take(kids).map(async child=>({id:child,item:await json('https://hacker-news.firebaseio.com/v0/item/'+child+'.json')})));
@@ -86,13 +91,40 @@ export async function collectZhWiki(query:string,since:number|null,cap=WIKI_MAX_
     const page=rows[0],revision=Array.isArray(page.revisions)?page.revisions[0]:undefined,stamp=typeof revision?.timestamp==='string'?Date.parse(revision.timestamp):NaN,time=Number.isFinite(stamp)?Math.floor(stamp/1000):NaN;
     if(!Number.isFinite(time)||time<0||time>Date.now()/1000+300||(since!==null&&time<since)){out.skipped++;continue;}
     const raw=plainSource(typeof page.extract==='string'?page.extract:''),text=/^#(redirect|重定向)\b/i.test(raw)?'':raw,author=typeof revision?.user==='string'?revision.user:'';
-    const e:Evidence={id:'WP'+id,title:plainSource(typeof page.title==='string'?page.title:'无标题条目').slice(0,180),text:text.slice(0,5000)||'该条目只有标题或重定向，未取得百科正文；不能据此形成需求结论。',source:WIKI_SOURCE,date:new Date(time*1000).toISOString().slice(0,10),fetched:new Date().toISOString(),author:await anonAuthor(author),thread:'zhwiki:'+id,url:'https://zh.wikipedia.org/?curid='+id,kind:'public',stance:'context',excluded:false,truncated:!text||text.length>5000,contentType:'article'};
+    const title=plainSource(typeof page.title==='string'?page.title:'无标题条目').slice(0,180);
+    if(!matchesSourceQuery(title+' '+text,query)){out.skipped++;continue;}
+    const e:Evidence={id:'WP'+id,title,text:text.slice(0,5000)||'该条目只有标题或重定向，未取得百科正文；不能据此形成需求结论。',source:WIKI_SOURCE,date:new Date(time*1000).toISOString().slice(0,10),fetched:new Date().toISOString(),author:await anonAuthor(author),thread:'zhwiki:'+id,url:'https://zh.wikipedia.org/?curid='+id,kind:'public',stance:'context',excluded:false,truncated:!text||text.length>5000,contentType:'article'};
     out.evidence.push(e);if(text.length>=40)out.usableIds.push(e.id);
   }
   return out;
 }
 export async function collectPublic(query:string,since:number|null,cap=SOURCE_REQUEST_CAP):Promise<Collection>{
-  const hn=await collectHN(query,since,Math.max(0,Math.min(HN_WITHIN_CAP,cap-Math.min(WIKI_MAX_REQUESTS,cap))));
-  const wiki=await collectZhWiki(query,since,Math.max(0,cap-hn.requests));
-  return {query,evidence:[...hn.evidence,...wiki.evidence],usableIds:[...hn.usableIds,...wiki.usableIds],requests:hn.requests+wiki.requests,failed:hn.failed+wiki.failed,skipped:hn.skipped+wiki.skipped,limited:hn.limited||wiki.limited,since};
+  const limit=Math.max(0,Math.min(SOURCE_REQUEST_CAP,Math.floor(cap))),out=blank(query,since);out.sourceDetails=[];
+  if(!limit){out.limited=true;return out;}
+  // Reserve fixed allocations first. Results settle independently, with no retries.
+  const allocations:{run:()=>Promise<Collection>;cap:number;name:string}[]=[];let remaining=limit;
+  const add=(amount:number,name:string,run:(cap:number)=>Promise<Collection>)=>{const room=Math.min(amount,remaining);if(room<1)return;remaining-=room;allocations.push({cap:room,name,run:()=>run(room)});};
+  const chinese=/[\p{Script=Han}]/u.test(query);
+  add(1,NEWS_SOURCE,n=>collectNewsSearch(query,since,n));
+  if(chinese)add(2,STATISTICS_SOURCE,n=>collectOfficialStatistics(query,since,n));
+  add(1,'GitHub Issues',n=>collectGithubIssues(query,since,n));
+  for(const key of Object.keys(FEED_SOURCES) as FeedSource[])add(1,FEED_SOURCES[key].name,n=>collectPublicFeed(key,query,since,n));
+  if(!chinese)add(3,'Hacker News',n=>collectHN(query,since,n));
+  add(2,WIKI_SOURCE,n=>collectZhWiki(query,since,n));
+  const results=await Promise.allSettled(allocations.map(job=>job.run()));
+  for(let i=0;i<results.length;i++){
+    const result=results[i];if(result.status==='rejected'){out.requests+=allocations[i].cap;out.failed++;out.sourceDetails.push({source:allocations[i].name,state:'failed',requests:allocations[i].cap,items:0,full:0,excerpts:0,code:'SOURCE_FAILURE'});continue;}
+    const value=result.value;out.evidence.push(...value.evidence);out.usableIds.push(...value.usableIds);out.requests+=value.requests;out.failed+=value.failed;out.skipped+=value.skipped;out.limited||=value.limited;
+    out.sourceErrors=[...(out.sourceErrors||[]),...(value.sourceErrors||[])];out.sourceDetails.push(...(value.sourceDetails||[{source:allocations[i].name,state:value.failed&&!value.usableIds.length?'failed':value.usableIds.length?'ok':'empty',requests:value.requests,items:value.usableIds.length,full:value.evidence.filter(e=>value.usableIds.includes(e.id)&&!e.truncated).length,excerpts:value.evidence.filter(e=>value.usableIds.includes(e.id)&&e.truncated).length}]));
+  }
+  // Spare requests enrich matching originals. Each publisher gets at most one;
+  // every failure still counts, and no new search or hidden retry is started.
+  for(const key of ['chinanews','sspai','cnblogs'] as const){if(out.requests>=limit)break;const index=out.evidence.findIndex(e=>e.source===(key==='chinanews'?NEWS_SOURCE:FEED_SOURCES[key].name)&&e.contentBasis==='excerpt');if(index<0)continue;
+    const receipt=out.sourceDetails.find(row=>row.source===(key==='chinanews'?NEWS_SOURCE:FEED_SOURCES[key].name))!;out.requests++;receipt.requests++;
+    try{out.evidence[index]=await (key==='chinanews'?enrichNewsArticle(out.evidence[index]):enrichFeedArticle(key,out.evidence[index]));receipt.full++;receipt.excerpts--;}
+    catch{out.failed++;receipt.code='SOURCE_ARTICLE_UNAVAILABLE';(out.sourceErrors||=[]).push('SOURCE_ARTICLE_UNAVAILABLE');}
+  }
+  const omitted=chinese?'Hacker News':STATISTICS_SOURCE;
+  out.sourceDetails.push({source:omitted,state:'skipped',requests:0,items:0,full:0,excerpts:0,code:'SOURCE_LANGUAGE_PRIORITY'});
+  out.limited||=allocations.length<7;return out;
 }

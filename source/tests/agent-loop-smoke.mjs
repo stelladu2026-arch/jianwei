@@ -21,7 +21,7 @@ globalThis.fetch=async(url,init={})=>{
   assert.equal(init.redirect,'manual');
   assert.ok(address.startsWith('https://hn.algolia.com/api/v1/search?')||address.startsWith('https://hacker-news.firebaseio.com/v0/item/')||address.startsWith('https://zh.wikipedia.org/w/api.php?'));
   if(address.includes('hn.algolia.com'))return Response.json({hits:[{objectID:'100'}]});
-  if(address.includes('hacker-news.firebaseio.com'))return Response.json({id:100,type:'story',by:'fixture-author',time:Math.floor(Date.now()/1000)-3600,title:'Synthetic agent source',text:'Synthetic agent source body is long enough to be usable evidence and is not a market fact.'});
+  if(address.includes('hacker-news.firebaseio.com'))return Response.json({id:100,type:'story',by:'fixture-author',time:Math.floor(Date.now()/1000)-3600,title:'Synthetic support workflow agent source',text:'Synthetic agent source body is long enough to be usable evidence and is not a market fact.'});
   const parsed=new URL(address);
   if(parsed.searchParams.get('list')==='search')return Response.json({query:{search:[{pageid:1001,title:'Synthetic agent encyclopedia'}]}});
   return Response.json({query:{pages:[{pageid:1001,title:'Synthetic agent encyclopedia',extract:'Synthetic encyclopedia extract is long enough to be usable and is not a domestic user interview.',revisions:[{user:'fixture-editor',timestamp:new Date().toISOString()}]}]}});

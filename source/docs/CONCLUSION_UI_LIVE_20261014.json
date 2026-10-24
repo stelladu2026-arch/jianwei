@@ -1,0 +1,71 @@
+{
+  "date_beijing": "2026-10-14",
+  "rounds": [
+    {
+      "project_id": "7951efbd-00c9-4f32-a281-c6a4ac8bda47",
+      "scope": "fixed non-synthetic originals",
+      "status": "failed",
+      "fields": [
+        "data.notes.0.kind:fact_requires_literal_source"
+      ],
+      "model_requests": 1,
+      "input_tokens": 4658,
+      "output_tokens": 1424
+    },
+    {
+      "project_id": "b2471175-1f53-4ad3-8b05-dfed1e4de758",
+      "scope": "source selection protocol initial version",
+      "status": "failed",
+      "fields": [
+        "fact_format:required_for_selection"
+      ],
+      "model_requests": 1,
+      "input_tokens": 5311,
+      "output_tokens": 1084
+    },
+    {
+      "project_id": "6b786f96-b63d-4b52-a05e-92cd15794bdf",
+      "scope": "source selection required marker version",
+      "status": "failed",
+      "fields": [
+        "data.citations:too_big"
+      ],
+      "model_requests": 1,
+      "input_tokens": 5372,
+      "output_tokens": 1818
+    },
+    {
+      "project_id": "47a46cb9-f06d-4777-a5c3-f077380b14da",
+      "scope": "actual anonymous V2EX programmer node feed",
+      "status": "partial",
+      "source_requests": 1,
+      "source_errors": [
+        "SOURCE_403"
+      ],
+      "model_requests": 0,
+      "has_stage_report": true,
+      "original_count": 0
+    },
+    {
+      "project_id": "92009a6c-96a5-4ac7-9075-77e64afbef74",
+      "scope": "fixed non-synthetic originals, corrected citation capacity",
+      "status": "completed",
+      "model_requests": 1,
+      "input_tokens": 5335,
+      "output_tokens": 973,
+      "has_report": true,
+      "draft_cards": 1,
+      "original_count": 6
+    }
+  ],
+  "total_new_model_requests": 4,
+  "total_known_input_tokens": 20676,
+  "total_known_output_tokens": 5299,
+  "paid_budget_yuan": 0,
+  "actual_bill": "not fetched; budget is not proof of billing",
+  "implicit_retries": 0,
+  "historical_rejected_output_repaired": false,
+  "new_actual_embedding_requests": 0,
+  "full_real_four_role_verified": false,
+  "real_tool_loop_verified": false
+}

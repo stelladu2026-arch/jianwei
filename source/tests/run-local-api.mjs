@@ -5,20 +5,39 @@ import {registerHooks} from 'node:module';
 import {existsSync,readFileSync} from 'node:fs';
 import {fileURLToPath,pathToFileURL} from 'node:url';
 const root=fileURLToPath(new URL('../',import.meta.url));
+// Some SDK waits use unreferenced timers. Keep a bounded handle until every
+// imported suite completes, and never let a partial run report exit status 0.
+let suiteComplete=false;
+const deadline=setTimeout(()=>{console.error('RESEARCH_API_SUITE_TIMEOUT');process.exit(1)},90000);
+process.on('exit',()=>{if(!suiteComplete){console.error('RESEARCH_API_SUITE_INCOMPLETE');process.exitCode=1}});
 const sqlite=new DatabaseSync(':memory:');
 sqlite.exec(readFileSync(new URL('../drizzle/0000_stormy_archangel.sql',import.meta.url),'utf8'));
 globalThis.__testEnv={DB:{prepare(sql){let args=[];return {bind(...v){args=v;return this},async first(){return sqlite.prepare(sql).get(...args)||null},async all(){return {results:sqlite.prepare(sql).all(...args)}},async run(){const r=sqlite.prepare(sql).run(...args);return {meta:{changes:Number(r.changes)}}}}}}};
-registerHooks({resolve(specifier,context,next){if(specifier==='cloudflare:workers')return {url:'data:text/javascript,export const env=globalThis.__testEnv;',shortCircuit:true};if(specifier==='next/server')return {url:pathToFileURL(root+'node_modules/next/server.js').href,shortCircuit:true};if(specifier.startsWith('@/'))return {url:pathToFileURL(root+specifier.slice(2)+'.ts').href,shortCircuit:true};if(specifier.startsWith('.')&&context.parentURL?.endsWith('.ts')){const u=new URL(specifier+'.ts',context.parentURL);if(existsSync(u))return {url:u.href,shortCircuit:true}}return next(specifier,context)}});
+registerHooks({resolve(specifier,context,next){if(specifier==='cloudflare:workers')return {url:'data:text/javascript,export const env=globalThis.__testEnv;',shortCircuit:true};if(specifier==='next/server')return {url:pathToFileURL(root+'tests/next-server-boundary.mjs').href,shortCircuit:true};if(specifier.startsWith('@/'))return {url:pathToFileURL(root+specifier.slice(2)+'.ts').href,shortCircuit:true};if(specifier.startsWith('.')&&context.parentURL?.endsWith('.ts')){const u=new URL(specifier+'.ts',context.parentURL);if(existsSync(u))return {url:u.href,shortCircuit:true}}return next(specifier,context)}});
+if(process.env.JIANWEI_TEST_DATABASE==='turso'){
+ const {tursoDatabase}=await import('../lib/deployment/turso-database.ts');
+ const {sqliteTursoTransport}=await import('./turso-sqlite-transport.mjs');
+ globalThis.__testEnv.DB=tursoDatabase('libsql://synthetic-test.turso.io','synthetic-turso-token-only',sqliteTursoTransport(sqlite));
+}
 const modelStatus=await import('../app/api/model-status/route.ts');
 const projects=await import('../app/api/projects/route.ts');
 const project=await import('../app/api/projects/[id]/route.ts');
 const context=await import('../app/api/projects/[id]/context/route.ts');
 const run=await import('../app/api/projects/[id]/run/route.ts');
+const audit=await import('../app/api/projects/[id]/conclusion-review/route.ts');
 const workflow=await import('../app/api/projects/[id]/workflow/route.ts');
 const search=await import('../app/api/search/route.ts');
+const harness=await import('../app/api/projects/[id]/harness/route.ts');
+const background=await import('../app/api/projects/[id]/workflow/background/route.ts');
 globalThis.__externalScenario='success';
-globalThis.fetch=async(url)=>{if(globalThis.__externalScenario==='failure')throw new Error('test source offline');const address=String(url);if(address.startsWith('https://hn.algolia.com/api/'))return Response.json({hits:[{objectID:'123456'}]});if(address.startsWith('https://hacker-news.firebaseio.com/v0/item/'))return Response.json({id:123456,title:'Synthetic connector test only',by:'test-user',time:1700000000,text:'Synthetic fixture for API tests; not market evidence.'});if(address.startsWith('https://zh.wikipedia.org/w/api.php?')){const parsed=new URL(address);if(parsed.searchParams.get('list')==='search')return Response.json({query:{search:[{pageid:987654,title:'Synthetic encyclopedia fixture'}]}});return Response.json({query:{pages:[{pageid:987654,title:'Synthetic encyclopedia fixture',extract:'Synthetic encyclopedia fixture body for API tests; not a domestic user statement and not market evidence.',revisions:[{user:'fixture-wiki-editor',timestamp:'2024-06-01T00:00:00Z'}]}]}})}throw new Error('Unapproved test endpoint '+address)};
-globalThis.__apiTestFetch=async(url,init)=>{const req=new Request(url,init);const parsed=new URL(url);if(parsed.pathname==='/api/model-status')return modelStatus[req.method](req);if(parsed.pathname==='/api/search')return search.POST(req);if(parsed.pathname==='/api/projects')return projects[req.method](req);const id=parsed.pathname.split('/')[3];if(parsed.pathname.endsWith('/workflow'))return workflow[req.method](req,{params:Promise.resolve({id})});if(parsed.pathname.endsWith('/run'))return run[req.method](req,{params:Promise.resolve({id})});if(parsed.pathname.endsWith('/context'))return context.POST(req,{params:Promise.resolve({id})});return project[req.method](req,{params:Promise.resolve({id})})};
+globalThis.fetch=async(url)=>{if(globalThis.__externalScenario==='failure')throw new Error('test source offline');const address=String(url);if(address.startsWith('https://hn.algolia.com/api/'))return Response.json({hits:[{objectID:'123456'}]});if(address.startsWith('https://hacker-news.firebaseio.com/v0/item/'))return Response.json({id:123456,type:'story',title:'Synthetic workflow connector test only',by:'test-user',time:1700000000,text:'Synthetic workflow fixture for API tests; not market evidence.'});if(address.startsWith('https://zh.wikipedia.org/w/api.php?')){const parsed=new URL(address);if(parsed.searchParams.get('list')==='search')return Response.json({query:{search:[{pageid:987654,title:'Synthetic encyclopedia fixture'}]}});return Response.json({query:{pages:[{pageid:987654,title:'Synthetic encyclopedia fixture',extract:'Synthetic workflow encyclopedia fixture body for API tests; not a domestic user statement and not market evidence.',revisions:[{user:'fixture-wiki-editor',timestamp:'2024-06-01T00:00:00Z'}]}]}})}throw new Error('Unapproved test endpoint '+address)};
+globalThis.__apiTestFetch=async(url,init)=>{const req=new Request(url,init);const parsed=new URL(url);if(parsed.pathname==='/api/model-status')return modelStatus[req.method](req);if(parsed.pathname==='/api/search')return search.POST(req);if(parsed.pathname==='/api/projects')return projects[req.method](req);const id=parsed.pathname.split('/')[3];if(parsed.pathname.endsWith('/harness'))return harness[req.method](req,{params:Promise.resolve({id})});if(parsed.pathname.endsWith('/workflow/background'))return background.POST(req,{params:Promise.resolve({id})});if(parsed.pathname.endsWith('/conclusion-review'))return audit[req.method](req,{params:Promise.resolve({id})});if(parsed.pathname.endsWith('/workflow'))return workflow[req.method](req,{params:Promise.resolve({id})});if(parsed.pathname.endsWith('/run'))return run[req.method](req,{params:Promise.resolve({id})});if(parsed.pathname.endsWith('/context'))return context.POST(req,{params:Promise.resolve({id})});return project[req.method](req,{params:Promise.resolve({id})})};
+if(!process.argv.includes('--harness-only')){
+if(process.env.JIANWEI_TEST_SUITE==='copy'){await import('./status-copy-smoke.mjs');}
+else if(process.env.JIANWEI_TEST_SUITE==='prose'){await import('./prose-completeness-smoke.mjs');}
+else if(process.env.JIANWEI_TEST_SUITE==='optional'){await import('./optional-output-smoke.mjs');}
+else if(process.env.JIANWEI_TEST_SUITE==='expanded'){await import('./expanded-source-smoke.mjs');await import('./news-sources-smoke.mjs');await import('./official-statistics-smoke.mjs');await import('./optional-output-smoke.mjs');await import('./prose-completeness-smoke.mjs');await import('./status-copy-smoke.mjs');}
+else {
 await import('./api-smoke.mjs');
 await import('./execution-smoke.mjs');
 await import('./qwen-smoke.mjs');
@@ -28,4 +47,40 @@ await import('./collaboration-smoke.mjs');
 await import('./model-configuration-smoke.mjs');
 await import('./recovery-smoke.mjs');
 await import('./review-schema-smoke.mjs');
+await import('./capability-gaps-smoke.mjs');
+await import('./conclusion-audit-smoke.mjs');
+await import('./stage-outcomes-smoke.mjs');
+await import('./model-contract-fixes-smoke.mjs');
+await import('./source-facts-smoke.mjs');
+await import('./conclusion-ui-smoke.mjs');
+await import('./status-copy-smoke.mjs');
+await import('./prose-completeness-smoke.mjs');
+await import('./domestic-source-smoke.mjs');
+await import('./review-selections-smoke.mjs');
+await import('./qwen-schema-smoke.mjs');
+await import('./workflow-budget-smoke.mjs');
+await import('./workflow-start-smoke.mjs');
+await import('./research-activity-ui-smoke.mjs');
+await import('./collection-closeout-smoke.mjs');
+await import('./evidence-scope-smoke.mjs');
+await import('./opportunity-lifecycle-smoke.mjs');
+await import('./citation-recovery-smoke.mjs');
+await import('./optional-output-smoke.mjs');
+await import('./product-presentation-smoke.mjs');
+await import('./wait-feedback-smoke.mjs');
+await import('./interaction-audit-smoke.mjs');
+await import('./desk-recovery-smoke.mjs');
+await import('./vercel-target-smoke.mjs');
+await import('./expanded-source-smoke.mjs');await import('./news-sources-smoke.mjs');await import('./official-statistics-smoke.mjs');
+}
+}
+await import('./harness-acceptance-smoke.mjs');
+await import('./harness-node-env-smoke.mjs');
+await import('./qwen-network-check-smoke.mjs');
+await import('./harness-recovery-smoke.mjs');
+await import('./stage-budget-smoke.mjs');
+await import('./research-export-regression.mjs');
+await import('./project-summary-smoke.mjs');
 sqlite.close();
+suiteComplete=true;clearTimeout(deadline);
+console.log('RESEARCH_API_SUITE_COMPLETE');

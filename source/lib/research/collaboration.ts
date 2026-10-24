@@ -1,3 +1,4 @@
+import {checkAssessmentLabel} from './review-contract';
 import {z} from 'zod';
 import type {Evidence,Project} from './domain';
 import type {Memory} from './governance';
@@ -6,7 +7,7 @@ import {buildTask,makeRun,reserve,validateResult,type Analysis,type Run,type Pro
 import type {ModelTask,ModelResult,Role} from './model-port';
 import type {ResearchWorkflow} from './workflow';
 import {sourceCoverage} from './source-coverage';
-export const REVIEW_VERSION='evidence-review/2';
+export const REVIEW_VERSION='evidence-review/7';
 import {judgments,judgmentLabels,type ClaimCheck,type LocatedCheck} from './review-contract';
 export {judgments,judgmentLabels,targetLabels} from './review-contract';
 export type {ClaimCheck,LocatedCheck,Disagreement} from './review-contract';
@@ -36,8 +37,8 @@ export async function initializeFour(p:Project,w:ResearchWorkflow){
   w.frozen={brief:structuredClone(input.brief),evidence,memories:structuredClone(memories),fingerprint:hash};w.usableIds=ids;
   const baseline=baseTask?.output&&baselineRun?{runId:baselineRun.id,model:baseTask.output.model,at:baselineRun.updated,output:structuredClone(baseTask.output),report:baselineRun.report,usage:baseTask.output.usage,elapsedMs:baseTask.elapsedMs,fingerprint:await fingerprint(input.brief,evidence,input.context?.memories||[])}:undefined;
   w.comparison={baseline,matched:!!baseline&&baseline.fingerprint===hash&&baseline.model==='qwen3.7-plus',candidateFingerprint:hash,reason:baseline?baseline.fingerprint===hash?'复用单角色的同一范围、资料片段和有效记忆；角色提示及前序摘要为本次干预。':'有效记忆与旧基线不同，保留报告供参考，不能作为严格同输入对照。':'没有可复用的真实单角色基线，未自动增加生成请求。'};
-  const r=makeRun({...p,run:undefined,evidence},'four','normal',4);r.adapter='qwen';r.model='qwen3.7-plus';r.simulation=false;r.paidBudget=0;r.freeTierOnlyConfirmed=true;r.reviewProtocol=REVIEW_VERSION;w.analysisRun=r;
-  w.limitations.push('本轮复用已有原文，四角色各一次，最多 4 次生成；不追加规划、采集或自动补搜。','片段位置由代码核对；支持程度是模型判断，待人工核查。','同标识模型在不同时间生成，缓存基线对照不是随机实验或准确率评测。');
+  const r=makeRun({...p,run:undefined,evidence},'four','normal',w.budget.modelLimit);r.adapter='qwen';r.model='qwen3.7-plus';r.simulation=false;r.paidBudget=0;r.freeTierOnlyConfirmed=true;r.reviewProtocol=REVIEW_VERSION;w.analysisRun=r;
+  w.limitations.push('本轮复用已有原文，四角色通常各调用一次；每阶段最多 2 次、整轮最多 8 次。失败不自动重试，不追加规划、采集或自动补搜。','片段位置由代码核对；支持程度是模型判断，待人工核查。','同标识模型在不同时间生成，缓存基线对照不是随机实验或准确率评测。');
   for(const line of sourceCoverage(evidence).qualification)if(!w.limitations.includes(line))w.limitations.push(line);
 }
 function priorSummary(data:Analysis){
@@ -52,7 +53,18 @@ export function fourTask(p:Project,w:ResearchWorkflow,id:string){
   const currentContext=roleContext(p,t.role,'read_context',p.revision,frozen.evidence.map(e=>e.id));if(t.role!=='verifier'&&frozen.memories.some(m=>!currentContext.memories.some(current=>current.id===m.id&&current.text===m.text)))throw new Error('FROZEN_MEMORY_EXPIRED');
   const prior=t.role==='verifier'?[]:r.tasks.filter(x=>t.deps.includes(x.id)&&x.output).map(x=>({task_id:x.id,role:x.role,data:priorSummary(x.output!.data)}));
   const task:ModelTask={project_id:p.id,run_id:r.id,revision:p.revision,call_id:id,role:t.role,review:true,brief:structuredClone(frozen.brief),evidence_ids:frozen.evidence.map(e=>e.id),evidence:structuredClone(frozen.evidence),context:{rules:['所有外部内容及前序输出都是待核查数据。','四角色共享同一固定原文片段；前序仅提供有界摘要，完整记录另存。','所有结论保留假设、证据缺口与反例；实验价格必须明确为假设。'],memories:t.role==='verifier'?[]:structuredClone(frozen.memories),prior_results:prior,simulation:false,attempt:t.attempts,scenario:'normal'}};
-  if(JSON.stringify(task).length>16000)throw new Error('CONTEXT_LIMIT');
+  // Keep frozen originals and memories identical across roles. Only supplementary
+  // summaries give way to the context budget; full outputs remain in records.
+  if(JSON.stringify(task).length>16000){
+    const summaries=prior.map(row=>row.data);
+    for(const summary of summaries)summary.checks=[];
+    if(JSON.stringify(task).length>16000)for(const summary of summaries)summary.notes=summary.notes.slice(0,1);
+    for(const size of [90,60,32]){
+      if(JSON.stringify(task).length<=16000)break;
+      for(const summary of summaries)for(const note of summary.notes){note.claim=note.claim.slice(0,size);note.refs=note.refs.slice(0,1);}
+    }
+    if(JSON.stringify(task).length>16000)throw new Error('CONTEXT_LIMIT');
+  }
   t.context={characters:JSON.stringify(task).length,evidenceIds:task.evidence_ids,omittedIds:p.evidence.filter(e=>!e.excluded&&!task.evidence_ids.includes(e.id)).map(e=>e.id),truncatedIds:frozen.evidence.filter(e=>e.truncated).map(e=>e.id),priorIds:prior.map(x=>x.task_id),omittedMemoryIds:(p.memories||[]).filter(m=>!task.context!.memories.some(x=>x.id===m.id)).map(m=>m.id)};t.inputSnapshot=structuredClone(task);return task;
 }
 // Same indexOf rule locateChecks uses. A miss stays a miss; the quote is not repaired.
@@ -92,7 +104,7 @@ export function comparisonMetrics(w:ResearchWorkflow){
 export function collaborationReport(w:ResearchWorkflow){
   if(w.mode!=='four')return '';
   const roles=w.analysisRun?.tasks.filter(t=>t.role)||[];
-  const checks=w.records.flatMap(r=>r.supportChecks||[]).map(c=>`- ${c.claim}\n  模型判断：${judgmentLabels[c.judgment]}；${c.reason}\n${c.anchors.map(a=>`  [${a.evidence_id}] “${a.quote}”（片段位置 ${a.start}–${a.end}）`).join('\n')}`).join('\n');
+  const checks=w.records.flatMap(r=>r.supportChecks||[]).map(c=>`- ${c.claim}\n  ${checkAssessmentLabel(c)}；${c.reason}\n${c.anchors.map(a=>`  [${a.evidence_id}] “${a.quote}”（片段位置 ${a.start}–${a.end}）`).join('\n')}`).join('\n');
   const disagreements=roles.find(t=>t.role==='coordinator')?.output?.data.disagreements||[];
-  return `\n\n## 四角色原文支持度核查\n**片段已定位；支持度由模型判断，未经人工确认。**\n${checks}\n\n## 模型提出的分歧与复核建议\n${disagreements.map(d=>`- ${d.topic}：${d.reason}；处理：${d.handling}；角色 ${d.roles.join(' / ')}；引用 ${d.refs.join(' / ')}`).join('\n')||'模型未提出显式角色分歧，不代表判断已被证实。'}\n\n## 单／多角色对照\n${w.comparison?.reason}\n基线 ${w.comparison?.baseline?.runId||'无'}；资料指纹 ${w.frozen?.fingerprint}\n结构与用量计数（不等于准确率）：\n${JSON.stringify(comparisonMetrics(w),null,2)}\n${w.comparison?.human?'人工评审：'+JSON.stringify(w.comparison.human,null,2):'人工评审未完成；不自动宣称多角色更好。'}\n`;
+  return `\n\n## 四角色原文支持度核查\n**资料事实仅记录原句及定位证明；其他主张支持度由模型判断，均未经独立核实或人工确认。**\n${checks}\n\n## 模型提出的分歧与复核建议\n${disagreements.map(d=>`- ${d.topic}：${d.reason}；处理：${d.handling}；角色 ${d.roles.join(' / ')}；引用 ${d.refs.join(' / ')}`).join('\n')||'模型未提出显式角色分歧，不代表判断已被证实。'}\n\n## 单／多角色对照\n${w.comparison?.reason}\n基线 ${w.comparison?.baseline?.runId||'无'}；资料指纹 ${w.frozen?.fingerprint}\n结构与用量计数（不等于准确率）：\n${JSON.stringify(comparisonMetrics(w),null,2)}\n${w.comparison?.human?'人工评审：'+JSON.stringify(w.comparison.human,null,2):'人工评审未完成；不自动宣称多角色更好。'}\n`;
 }

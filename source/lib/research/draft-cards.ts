@@ -1,3 +1,4 @@
+import type {claimKinds} from './claim-kinds';
 import type {Evidence} from './domain';
 import {retrieveProjectEvidence} from './retrieval';
 
@@ -49,7 +50,7 @@ export function renderDemandCard(demand:DemandNote|undefined,evidence:Evidence[]
     const refs=ids.length?` ${ids.map(id=>'['+id+']').join(' ')}（词面重叠或该行已写的资料标识，不是语义检索）`:'';
     return `### ${label}\n${line.text}${refs}`;
   }).join('\n');
-  return `## 需求卡\n缺的字段保持未提供。应用没有补写，也没有自动保存机会卡。\n${body}`;
+  return `## 需求卡\n缺的字段保持未提供。应用没有补写缺失字段；完整真实研究可另存待人工确认的机会草稿，正式机会卡仍需人工确认。\n${body}`;
 }
 
 export function renderInterviewPlan(interview:InterviewPlan|undefined,evidence:Evidence[]){
@@ -69,15 +70,15 @@ export function renderPublicSignals(quotes:{evidence_id:string;quote:string;loca
   return `## 公开言论\n${rows}\n付款判断：${judgment}。公开原句不能升级为实际付费。模型给出的付费信号是 ${model}；若该信号比上述判断更强，应用仍采用更严的判断。`;
 }
 
-export function renderQuoteLayers(notes:{claim:string;refs:string[];kind:'hypothesis'|'gap'|'counter'}[],citations:Quote[]|undefined,evidence:{id:string;text:string}[]){
+export function renderQuoteLayers(notes:{claim:string;refs:string[];kind:typeof claimKinds[number]}[],citations:Quote[]|undefined,evidence:{id:string;text:string}[]){
   const located=(citations||[]).filter(item=>{
     const source=evidence.find(row=>row.id===item.evidence_id);
     return typeof source?.text==='string'&&item.quote.length>0&&source.text.indexOf(item.quote)>=0;
   });
-  const claim=(kind:'hypothesis'|'gap')=>{
+  const claim=(kind:'fact'|'hypothesis'|'gap')=>{
     const rows=notes.filter(note=>note.kind===kind);
     return rows.length?rows.map(note=>`- ${note.claim} ${note.refs.map(id=>'['+id+']').join(' ')}`.trim()).join('\n'):'- 无';
   };
   const quotes=located.length?located.map(item=>`- [${item.evidence_id}] ${item.quote}`).join('\n'):'- 未定位到原句。';
-  return `## 来源原句\n来源原句表示代码在资料里定位到了连续切片。定位到的原句不是已核实的市场事实。\n${quotes}\n\n## 推断\n推断只收录 kind 为 hypothesis 的主张。\n${claim('hypothesis')}\n\n## 未知\n未知只收录 kind 为 gap 的主张。\n${claim('gap')}`;
+  return `## 来源原句\n来源原句表示代码在资料里定位到了连续切片。定位到的原句不是已核实的市场事实。\n${quotes}\n\n## 资料事实\n仅表示可定位的原文陈述，未独立核实来源或交易。\n${claim('fact')}\n\n## 推断\n推断只收录 kind 为 hypothesis 的主张。\n${claim('hypothesis')}\n\n## 未知\n未知只收录 kind 为 gap 的主张。\n${claim('gap')}`;
 }
