@@ -1,8 +1,10 @@
 import type {Project} from './domain';
 export type DeskDestination='brief'|'workflow'|'execution';
 export type DeskProjectState={label:string;tone:'neutral'|'amber'|'rose'|'green';target:DeskDestination};
+export type DeskCheckpoint={status:string;revision:number;evidenceVersion?:number;created:string;lease?:{expires:string}};
+export type DeskProject=Pick<Project,'id'|'mode'|'status'|'archived'|'confirmed'|'revision'|'evidenceVersion'>&{workflow?:DeskCheckpoint&{conclusionAudit?:DeskCheckpoint};run?:DeskCheckpoint};
 // Only current checkpoints are considered; archived histories cannot claim current progress.
-export function projectDeskState(p:Project,now=Date.now()):DeskProjectState{
+export function projectDeskState(p:DeskProject,now=Date.now()):DeskProjectState{
  if(p.archived)return {label:'已归档',tone:'neutral',target:'brief'};
  if(!p.confirmed)return {label:'待确认范围',tone:'amber',target:'brief'};
  if(p.status==='paused')return {label:'项目已暂停',tone:'amber',target:'brief'};
