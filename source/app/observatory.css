@@ -20,3 +20,4 @@
 .research-desk-shell :where(input,textarea,select){font-size:17px}
 .research-desk-shell :where(.meta,.subdued,.source-note,.setup-heading,.setup-section legend,.breadcrumbs,.desk-top-note){font-size:16px}
 .research-desk-shell .button.primary{color:#101a24}
+.research-desk-shell .button.primary:disabled{color:var(--color-disabled-ink)}
