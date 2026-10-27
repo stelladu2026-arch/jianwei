@@ -76,3 +76,14 @@
 @media(prefers-reduced-motion:reduce){.research-desk-shell [data-slot=tabs-content][data-state=active]{animation:none}.instrument-plate{transition:none}.workspace-atmosphere:hover .instrument-plate{transform:rotate(-9deg)}}
 .workspace-atmosphere{animation:workspace-reveal .4s var(--ease-out) both}
 @media(prefers-reduced-motion:reduce){.workspace-atmosphere{animation:none}}
+
+/* The legacy focus-panel used an !important ivory fill with new light text. */
+.research-desk-shell .panel.focus-panel{background:linear-gradient(135deg,#203c50,#101f2e)!important;color:#edf4f8;min-width:0;width:100%;height:auto;overflow:visible}
+.research-desk-shell .focus-panel h3{font-size:25px;font-weight:700;line-height:1.6;color:#edf4f8;margin:20px 0 16px}
+.gap-panel-heading{display:flex;align-items:center;gap:12px;color:#c5ec8b;font-size:17px;font-weight:600;line-height:1.6}
+.gap-panel-heading>svg{flex-shrink:0;padding:8px;box-sizing:content-box;background:#c5ec8b0f;border:1px solid #c5ec8b55;border-radius:10px}
+.research-desk-shell .focus-panel>p{font-size:18px;line-height:1.85;color:#c0d3e1;margin-bottom:24px}
+.research-desk-shell .focus-panel .gap-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 16px;font-size:17px;line-height:1.7;color:#d4e5f0;margin:18px 0}
+.research-desk-shell .focus-panel .gap-row .tag{font-size:15px;white-space:normal}
+.research-desk-shell .focus-panel>.button{font-size:17px;white-space:normal;height:auto;min-height:52px;line-height:1.7;gap:10px}
+.research-desk-shell .focus-panel>.button>svg{flex-shrink:0}
