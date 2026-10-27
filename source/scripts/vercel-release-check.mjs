@@ -8,6 +8,8 @@ const steps=[
  [process.execPath,['scripts/vercel-storage-check.mjs']],
  ['pnpm',['run','build:vercel']],
 ];
+// A full production candidate must have its existing private access and storage.
+if(process.env.VERCEL_ENV==='production')steps.unshift([process.execPath,['scripts/vercel-interview-check.mjs']]);
 // Opt-in for one explicitly authorized deployment only. The SQL grant keeps
 // the same run from obtaining another allowance if the build is restarted.
 if(process.env.JIANWEI_HARNESS_LIVE_ACCEPTANCE==='1'){
