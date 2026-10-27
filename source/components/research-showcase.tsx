@@ -1,7 +1,7 @@
 'use client';
 
 import {useRef,useState,type KeyboardEvent} from 'react';
-import {ArrowDown,ArrowUpRight,BookOpen,Check,ChevronRight,Play,ScanLine,ShieldCheck} from 'lucide-react';
+import {ArrowDown,ArrowUpRight,BookOpen,Check,ChevronRight,Play,ShieldCheck} from 'lucide-react';
 import {demoEvidence} from '@/lib/research/domain';
 import {ResearchDeskMark} from './research-desk';
 
@@ -25,23 +25,18 @@ export function EvidenceLens(){
   else return;
   event.preventDefault();setSelected(next);controls.current[next]?.focus();
  }
- return <figure className={'evidence-lens lens-'+lens.id} aria-label="原文、反证与判断的交互演示">
-  <div className="lens-mast"><span>小团队客户支持中的重复劳动</span><ScanLine size={20} aria-hidden="true"/></div>
-  <div className="lens-stage">
-   <div className="lens-reticle" aria-hidden="true"><span/><span/><span/><span/></div>
-   <div className="lens-plane plane-back" aria-hidden="true"/>
-   <div className="lens-plane plane-middle" aria-hidden="true"/>
-   <article className="lens-reading" role="tabpanel" id="evidence-lens-panel" aria-labelledby={'lens-tab-'+lens.id} tabIndex={0}>
-    <div key={lens.id} className="lens-reading-content">
-     <div className="lens-reference"><lens.icon size={18} aria-hidden="true"/><span>{lens.ref}</span></div>
-     <h3>{lens.heading}</h3>
-     <blockquote>{lens.text}</blockquote>
-     <p className="lens-source">{lens.source}</p>
-     <div className="lens-finding"><span aria-hidden="true"/><p>{lens.finding}</p></div>
-    </div>
-   </article>
-  </div>
-  <div className="lens-controls" role="tablist" aria-label="查看原文、反证或判断">{lenses.map((item,index)=><button key={item.id} ref={node=>{controls.current[index]=node}} id={'lens-tab-'+item.id} role="tab" aria-selected={selected===index} aria-controls="evidence-lens-panel" tabIndex={selected===index?0:-1} onClick={()=>setSelected(index)} onKeyDown={event=>keyboard(event,index)}><item.icon size={16} aria-hidden="true"/>{item.label}</button>)}</div>
+ return <figure className={'evidence-observatory stage-'+lens.id} aria-label="原文、反证与判断的交互演示">
+  <div className="observatory-caption"><span>研究观测 / EVIDENCE FIELD</span><span className="fictional-tag">虚构案例演示</span></div>
+  <div className="orbital-field" aria-hidden="true"><i/><i/><i/><span className="decision-axis"/><span className="orbital-core"/></div>
+  <div className="evidence-constellation" role="tablist" aria-label="选择研究视角">{lenses.map((item,index)=><button key={item.id} className={'evidence-node node-'+item.id} ref={node=>{controls.current[index]=node}} id={'lens-tab-'+item.id} role="tab" aria-selected={selected===index} aria-controls="evidence-lens-panel" tabIndex={selected===index?0:-1} onClick={()=>setSelected(index)} onKeyDown={event=>keyboard(event,index)}>
+   <span className="node-index">0{index+1}<item.icon size={23} aria-hidden="true"/></span>
+   <span className="node-title">{['用户原文','独立反证','产品判断'][index]}</span>
+   <span className="node-excerpt">{item.finding}</span>
+   <span className="node-reference">{item.ref}<ArrowUpRight size={18} aria-hidden="true"/></span>
+  </button>)}</div>
+  <article className="observatory-reading" role="tabpanel" id="evidence-lens-panel" aria-labelledby={'lens-tab-'+lens.id} tabIndex={0}>
+   <div key={lens.id} className="lens-reading-content"><h3>{lens.heading}</h3><blockquote>{lens.text}</blockquote><p>{lens.source} · {lens.ref}</p></div>
+  </article>
   <figcaption>虚构案例交互演示，不构成市场调研结论。</figcaption>
  </figure>;
 }
@@ -55,21 +50,17 @@ const choices=[
 export function ResearchShowcase({busy,onDemo,onWorkspace,onNew}:{busy:boolean;onDemo:()=>void;onWorkspace:()=>void;onNew:()=>void}){
  return <div className="research-showcase">
   <nav className="showcase-nav" aria-label="作品导览导航">
-   <a className="showcase-brand" href="#showcase-top" aria-label="见微，返回作品开头"><ResearchDeskMark/><span>见微</span></a>
+   <a className="showcase-brand" href="#showcase-top" aria-label="见微，返回作品开头"><ResearchDeskMark/><span>见微</span><small>产品机会研究 Agent</small></a>
    <div><a href="#design-decisions">产品取舍</a><a href="#research-path">研究链路</a><button disabled={busy} onClick={onWorkspace}>研究空间<ArrowUpRight size={16} aria-hidden="true"/></button></div>
   </nav>
   <section className="showcase-hero" id="showcase-top" aria-labelledby="showcase-title">
    <div className="showcase-intro">
-    <h1 id="showcase-title">原文与反证之间，<br/>看见产品机会。</h1>
-    <p>见微是一个产品机会研究 Agent，让模糊方向成为有依据、可复核的下一步。</p>
-    <div className="showcase-actions"><button className="showcase-primary" disabled={busy} onClick={onDemo}><Play size={17} aria-hidden="true"/>{busy?'正在打开案例…':'打开演示案例'}</button><a className="showcase-text-link" href="#design-decisions">查看设计取舍<ArrowDown size={16} aria-hidden="true"/></a></div>
+    <div className="showcase-eyebrow"><span/>AI 产品作品集 / 研究观测站</div><h1 id="showcase-title">从模糊需求，<br/>到可验证的<br/><em>产品机会。</em></h1>
+    <p>让证据、反证与决策，<br/>在同一条研究链路中发生。</p>
+    <div className="showcase-actions"><button className="showcase-primary" disabled={busy} onClick={onDemo}><Play size={17} aria-hidden="true"/>{busy?'正在打开案例…':'体验演示案例'}</button><a className="showcase-text-link" href="#design-decisions">查看产品思考<ArrowDown size={16} aria-hidden="true"/></a></div>
    </div>
    <EvidenceLens/>
    <div className="showcase-hero-foot"><span>产品机会研究 Agent</span><span>从问题出发，以验证收尾。</span></div>
-  </section>
-  <section className="showcase-decisions" id="design-decisions" aria-labelledby="decisions-title">
-   <div className="showcase-section-heading"><h2 id="decisions-title">研究的价值，<br/>藏在取舍里。</h2><p>自动化负责整理证据，产品设计负责界定边界。</p></div>
-   <div className="decision-index">{choices.map((choice,index)=><details key={choice.title} className="decision-item" open={index===0}><summary><h3>{choice.title}</h3><span className="decision-toggle" aria-hidden="true"/></summary><div className="decision-answer"><p>{choice.body}</p><p>{choice.detail}</p></div></details>)}</div>
   </section>
   <section className="showcase-path" id="research-path" aria-labelledby="path-title">
    <div className="showcase-section-heading"><h2 id="path-title">一条可以追溯的<br/>研究链路。</h2><p>自动检索与多角色复核，服务于同一个决策问题。</p></div>
@@ -80,6 +71,10 @@ export function ResearchShowcase({busy,onDemo,onWorkspace,onNew}:{busy:boolean;o
     <li><span>04</span><div><h3>人工确认下一步</h3><p>保存条件性草稿，设计验证计划。</p></div></li>
    </ol>
    <p className="showcase-boundary"><ShieldCheck size={18} aria-hidden="true"/>流程完成、角色一致、原文可定位，都不代表需求或付费已经得到验证。</p>
+  </section>
+  <section className="showcase-decisions" id="design-decisions" aria-labelledby="decisions-title">
+   <div className="showcase-section-heading"><h2 id="decisions-title">研究的价值，<br/>藏在取舍里。</h2><p>自动化负责整理证据，产品设计负责界定边界。</p></div>
+   <div className="decision-index">{choices.map((choice,index)=><details key={choice.title} className="decision-item" open={index===0}><summary><h3>{choice.title}</h3><span className="decision-toggle" aria-hidden="true"/></summary><div className="decision-answer"><p>{choice.body}</p><p>{choice.detail}</p></div></details>)}</div>
   </section>
   <section className="showcase-close" aria-labelledby="showcase-close-title"><div><h2 id="showcase-close-title">带着一个问题，<br/>进入研究。</h2><p>看固定演示，或用自己的方向开始一轮研究。</p></div><div className="showcase-close-actions"><button className="showcase-primary" disabled={busy} onClick={onWorkspace}>进入研究空间<ChevronRight size={18} aria-hidden="true"/></button><button className="showcase-text-link" disabled={busy} onClick={onNew}>新建研究<ArrowUpRight size={16} aria-hidden="true"/></button></div></section>
   <footer className="showcase-footer"><span>见微</span><p>保留依据，也保留未知。</p><a href="#showcase-top">回到开头<ArrowUpRight size={16} aria-hidden="true"/></a></footer>
