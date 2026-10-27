@@ -1,7 +1,7 @@
 import {NextResponse,type NextRequest} from 'next/server';
 import {privateDeploymentAccess} from './private-access';
-export async function privateProxy(request:NextRequest,password=process.env.JIANWEI_ACCESS_PASSWORD){
- const access=await privateDeploymentAccess(request.headers.get('authorization'),password);
+export async function privateProxy(request:NextRequest,password=process.env.JIANWEI_ACCESS_PASSWORD,publicWorkspace=false){
+ const access=publicWorkspace?'allowed':await privateDeploymentAccess(request.headers.get('authorization'),password);
  const headers={'Cache-Control':'private, no-store','X-Robots-Tag':'noindex, nofollow'};
  if(access==='unconfigured'){
   // Presence/minimum-boundary only: never return the value, exact length or hash.

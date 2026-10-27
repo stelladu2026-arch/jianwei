@@ -4,6 +4,7 @@ import {privateProxy} from './lib/deployment/private-proxy';
 export async function proxy(request:NextRequest){
  // Existing Sites authentication remains the Cloudflare target's authority.
  if(deploymentTarget!=='node')return NextResponse.next();
- return privateProxy(request,process.env.JIANWEI_ACCESS_PASSWORD);
+ // Owner selected full password-free workspace access; origin and budget guards remain.
+ return privateProxy(request,process.env.JIANWEI_ACCESS_PASSWORD,true);
 }
 export const config={matcher:['/((?!_next/static|_next/image|favicon.svg).*)']};

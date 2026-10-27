@@ -87,3 +87,18 @@
 .research-desk-shell .focus-panel .gap-row .tag{font-size:15px;white-space:normal}
 .research-desk-shell .focus-panel>.button{font-size:17px;white-space:normal;height:auto;min-height:52px;line-height:1.7;gap:10px}
 .research-desk-shell .focus-panel>.button>svg{flex-shrink:0}
+
+/* Glass plates: transparent reading surface, refracted rim and separate rear pane. */
+.gap-result-line{display:inline-block;white-space:nowrap}
+.showcase-hero::before{opacity:1;background:linear-gradient(90deg,#080e14 0%,#080e14cc 28%,#080e1422 63%),url('/images/observatory-environment.webp') center bottom/cover no-repeat}
+.evidence-constellation{perspective:1200px;padding:18px 16px 46px;gap:36px;isolation:isolate}
+.evidence-node{isolation:isolate;transform-style:preserve-3d;background:linear-gradient(135deg,#bde5ff26 0%,#bad8f007 38%,#638aa31c 72%,#bde5ff1f);background-color:#12253555;border:1px solid #e2f3ffa6;backdrop-filter:blur(7px) saturate(1.3);-webkit-backdrop-filter:blur(7px) saturate(1.3);box-shadow:inset 2px 2px 2px #effaff77,inset -2px -2px 1px #9edfff44,0 22px 32px #0007,0 0 28px #84d8f014;transition:transform .5s var(--ease-out),box-shadow .4s,border-color .3s}
+.evidence-node::before{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:linear-gradient(120deg,#e4f7ff36 0%,transparent 22%,transparent 68%,#b9e4ff17 82%,transparent);box-shadow:inset 0 0 0 3px #ccedff0d;z-index:-1}
+.evidence-node::after{content:'';position:absolute;inset:7px -10px -10px 7px;border:1px solid #aedcf377;border-radius:inherit;background:linear-gradient(135deg,#d4f1ff0c,#557a9422);box-shadow:inset -2px -2px 1px #d7f2ff44,0 10px 26px #0004;transform:translateZ(-16px);z-index:-2;pointer-events:none}
+.node-source{transform:rotateX(3deg) rotateY(-7deg) rotateZ(1deg)}.node-counter{transform:rotateX(2deg) rotateY(7deg) rotateZ(-2deg)}.node-decision{transform:rotateX(2deg) rotateY(-7deg) rotateZ(2deg)}
+.evidence-node:hover,.evidence-node[aria-selected=true]{background-color:#15344866;box-shadow:inset 2px 2px 2px #effaff99,inset -2px -2px 1px #9edfff66,0 28px 46px #0008,0 0 34px #8dcfee22;border-color:#e6f6ff}
+.node-source:hover{transform:translateY(-6px) rotateX(2deg) rotateY(-4deg)}.node-counter:hover{transform:translateY(-6px) rotateY(4deg)}.node-decision:hover{transform:translateY(-6px) rotateY(-4deg)}
+.node-title{text-shadow:0 1px 8px #06101e}.node-excerpt{color:#e1eff8;text-shadow:0 1px 5px #06101e}.node-reference{color:#c1dce9}.node-index>svg{background:linear-gradient(135deg,#e3f6ff44,#b1deff0a);box-shadow:inset 1px 1px 0 #effaff99,2px 3px 0 #6d99b444,0 5px 16px #06142255}
+.orbital-field i{border-color:#8be8ff99}.orbital-field i:nth-child(2){border-color:#8be8ff66}.orbital-core{box-shadow:0 0 32px #c5ec8b}
+@media(max-width:980px){.evidence-constellation{padding-inline:12px;gap:28px}.evidence-node,.evidence-node:hover{transform:none}.evidence-node::after{inset:5px -6px -6px 5px}.showcase-hero::before{opacity:.75}}
+@media(prefers-reduced-motion:reduce){.evidence-node,.evidence-node:hover{transform:none;transition:none}}
