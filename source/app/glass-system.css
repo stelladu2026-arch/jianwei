@@ -32,3 +32,5 @@
 /* Reserve the full projected card extent so rims and captions never overlap. */
 @media(min-width:981px) and (max-width:1599px){.evidence-constellation{height:580px}.node-counter{top:260px}.node-decision{top:306px}}
 @media(min-width:981px) and (max-width:1200px){.evidence-constellation{height:630px}.node-counter{top:276px}.node-decision{top:326px}}
+.research-desk-shell .panel.focus-panel{background:var(--glass-face),#10283b66!important}
+.research-desk-shell .conclusion-summary.research-typesetting,.research-desk-shell .register-row{background:var(--glass-face),var(--glass-fill);border-color:var(--glass-rim);box-shadow:var(--glass-shadow);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
