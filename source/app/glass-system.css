@@ -34,3 +34,12 @@
 @media(min-width:981px) and (max-width:1200px){.evidence-constellation{height:630px}.node-counter{top:276px}.node-decision{top:326px}}
 .research-desk-shell .panel.focus-panel{background:var(--glass-face),#10283b66!important}
 .research-desk-shell .conclusion-summary.research-typesetting,.research-desk-shell .register-row{background:var(--glass-face),var(--glass-fill);border-color:var(--glass-rim);box-shadow:var(--glass-shadow);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+
+/* Stronger specular reflections across workspace cards; text stays fully opaque. */
+:root{--glass-face:linear-gradient(122deg,transparent 0 12%,#e4f5ff26 19%,#d0edff0a 24%,transparent 32% 64%,#acdfff17 75%,transparent 87%),linear-gradient(180deg,#e3f6ff29,#a7dbff0a 32%,transparent 72%);--glass-fill:#12304a66;--glass-rim:#cbeaffaa;--glass-highlight:#f1fbffaa;--glass-shadow:inset 0 1px 1px #f5fcffb3,inset 1px 0 1px #d9f0ff66,inset -1px -1px 1px #8dccf07a,0 4px 0 #071d2b,0 5px 0 #abd8ee38,0 22px 44px #0006}
+.research-desk-shell:not(.is-showcase) .main-shell::before{background:radial-gradient(ellipse at 90% 4%,#6bcce624,transparent 44%),linear-gradient(#080f1ab8,#080f1ae3),url('/images/observatory-environment.webp') top right/1440px auto repeat-y}
+.research-desk-shell :is(.panel,.opportunity-card,.governance-card,.memory-card,.role-card,.validation-plan,.execution-task,.workflow-stage),.research-desk-shell .evidence-card.glass-surface{background:var(--glass-face),var(--glass-fill);border-color:var(--glass-rim);box-shadow:var(--glass-shadow);backdrop-filter:blur(9px) saturate(1.25);-webkit-backdrop-filter:blur(9px) saturate(1.25)}
+.research-desk-shell :is(.panel,.opportunity-card,.governance-card,.memory-card,.role-card,.validation-plan,.execution-task,.workflow-stage)::after{content:'';position:absolute;inset:0 0 auto auto;width:min(42%,190px);height:96px;pointer-events:none;border-radius:0 12px 0 0;background:linear-gradient(135deg,transparent 15%,#d3eeff0d 38%,#effaff26 49%,transparent 59%);z-index:-1}
+.research-desk-shell .evidence-card.glass-surface:hover{background:var(--glass-face),#20485d77;border-color:#effbffdd;box-shadow:inset 0 1px 1px #fff,inset 1px 0 1px #d9f0ff88,inset -1px -1px 1px #b5e5ffaa,0 5px 0 #071d2b,0 6px 0 #acdff055,0 24px 48px #0007}
+.research-desk-shell :is(.task-failed,.notice-warning,.step-failed,.workflow-recovery){background:var(--glass-face),var(--studio-warning-bg);border-color:#d6b574aa}
+.research-desk-shell :is(.task-done,.workflow-stage.current,.role-done){background:var(--glass-face),var(--studio-tint)}
