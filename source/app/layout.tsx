@@ -3,6 +3,7 @@ import "./globals.css";
 import "./research-desk.css";
 import "./sidebar-row-fix.css";
 import "./research-studio.css";
+import "./research-portfolio.css";
 
 export const metadata: Metadata = {
   title: "见微 · 产品机会研究",
