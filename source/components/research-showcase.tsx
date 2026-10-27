@@ -3,6 +3,7 @@
 import {useRef,useState,type KeyboardEvent} from 'react';
 import {ArrowDown,ArrowUpRight,BookOpen,Check,ChevronRight,Play,ShieldCheck} from 'lucide-react';
 import {demoEvidence} from '@/lib/research/domain';
+import {GlassButton,GlassPanel} from './glass-surface';
 import {ResearchDeskMark} from './research-desk';
 
 const original=demoEvidence('');
@@ -12,8 +13,7 @@ const lenses=[
  {id:'decision',label:'判断',heading:'先验证信息补全是否足够高频。',text:'招募符合条件的开发者，让其展示近期咨询，记录往返次数与耗时，再决定是否投入。',ref:'S2 / S3',source:'基于上述虚构材料的演示推断',finding:'留下下一步，也留下足以推翻判断的条件。',icon:Check},
 ] as const;
 
-export function EvidenceLens(){
- const [selected,setSelected]=useState(0);
+export function EvidenceLens({selected,onSelect}:{selected:number;onSelect:(index:number)=>void}){
  const controls=useRef<Array<HTMLButtonElement|null>>([]);
  const lens=lenses[selected];
  function keyboard(event:KeyboardEvent<HTMLButtonElement>,index:number){
@@ -23,22 +23,24 @@ export function EvidenceLens(){
   else if(event.key==='Home')next=0;
   else if(event.key==='End')next=lenses.length-1;
   else return;
-  event.preventDefault();setSelected(next);controls.current[next]?.focus();
+  event.preventDefault();onSelect(next);controls.current[next]?.focus();
  }
  return <figure className={'evidence-observatory stage-'+lens.id} aria-label="原文、反证与判断的交互演示">
   <div className="observatory-caption"><span>研究观测 / EVIDENCE FIELD</span><span className="fictional-tag">虚构案例演示</span></div>
   <div className="orbital-field" aria-hidden="true"><i/><i/><i/><span className="decision-axis"/><span className="orbital-core"/></div>
-  <div className="evidence-constellation" role="tablist" aria-label="选择研究视角">{lenses.map((item,index)=><button key={item.id} className={'evidence-node node-'+item.id} ref={node=>{controls.current[index]=node}} id={'lens-tab-'+item.id} role="tab" aria-selected={selected===index} aria-controls="evidence-lens-panel" tabIndex={selected===index?0:-1} onClick={()=>setSelected(index)} onKeyDown={event=>keyboard(event,index)}>
+  <div className="evidence-constellation" role="tablist" aria-label="选择研究视角">{lenses.map((item,index)=><GlassButton key={item.id} className={'evidence-node node-'+item.id} ref={node=>{controls.current[index]=node}} id={'lens-tab-'+item.id} role="tab" aria-selected={selected===index} aria-controls="evidence-lens-panel" tabIndex={selected===index?0:-1} onClick={()=>onSelect(index)} onKeyDown={event=>keyboard(event,index)}>
    <span className="node-index">0{index+1}<item.icon size={23} aria-hidden="true"/></span>
    <span className="node-title">{['用户原文','独立反证','产品判断'][index]}</span>
    <span className="node-excerpt">{item.finding}</span>
    <span className="node-reference">{item.ref}<ArrowUpRight size={18} aria-hidden="true"/></span>
-  </button>)}</div>
-  <article className="observatory-reading" role="tabpanel" id="evidence-lens-panel" aria-labelledby={'lens-tab-'+lens.id} tabIndex={0}>
-   <div key={lens.id} className="lens-reading-content"><h3>{lens.heading}</h3><blockquote>{lens.text}</blockquote><p>{lens.source} · {lens.ref}</p></div>
-  </article>
+  </GlassButton>)}</div>
   <figcaption>虚构案例交互演示，不构成市场调研结论。</figcaption>
  </figure>;
+}
+
+function EvidenceReading({selected}:{selected:number}){
+ const lens=lenses[selected];
+ return <section className="showcase-evidence-detail" aria-label="演示证据细读"><div className="reading-section-label"><BookOpen size={22} aria-hidden="true"/><span>演示证据细读</span><span>点击上方玻璃卡片切换视角</span></div><GlassPanel className="observatory-reading" role="tabpanel" id="evidence-lens-panel" aria-labelledby={'lens-tab-'+lens.id} tabIndex={0}><div key={lens.id} className="lens-reading-content"><div className="reading-title"><span className="reading-reference">{lens.ref}</span><h3>{lens.heading}</h3></div><div className="reading-copy"><blockquote>{lens.text}</blockquote><p>{lens.source} · 虚构案例演示</p></div></div></GlassPanel></section>;
 }
 
 const choices=[
@@ -48,6 +50,7 @@ const choices=[
 ];
 
 export function ResearchShowcase({busy,onDemo,onWorkspace,onNew}:{busy:boolean;onDemo:()=>void;onWorkspace:()=>void;onNew:()=>void}){
+ const [selected,setSelected]=useState(0);
  return <div className="research-showcase">
   <nav className="showcase-nav" aria-label="作品导览导航">
    <a className="showcase-brand" href="#showcase-top" aria-label="见微，返回作品开头"><ResearchDeskMark/><span>见微</span><small>产品机会研究 Agent</small></a>
@@ -59,9 +62,10 @@ export function ResearchShowcase({busy,onDemo,onWorkspace,onNew}:{busy:boolean;o
     <p>让证据、反证与决策，<br/>在同一条研究链路中发生。</p>
     <div className="showcase-actions"><button className="showcase-primary" disabled={busy} onClick={onDemo}><Play size={17} aria-hidden="true"/>{busy?'正在打开案例…':'体验演示案例'}</button><a className="showcase-text-link" href="#design-decisions">查看产品思考<ArrowDown size={16} aria-hidden="true"/></a></div>
    </div>
-   <EvidenceLens/>
+   <EvidenceLens selected={selected} onSelect={setSelected}/>
    <div className="showcase-hero-foot"><span>产品机会研究 Agent</span><span>从问题出发，以验证收尾。</span></div>
   </section>
+  <EvidenceReading selected={selected}/>
   <section className="showcase-path" id="research-path" aria-labelledby="path-title">
    <div className="showcase-section-heading"><h2 id="path-title">一条可以追溯的<br/>研究链路。</h2><p>自动检索与多角色复核，服务于同一个决策问题。</p></div>
    <ol className="research-path-list">
