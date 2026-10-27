@@ -1,0 +1,13 @@
+@font-face{font-family:"Jianwei Grotesk";src:url('/fonts/jianwei-grotesk.woff2') format('woff2');font-style:normal;font-weight:400 800;font-display:swap}
+@font-face{font-family:"Jianwei Chinese";src:url('/fonts/jianwei-chinese-regular.woff2') format('woff2');font-style:normal;font-weight:400;font-display:swap}
+@font-face{font-family:"Jianwei Chinese";src:url('/fonts/jianwei-chinese-bold.woff2') format('woff2');font-style:normal;font-weight:650 800;font-display:swap}
+html,body{overflow-x:clip}
+body{font-family:var(--font-body);background:var(--color-paper);color:var(--color-ink)}
+button,a,input,textarea,select,summary{touch-action:manipulation}
+button,a,summary{cursor:pointer}
+:where(button,a,input,textarea,select,summary,[role=tab],[tabindex]):focus-visible{outline:2px solid var(--color-action);outline-offset:4px}
+:where(h1,h2,h3,h4){min-width:0;overflow-wrap:break-word;text-wrap:balance}
+:where(p,blockquote){text-wrap:pretty}
+::selection{background:var(--color-action);color:var(--color-sheet)}
+button:disabled{cursor:not-allowed}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation:none!important;scroll-behavior:auto!important;transition-duration:0ms!important}}

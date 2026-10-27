@@ -1,0 +1,15 @@
+[
+  {
+    "date": "2026-10-27",
+    "mode": "redesign",
+    "depth": "full",
+    "scope": "hybrid",
+    "theme": "custom",
+    "idea": "Evidence lens: original, counterexample, conditional judgment",
+    "signature": "Interactive reader using the existing fictional case",
+    "static_fail": 0,
+    "static_warn": 2,
+    "rendered": false,
+    "review": "independent code review; two interaction fixes; visual review blocked"
+  }
+]
