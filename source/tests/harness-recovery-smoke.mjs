@@ -30,7 +30,7 @@ try{
   const thread=p.workflow.records.at(-1).harnessThreadId;
   const row=await originalDb.prepare('SELECT input FROM research_harness_stage_inputs WHERE thread_id=?').bind(thread).first();
   const snapshot=JSON.parse(row.input),n=calls;
-  for(const change of [{model:'old-model'},{qualityPolicy:'old-policy'},{model:undefined,qualityPolicy:undefined}]){
+  for(const change of [{model:'old-model'},{qualityPolicy:'old-policy'},{model:undefined,qualityPolicy:undefined},{sourcePolicy:'old-source-policy'}]){
    await originalDb.prepare('UPDATE research_harness_stage_inputs SET input=? WHERE thread_id=?').bind(JSON.stringify({...snapshot,...change}),thread).run();
    const permission=await stageRecovery(originalDb,p);assert.equal(permission.allowed,false);assert.ok(permission.reason.includes('协议'));assert.equal(calls,n);
   }

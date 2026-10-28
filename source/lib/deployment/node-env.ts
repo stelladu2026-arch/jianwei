@@ -11,6 +11,8 @@ function configuredDatabase(){
 }
 // Replaces cloudflare:workers only in the standard Next.js target. No key is public.
 export const env={
+ get TAVILY_API_KEY(){return process.env.TAVILY_API_KEY},
+ get WEB_SEARCH_ENABLED(){return process.env.WEB_SEARCH_ENABLED},
  JIANWEI_RUNTIME:'node',
  get DB(){return configuredDatabase()},
  get DASHSCOPE_API_KEY(){return process.env.DASHSCOPE_API_KEY},

@@ -35,7 +35,7 @@ function restoredSpend(messages:BaseMessage[]):AgentSpend{
   return emptySpend();
 }
 async function bindingHash(input:HarnessInput){
-  const bytes=new TextEncoder().encode(JSON.stringify({version:HARNESS_VERSION,model:QWEN_MODEL,qualityPolicy:QUALITY_POLICY_VERSION,task:input.task,evidence:input.evidence,budget:input.budget,since:input.since,allowFollowUp:input.allowFollowUp,finalizeAtLimit:input.finalizeAtLimit}));
+  const bytes=new TextEncoder().encode(JSON.stringify({version:HARNESS_VERSION,model:QWEN_MODEL,qualityPolicy:QUALITY_POLICY_VERSION,sourcePolicy:input.sourcePolicy,task:input.task,evidence:input.evidence,budget:input.budget,since:input.since,allowFollowUp:input.allowFollowUp,finalizeAtLimit:input.finalizeAtLimit}));
   return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes)),x=>x.toString(16).padStart(2,'0')).join('');
 }
 

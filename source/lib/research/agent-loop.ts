@@ -52,6 +52,8 @@ export function parseToolCalls(raw:unknown,diagnose?:(issues:string[])=>void):Ag
 
 type Turn={final:ModelResult|null;toolCalls:AgentToolCall[];receipt?:{requestId?:string;usage?:ModelResult['usage']}};
 export type LoopInput={
+  sourcePolicy?:string;
+  publicSearch?:(query:string,since:number|null,cap:number)=>Promise<Collection>;
   task:ModelTask;
   invoke:(task:ModelTask)=>Promise<Turn>;
   evidence:Evidence[];
@@ -87,7 +89,7 @@ export async function executeTool(call:AgentToolCall,input:LoopInput,spend:Agent
   if(input.budget.searches+spend.searches>=input.budget.searchLimit)return refuse(spend,name,'SEARCH_BUDGET');
   await input.beforeTool?.(name,SOURCE_REQUEST_CAP);
   spend.sourceAttempts+=SOURCE_REQUEST_CAP;spend.searches+=1;
-  const collection=name==='public_source_search'?await collectPublic(query,input.since):name==='hacker_news_search'?await collectHN(query,input.since,Math.max(0,SOURCE_REQUEST_CAP-3)):name==='hacker_news_read'?await readHNItem(id,input.since):await collectZhWiki(query,input.since);
+  const collection=name==='public_source_search'?await (input.publicSearch||collectPublic)(query,input.since,SOURCE_REQUEST_CAP):name==='hacker_news_search'?await collectHN(query,input.since,Math.max(0,SOURCE_REQUEST_CAP-3)):name==='hacker_news_read'?await readHNItem(id,input.since):await collectZhWiki(query,input.since);
   spend.sourceAttempts-=SOURCE_REQUEST_CAP-collection.requests;
   spend.collections.push(collection);
   if(query)spend.fetchedQueries.push(query);

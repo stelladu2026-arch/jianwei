@@ -1,3 +1,4 @@
+import {sourceProfile,focusedSourceQuery,collectIssueComments,collectDifyOfficial} from './research-channels';
 import type {Evidence} from './domain';
 import {collectNewsSearch,enrichNewsArticle,NEWS_SOURCE} from './news-search';
 import {collectOfficialStatistics,STATISTICS_SOURCE} from './official-statistics';
@@ -25,7 +26,7 @@ export async function publicJSON(url:string,signal?:AbortSignal){
   if(!response.ok)throw new Error('SOURCE_'+response.status);
   return response.json() as Promise<any>;
 }
-export type Collection={query:string;evidence:Evidence[];usableIds:string[];requests:number;failed:number;skipped:number;limited:boolean;since:number|null;sourceErrors?:string[];sourceDetails?:SourceReceipt[]};
+export type Collection={routing?:{profile:string;effectiveQuery:string};query:string;evidence:Evidence[];usableIds:string[];requests:number;failed:number;skipped:number;limited:boolean;since:number|null;sourceErrors?:string[];sourceDetails?:SourceReceipt[]};
 function blank(query:string,since:number|null):Collection{return {query,evidence:[],usableIds:[],requests:0,failed:0,skipped:0,limited:false,since};}
 async function anonAuthor(name:string){if(!name)return '';const hash=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(name));return Array.from(new Uint8Array(hash)).slice(0,6).map(x=>x.toString(16).padStart(2,'0')).join('');}
 // Search and source items are fixed public destinations. Links inside posts or articles are never fetched.
@@ -98,19 +99,31 @@ export async function collectZhWiki(query:string,since:number|null,cap=WIKI_MAX_
   }
   return out;
 }
-export async function collectPublic(query:string,since:number|null,cap=SOURCE_REQUEST_CAP):Promise<Collection>{
+export async function collectPublic(query:string,since:number|null,cap=SOURCE_REQUEST_CAP,options:{topic?:string;webSearch?:(query:string,since:number|null,cap:number)=>Promise<Collection>}={}):Promise<Collection>{
   const limit=Math.max(0,Math.min(SOURCE_REQUEST_CAP,Math.floor(cap))),out=blank(query,since);out.sourceDetails=[];
   if(!limit){out.limited=true;return out;}
   // Reserve fixed allocations first. Results settle independently, with no retries.
   const allocations:{run:()=>Promise<Collection>;cap:number;name:string}[]=[];let remaining=limit;
   const add=(amount:number,name:string,run:(cap:number)=>Promise<Collection>)=>{const room=Math.min(amount,remaining);if(room<1)return;remaining-=room;allocations.push({cap:room,name,run:()=>run(room)});};
   const chinese=/[\p{Script=Han}]/u.test(query);
+  const profile=sourceProfile(query,options.topic),focused=focusedSourceQuery(query,profile);out.routing={profile,effectiveQuery:focused};
+  if(profile!=='general'){
+   add(3,'GitHub Issues 与人工评论',async n=>{const root=await collectGithubIssues(focused,since,1),comments=n>1?await collectIssueComments(root.evidence,focused,since,n-1):null;if(comments){root.evidence.push(...comments.evidence);root.usableIds.push(...comments.usableIds);root.requests+=comments.requests;root.failed+=comments.failed;root.sourceDetails.push(...(comments.sourceDetails||[]));}return root;});
+   if(profile==='dify')add(2,'GitHub 文档 · Dify 官方项目',n=>collectDifyOfficial(focused,since,n));
+   if(options.webSearch)add(1,'网页搜索发现',n=>options.webSearch!(query,since,n));
+   add(3,'Hacker News',n=>collectHN(focused,since,n));
+   if(chinese)add(1,NEWS_SOURCE,n=>collectNewsSearch(query,since,n));
+   for(const key of Object.keys(FEED_SOURCES) as FeedSource[])add(1,FEED_SOURCES[key].name,n=>collectPublicFeed(key,query,since,n));
+   add(1,WIKI_SOURCE,n=>collectZhWiki(query,since,n));
+  }else{
+  if(options.webSearch)add(1,'网页搜索发现',n=>options.webSearch!(query,since,n));
   add(1,NEWS_SOURCE,n=>collectNewsSearch(query,since,n));
   if(chinese)add(2,STATISTICS_SOURCE,n=>collectOfficialStatistics(query,since,n));
   add(1,'GitHub Issues',n=>collectGithubIssues(query,since,n));
   for(const key of Object.keys(FEED_SOURCES) as FeedSource[])add(1,FEED_SOURCES[key].name,n=>collectPublicFeed(key,query,since,n));
   if(!chinese)add(3,'Hacker News',n=>collectHN(query,since,n));
   add(2,WIKI_SOURCE,n=>collectZhWiki(query,since,n));
+  }
   const results=await Promise.allSettled(allocations.map(job=>job.run()));
   for(let i=0;i<results.length;i++){
     const result=results[i];if(result.status==='rejected'){out.requests+=allocations[i].cap;out.failed++;out.sourceDetails.push({source:allocations[i].name,state:'failed',requests:allocations[i].cap,items:0,full:0,excerpts:0,code:'SOURCE_FAILURE'});continue;}
@@ -124,7 +137,9 @@ export async function collectPublic(query:string,since:number|null,cap=SOURCE_RE
     try{out.evidence[index]=await (key==='chinanews'?enrichNewsArticle(out.evidence[index]):enrichFeedArticle(key,out.evidence[index]));receipt.full++;receipt.excerpts--;}
     catch{out.failed++;receipt.code='SOURCE_ARTICLE_UNAVAILABLE';(out.sourceErrors||=[]).push('SOURCE_ARTICLE_UNAVAILABLE');}
   }
-  const omitted=chinese?'Hacker News':STATISTICS_SOURCE;
-  out.sourceDetails.push({source:omitted,state:'skipped',requests:0,items:0,full:0,excerpts:0,code:'SOURCE_LANGUAGE_PRIORITY'});
+  if(profile!=='general')out.sourceDetails.push({source:'主题渠道分配：'+profile,state:'skipped',requests:0,items:0,full:0,excerpts:0,code:'SOURCE_TOPIC_ROUTING'});
+  if(!options.webSearch)out.sourceDetails.push({source:'网页搜索发现',state:'skipped',requests:0,items:0,full:0,excerpts:0,code:'SEARCH_NOT_CONFIGURED'});
+  const omitted=profile!=='general'?STATISTICS_SOURCE:chinese?'Hacker News':STATISTICS_SOURCE;
+  out.sourceDetails.push({source:omitted,state:'skipped',requests:0,items:0,full:0,excerpts:0,code:profile!=='general'?'SOURCE_TOPIC_PRIORITY':'SOURCE_LANGUAGE_PRIORITY'});
   out.limited||=allocations.length<7;return out;
 }

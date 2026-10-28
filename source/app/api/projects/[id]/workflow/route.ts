@@ -1,3 +1,4 @@
+import {collectConfiguredPublic,sourcePolicy} from '@/lib/research/configured-sources';
 import {searchFocusWarnings} from '@/lib/research/research-relevance';
 import {QUALITY_POLICY_VERSION,evidenceQualitySummary} from '@/lib/research/evidence-quality';
 import {env} from '@/lib/deployment/runtime-env';
@@ -36,7 +37,7 @@ export async function POST(request:Request,context:{params:Promise<{id:string}>}
   if(p.actions.includes(b.callId)||p.workflow?.records.some(r=>r.id===b.callId))return response(p);
   if(p.version!==b.version)throw new Error('VERSION_CONFLICT');
   const requestId=b.callId,resuming=b.action==='recover-stage';let restored:StageInput|undefined;
-  if(resuming){const permission=await stageRecovery(db(),p);if(!permission.allowed)throw Error(permission.reason);restored=await loadStageInput(db(),permission.threadId);if(restored.retrievalMode&&restored.retrievalMode!==(env.SEMANTIC_RETRIEVAL_ENABLED==='true'?'semantic':'lexical'))throw Error('检索配置已变化，不能复用旧线程。');b.callId=restored.task.call_id;}
+  if(resuming){const permission=await stageRecovery(db(),p);if(!permission.allowed)throw Error(permission.reason);restored=await loadStageInput(db(),permission.threadId);if(restored.sourcePolicy!==sourcePolicy())throw Error('来源渠道配置已变化，不能复用旧线程。');if(restored.retrievalMode&&restored.retrievalMode!==(env.SEMANTIC_RETRIEVAL_ENABLED==='true'?'semantic':'lexical'))throw Error('检索配置已变化，不能复用旧线程。');b.callId=restored.task.call_id;}
   if(b.action==='analyze-existing'){
     qwenCredentials(b.freeTierOnlyConfirmed);
     const next=restartExistingAnalysis(p),previous=p.workflow!;
@@ -116,26 +117,26 @@ export async function POST(request:Request,context:{params:Promise<{id:string}>}
     live.workflow.lease.expires=new Date(Date.now()+(w.harnessVersion?180000:75000)).toISOString();
     const saved=await save(live,expectedVersion);expectedVersion=saved.version;
   }
-  async function frozen(input:StageInput){if(!w.harnessVersion)return input;const value=restored||{...input,model:QWEN_MODEL,qualityPolicy:QUALITY_POLICY_VERSION,sourceHints:evidenceQualitySummary(input.task.evidence),retrievalMode:embedding?'semantic' as const:'lexical' as const};await saveStageInput(db(),record.harnessThreadId!,value);return value;}
+  async function frozen(input:StageInput){if(!w.harnessVersion)return input;const value=restored||{...input,model:QWEN_MODEL,qualityPolicy:QUALITY_POLICY_VERSION,sourcePolicy:sourcePolicy(),sourceHints:evidenceQualitySummary(input.task.evidence),retrievalMode:embedding?'semantic' as const:'lexical' as const};await saveStageInput(db(),record.harnessThreadId!,value);return value;}
   try{
     if(adapter&&task){
       if(w.mode==='four'){
         let raw:ModelResult;
         if(w.harnessVersion){
-          const agent=await runResearchHarness({database:db(),threadId:record.harnessThreadId,resume:resuming,...await frozen({task,evidence:p.evidence,since:w.since,allowFollowUp:false,finalizeAtLimit:true,budget:{modelLimit:w.budget.modelLimit,modelAttempts:w.budget.modelAttempts,sourceLimit:w.budget.sourceLimit,sourceAttempts:w.budget.sourceAttempts,searchLimit:w.budget.searchLimit,searches:w.budget.searches,paidBudget:0}}),guard:ensureLease,invoke:next=>executeAgentTurn(next,adapter,QWEN_TIMEOUT_MS)});
+          const agent=await runResearchHarness({publicSearch:(q,s,n)=>collectConfiguredPublic(q,s,n,p.title+' '+p.audience),database:db(),threadId:record.harnessThreadId,resume:resuming,...await frozen({task,evidence:p.evidence,since:w.since,allowFollowUp:false,finalizeAtLimit:true,budget:{modelLimit:w.budget.modelLimit,modelAttempts:w.budget.modelAttempts,sourceLimit:w.budget.sourceLimit,sourceAttempts:w.budget.sourceAttempts,searchLimit:w.budget.searchLimit,searches:w.budget.searches,paidBudget:0}}),guard:ensureLease,invoke:next=>executeAgentTurn(next,adapter,QWEN_TIMEOUT_MS)});
           if(!agent.final)throw new Error('INVALID_MODEL_OUTPUT');raw=agent.final;if(agent.receipts.length)modelReceipts.push(...agent.receipts);
         }else raw=await executeModel(task,adapter,QWEN_TIMEOUT_MS);
         output=acceptAgentFinal(raw,task,issues=>{outputIssues=issues});locateChecks(output,task,issue=>{outputIssues.push(issue)});
       }
       else{
-        const agent=await (w.harnessVersion?runResearchHarness:runSingleRoleAgent)({database:db(),threadId:record.harnessThreadId,resume:resuming,guard:ensureLease,...await frozen({task,evidence:p.evidence,since:w.since,allowFollowUp:w.budget.modelAttempts<workflowModelCeiling(w),finalizeAtLimit:true,budget:{modelLimit:workflowModelCeiling(w),modelAttempts:w.budget.modelAttempts,sourceLimit:w.budget.sourceLimit,sourceAttempts:w.budget.sourceAttempts,searchLimit:w.budget.searchLimit,searches:w.budget.searches,paidBudget:0}}),beforeModel:()=>reserveExtra('model'),beforeTool:(_name,count)=>reserveExtra('source',count),...(embedding?{retrieve:async(evidence:typeof p.evidence,query:string)=>{if(env.EMBEDDING_FREE_TIER_ONLY_CONFIRMED!=='true')throw new Error('EMBEDDING_NOT_CONFIGURED');await reserveExtra('embedding');return retrieveSemanticEvidence(evidence,query,embedding);}}:{}),invoke:async next=>{try{return await executeAgentTurn(next,adapter,QWEN_TIMEOUT_MS);}finally{modelReceipts.push({requestId:adapter.receipt.requestId,usage:adapter.receipt.usage?{...adapter.receipt.usage}:undefined});}}});
+        const agent=await (w.harnessVersion?runResearchHarness:runSingleRoleAgent)({publicSearch:(q,s,n)=>collectConfiguredPublic(q,s,n,p.title+' '+p.audience),database:db(),threadId:record.harnessThreadId,resume:resuming,guard:ensureLease,...await frozen({task,evidence:p.evidence,since:w.since,allowFollowUp:w.budget.modelAttempts<workflowModelCeiling(w),finalizeAtLimit:true,budget:{modelLimit:workflowModelCeiling(w),modelAttempts:w.budget.modelAttempts,sourceLimit:w.budget.sourceLimit,sourceAttempts:w.budget.sourceAttempts,searchLimit:w.budget.searchLimit,searches:w.budget.searches,paidBudget:0}}),beforeModel:()=>reserveExtra('model'),beforeTool:(_name,count)=>reserveExtra('source',count),...(embedding?{retrieve:async(evidence:typeof p.evidence,query:string)=>{if(env.EMBEDDING_FREE_TIER_ONLY_CONFIRMED!=='true')throw new Error('EMBEDDING_NOT_CONFIGURED');await reserveExtra('embedding');return retrieveSemanticEvidence(evidence,query,embedding);}}:{}),invoke:async next=>{try{return await executeAgentTurn(next,adapter,QWEN_TIMEOUT_MS);}finally{modelReceipts.push({requestId:adapter.receipt.requestId,usage:adapter.receipt.usage?{...adapter.receipt.usage}:undefined});}}});
         agentSpend=agent.spend;if('receipts' in agent&&Array.isArray(agent.receipts)){modelReceipts.splice(0,modelReceipts.length,...agent.receipts);}
         if(!agent.final)throw new Error(agent.spend.trace.some(t=>t.reason==='MODEL_BUDGET')?(workflowModelCeiling(w)<w.budget.modelLimit?'MODEL_STAGE_BUDGET':'MODEL_BUDGET'):'INVALID_MODEL_OUTPUT');
         task=agent.finalTask;output=acceptAgentFinal(agent.final,task,issues=>{outputIssues=issues});
         if(stage==='plan'||stage==='gap')planned=planningQueries(output,w,issues=>{outputIssues=issues});
       }
     }
-    else if(isSource)collection=w.sourceProfile==='v2ex'?await collectV2exFeed(w.sourceNode||'',w.since,sourceCap):await collectPublic(w.queries[w.collectIndex].query,w.since);
+    else if(isSource)collection=w.sourceProfile==='v2ex'?await collectV2exFeed(w.sourceNode||'',w.since,sourceCap):await collectConfiguredPublic(w.queries[w.collectIndex].query,w.since,sourceCap,p.title+' '+p.audience);
     else{const r=w.analysisRun!,t=r.tasks.find(t=>t.id===stage)!;if(w.mode==='four'&&stage==='check')checkFour(w);localStep(p,r,t);}
   }catch(e){if(e instanceof AgentStepFailure)agentSpend=e.spend;error=safeError((e as Error).message);}
   const current=await get(id);if(!current)return NextResponse.json({error:'项目已删除，结果未写入。'},{status:409});
