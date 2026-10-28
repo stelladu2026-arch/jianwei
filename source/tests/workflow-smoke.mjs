@@ -2,7 +2,8 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {QWEN_BASE_URL} from '../lib/research/provider-config.ts';
-import {sinceForPeriod} from '../lib/research/workflow.ts';
+import {fixtureProject} from '../lib/research/evaluation.ts';
+import {analysisTask,makeWorkflow,sinceForPeriod} from '../lib/research/workflow.ts';
 const planningFixture=JSON.parse(readFileSync(new URL('./fixtures/planning-wire.json',import.meta.url),'utf8'));
 import {sourceCoverage} from '../lib/research/source-coverage.ts';
 import {collectHN,collectPublic,collectZhWiki,WIKI_FETCH_HEADERS} from '../lib/research/collection.ts';
@@ -11,6 +12,16 @@ const beforeFetch=globalThis.fetch,key='sk-synthetic-workflow-key-only',owned=[]
 let passed=0,modelCalls=0,sourceCalls=0,scenario='normal',deferred,release;
 const inputs=[],destinations=[];
 function check(label,fn){fn();passed++;console.log('PASS '+label)}
+check('analysis budgets the complete workflow payload before snapshotting without changing originals',()=>{
+ const p=fixtureProject('baseline');p.mode='manual';p.decision='研究范围与验证要求。'.repeat(180);
+ p.evidence=Array.from({length:14},(_,i)=>({...p.evidence[0],id:'CTX'+i,thread:'CTX'+i,kind:'imported',excluded:false,title:'Synthetic context boundary '+i,text:'原始资料内容，仅用于上下文回归。'.repeat(100)}));
+ const before=JSON.stringify(p.evidence),w=makeWorkflow(p,false);w.stage='analyze';w.usableIds=p.evidence.map(e=>e.id);
+ const task=analysisTask(p,w,'context-boundary-regression');
+ assert.ok(JSON.stringify(task).length<=16000);assert.equal(task.brief.decision,p.decision);
+ const t=w.analysisRun.tasks.find(t=>t.role==='coordinator');assert.deepEqual(t.inputSnapshot,task);assert.equal(t.context.characters,JSON.stringify(task).length);
+ assert.ok(t.context.omittedIds.length>0);assert.equal(JSON.stringify(p.evidence),before);
+ assert.deepEqual(task.evidence_ids,task.evidence.map(e=>e.id));assert.equal(w.budget.modelAttempts,0);
+});
 async function api(path,method='GET',body){const r=await globalThis.__apiTestFetch('http://test.local'+path,{method,headers:{'content-type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});return {status:r.status,data:await r.json()}}
 async function read(p){return (await api(`/api/projects/${p.id}/workflow`)).data.project}
 async function action(p,name,extra={},callId=crypto.randomUUID()){return api(`/api/projects/${p.id}/workflow`,'POST',{version:p.version,callId,action:name,freeTierOnlyConfirmed:true,...extra})}

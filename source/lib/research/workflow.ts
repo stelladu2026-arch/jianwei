@@ -106,10 +106,14 @@ function analysisEvidence(p:Project,w:ResearchWorkflow){
 export function analysisTask(p:Project,w:ResearchWorkflow,id:string){
   const evidence=analysisEvidence(p,w);if(!evidence.length)throw new Error('NO_USABLE_EVIDENCE');
   const temporary:Project={...p,run:undefined,evidence};const r=makeRun(temporary,'single','normal',1);r.adapter='qwen';r.model=QWEN_MODEL;r.paidBudget=0;r.freeTierOnlyConfirmed=true;r.simulation=false;
-  temporary.run=r;const reserved=reserve(temporary,id);const task=buildTask(temporary,r,reserved.task,id);task.allow_tools=!w.useExistingEvidence&&w.sourceProfile!=='v2ex';task.brief={...task.brief,...brief(p,w)};
-  task.context!.rules.push('按问题主题归纳需求，保留不同作者和线程；不要把同一讨论计作多个客户。优先给出一个可验证的机会及其商业假设、已有替代、反证和下一步验证计划。公开自述和点击兴趣不能升级成真实付费承诺。需求卡字段和访谈问题可以省略，省略就保持缺失，不得编造访谈记录或市场结论。');
-  const retrieval=formatProjectRetrieval(w.retrieval||[]);if(retrieval)task.context!.rules.push(retrieval);
-  if(JSON.stringify(task).length>16000)throw new Error('CONTEXT_LIMIT');reserved.task.context!.characters=JSON.stringify(task).length;reserved.task.inputSnapshot=structuredClone(task);w.analysisRun=r;return task;
+  temporary.run=r;const reserved=reserve(temporary,id);
+  // Add workflow-specific fields before the shared whole-payload budget pass.
+  const task=buildTask(temporary,r,reserved.task,id,task=>{
+    task.allow_tools=!w.useExistingEvidence&&w.sourceProfile!=='v2ex';task.brief={...task.brief,...brief(p,w)};
+    task.context!.rules.push('按问题主题归纳需求，保留不同作者和线程；不要把同一讨论计作多个客户。优先给出一个可验证的机会及其商业假设、已有替代、反证和下一步验证计划。公开自述和点击兴趣不能升级成真实付费承诺。需求卡字段和访谈问题可以省略，省略就保持缺失，不得编造访谈记录或市场结论。');
+    const retrieval=formatProjectRetrieval(w.retrieval||[]);if(retrieval)task.context!.rules.push(retrieval);
+  });
+  w.analysisRun=r;return task;
 }
 export function stopWithoutEvidence(p:Project,w:ResearchWorkflow){w.status='partial';w.error='NO_USABLE_EVIDENCE';w.lease=undefined;p.status='partial';w.report=`# 一键研究部分完成：${p.title}\n\n未取得足够的可分析原文，未形成产品机会判断。没有搜到资料不代表没有需求。\n\n检索词：${w.queries.map(q=>q.query).join('；')}\n来源请求尝试：${w.budget.sourceAttempts}；模型请求尝试：${w.budget.modelAttempts}\n\n${w.limitations.map(x=>'- '+x).join('\n')}\n\n下一步：调整人群或检索词，或导入有来源的访谈资料后重新研究。\n`;}
 export function workflowSourceCap(w:ResearchWorkflow){return w.sourceProfile==='v2ex'?1:10;}
