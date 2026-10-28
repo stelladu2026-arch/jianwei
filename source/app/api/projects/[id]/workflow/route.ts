@@ -1,3 +1,4 @@
+import {searchFocusWarnings} from '@/lib/research/research-relevance';
 import {QUALITY_POLICY_VERSION,evidenceQualitySummary} from '@/lib/research/evidence-quality';
 import {env} from '@/lib/deployment/runtime-env';
 import {QwenEmbedding,retrieveSemanticEvidence} from '@/lib/research/semantic-retrieval';
@@ -27,7 +28,7 @@ const modelStages=new Set(['plan','analyze','gap','reanalyze','needs','commercia
 const sourceStages=new Set(['collect','supplement']);
 const safeError=(code:string)=>code in errorLabels||code==='NO_USABLE_EVIDENCE'?code:'MODEL_REPORTED_ERROR';
 function addAction(p:Project,id:string){p.actions=[...p.actions.slice(-49),id];}
-function afterAnalyze(p:Project){const w=p.workflow!;if(w.allowSupplement&&w.stage==='analyze'&&w.budget.modelAttempts+2<=w.budget.modelLimit&&w.budget.sourceAttempts+SOURCE_REQUEST_CAP<=w.budget.sourceLimit&&w.budget.searches<w.budget.searchLimit&&p.budget.searches<6)w.stage='gap';else{if(w.allowSupplement&&w.stage==='analyze')w.limitations.push('剩余预算不足以同时补搜和重新分析，本轮保留证据缺口。');w.stage='check';}}
+function afterAnalyze(p:Project){const w=p.workflow!;if(w.allowSupplement&&w.stage==='analyze'&&w.budget.modelAttempts+2<=w.budget.modelLimit&&w.budget.sourceAttempts+SOURCE_REQUEST_CAP<=w.budget.sourceLimit&&w.budget.searches<w.budget.searchLimit&&p.budget.searches<6)w.stage='gap';else{if(w.allowSupplement&&w.stage==='analyze')w.limitations.push(`本轮未进入补证：模型请求 ${w.budget.modelAttempts}/${w.budget.modelLimit}（补证需预留2次），来源请求 ${w.budget.sourceAttempts}/${w.budget.sourceLimit}（下一次采集需预留${SOURCE_REQUEST_CAP}次），本轮检索 ${w.budget.searches}/${w.budget.searchLimit}，项目累计检索 ${p.budget.searches}/6；至少一项未满足，保留证据缺口。`);w.stage='check';}}
 export const maxDuration=300;
 export async function POST(request:Request,context:{params:Promise<{id:string}>}){try{
   if(request.headers.get('sec-fetch-site')==='cross-site')return NextResponse.json({error:'请求来源不正确'},{status:403});
@@ -185,7 +186,7 @@ export async function POST(request:Request,context:{params:Promise<{id:string}>}
   if(output){
     cr.output=output;
     if(stage==='plan'){
-      cw.queries=planned!.map(query=>({query,purpose:'initial',reason:'根据已确认的研究方向规划'}));cw.framing=output.data.framing;cw.limitations.push(...output.gaps.slice(0,4));skipFetchedQueries(cw);
+      cw.queries=planned!.map(query=>({query,purpose:'initial',reason:'根据已确认的研究方向规划'}));cw.framing=output.data.framing;cw.limitations.push(...output.gaps.slice(0,4),...searchFocusWarnings(planned!));skipFetchedQueries(cw);
       if(cw.collectIndex<cw.queries.length)cw.stage='collect';else if(cw.usableIds.length||current.evidence.some(e=>e.kind==='imported'&&!e.excluded))cw.stage='analyze';else stopWithoutEvidence(current,cw);
     }else if(stage==='gap'){
       const queries=planned!;

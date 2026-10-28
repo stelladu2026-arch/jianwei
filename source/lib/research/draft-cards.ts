@@ -70,7 +70,7 @@ export function renderPublicSignals(quotes:{evidence_id:string;quote:string;loca
   return `## 公开言论\n${rows}\n付款判断：${judgment}。公开原句不能升级为实际付费。模型给出的付费信号是 ${model}；若该信号比上述判断更强，应用仍采用更严的判断。`;
 }
 
-export function renderQuoteLayers(notes:{claim:string;refs:string[];kind:typeof claimKinds[number]}[],citations:Quote[]|undefined,evidence:{id:string;text:string}[]){
+export function renderQuoteLayers(notes:{claim:string;refs:string[];kind:typeof claimKinds[number]}[],citations:Quote[]|undefined,evidence:{id:string;text:string}[],proposalUnknowns=''){
   const located=(citations||[]).filter(item=>{
     const source=evidence.find(row=>row.id===item.evidence_id);
     return typeof source?.text==='string'&&item.quote.length>0&&source.text.indexOf(item.quote)>=0;
@@ -80,5 +80,5 @@ export function renderQuoteLayers(notes:{claim:string;refs:string[];kind:typeof 
     return rows.length?rows.map(note=>`- ${note.claim} ${note.refs.map(id=>'['+id+']').join(' ')}`.trim()).join('\n'):'- 无';
   };
   const quotes=located.length?located.map(item=>`- [${item.evidence_id}] ${item.quote}`).join('\n'):'- 未定位到原句。';
-  return `## 来源原句\n来源原句表示代码在资料里定位到了连续切片。定位到的原句不是已核实的市场事实。\n${quotes}\n\n## 资料事实\n仅表示可定位的原文陈述，未独立核实来源或交易。\n${claim('fact')}\n\n## 推断\n推断只收录 kind 为 hypothesis 的主张。\n${claim('hypothesis')}\n\n## 未知\n未知只收录 kind 为 gap 的主张。\n${claim('gap')}`;
+  return `## 来源原句\n来源原句表示代码在资料里定位到了连续切片。定位到的原句不是已核实的市场事实。\n${quotes}\n\n## 资料事实\n仅表示可定位的原文陈述，未独立核实来源或交易。\n${claim('fact')}\n\n## 推断\n推断只收录 kind 为 hypothesis 的主张。\n${claim('hypothesis')}\n\n## 未知\n以下为模型标记的 gap；未单列不代表不存在未知项。\n${notes.some(n=>n.kind==='gap')?claim('gap'):'- 模型未在 notes 中单列未知主张。'}${proposalUnknowns.trim()?'\n\n机会草稿另列的未知项：\n'+proposalUnknowns:''}`;
 }

@@ -1,5 +1,6 @@
+import {renderQuoteLayers} from '../lib/research/draft-cards.ts';
 import assert from 'node:assert/strict';
-import {evidenceUseHint,evidenceQualitySummary,evidenceQualityReport,QUALITY_POLICY_VERSION} from '../lib/research/evidence-quality.ts';
+import {validationPlanWarnings,evidenceUseHint,evidenceQualitySummary,evidenceQualityReport,QUALITY_POLICY_VERSION} from '../lib/research/evidence-quality.ts';
 import {workflowModelUsage} from '../lib/research/workflow-usage.ts';
 import {workflowReport,makeWorkflow} from '../lib/research/workflow.ts';
 import {fixtureProject} from '../lib/research/evaluation.ts';
@@ -15,4 +16,7 @@ check('report and UI use per-call receipts, excluding local preparation failures
  const usage=workflowModelUsage(w),report=workflowReport(p,w);assert.equal(usage.receipts,3);assert.equal(usage.input,70);assert.equal(usage.output,12);assert.ok(report.includes('有用量回执 3 次；输入 / 输出词元 70 / 12'));assert.equal(usage.unknown,0);
  w.budget.modelAttempts=4;assert.equal(workflowModelUsage(w).unknown,1);
 });
+check('report distinguishes document capabilities and issue experience without verifying either',()=>{assert.equal(evidenceUseHint({id:'D',title:'Knowledge Retrieval',text:'Feature',source:'GitHub 文档 · 原始文件'}).label,'功能文档或产品说明');assert.equal(evidenceUseHint({id:'I',title:'Citation missing',text:'Expected behavior: sources visible',source:'GitHub Issue'}).label,'公开问题或需求线索');assert.equal(evidenceQualitySummary([{id:'I',title:'Bug Report',text:'Steps to reproduce',source:'GitHub Issue'}]).allIndirect,false)});
+check('missing gap notes cannot hide explicit proposal unknowns',()=>{const text=renderQuoteLayers([],[],[],'未知频率与付费意愿');assert.ok(text.includes('模型未在 notes 中单列未知主张'));assert.ok(text.includes('未知频率与付费意愿'));assert.ok(!text.includes('## 未知\n未知只收录'))});
+check('validation plan warnings identify missing explicit checks without changing plans',()=>{const plan='访谈3位开发者，了解问题';assert.equal(validationPlanWarnings(plan).length,2);assert.equal(validationPlanWarnings('观察指标：记录失败次数。停止条件：没有可复现问题则停止。').length,0);assert.equal(plan,'访谈3位开发者，了解问题')});
 console.log(JSON.stringify({evidence_boundary_checks:passed,actual_model_calls:0,policy:QUALITY_POLICY_VERSION}));

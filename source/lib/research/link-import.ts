@@ -1,4 +1,4 @@
-export type LinkPreview={url:string;error?:string;row?:{title:string;text:string;source:string;date:string;author:string;thread:string;url:string;stance:'context';truncated:boolean}};
+export type LinkPreview={url:string;error?:string;row?:{title:string;text:string;source:string;date:string;author:string;thread:string;url:string;stance:'context';truncated:boolean;applicationNote?:string;sourceState?:'open'|'closed'}};
 function destination(raw:string){
  const u=new URL(raw);if(u.protocol!=='https:'||u.username||u.password||u.port)throw Error('仅支持无账号信息的 HTTPS 链接。');u.hash='';
  if(u.hostname==='github.com'){
@@ -19,15 +19,15 @@ export async function previewImportLink(raw:string,fetcher:typeof fetch=fetch):P
  try{
   const d=destination(raw),response=await fetcher(d.target,{redirect:'manual',cache:'no-store',signal:AbortSignal.timeout(10000),headers:{Accept:d.kind==='issue'?'application/vnd.github+json':'text/html,text/plain', 'User-Agent':'Jianwei-Link-Import/1'}});
   if(response.status>=300&&response.status<400)throw Error('来源发生重定向，未跟随；请粘贴最终公开链接。');if(!response.ok)throw Error(`来源读取失败（HTTP ${response.status}），可手动补正文。`);
-  const rawText=await boundedText(response);let title='',text='',date='',author='',source='',truncated=false;
+  const rawText=await boundedText(response);let title='',text='',date='',author='',source='',truncated=false,applicationNote='',sourceState:'open'|'closed'|undefined;
   if(d.kind==='issue'){
    const item=JSON.parse(rawText);if(typeof item.body!=='string'||typeof item.title!=='string'||item.body.trim().length<40||item.pull_request)throw Error('未取得有效 Issue 正文。');
    if(item.user?.type==='Bot')throw Error('此 Issue 作者为机器人，请核查后手动导入。');
    title=item.title;date=typeof item.created_at==='string'?item.created_at.slice(0,10):'';author=typeof item.user?.login==='string'?item.user.login:'';
-   source='GitHub Issue · 作者正文，不含评论';text=`Issue 状态：${item.state==='closed'?'已关闭（不代表一定已修复）':'打开'}\n资料性质：作者公开问题报告，未经独立核实；不含评论和机器人回复。\n\n${item.body}`;
+   source='GitHub Issue · 作者正文，不含评论';text=item.body;sourceState=item.state==='closed'?'closed':'open';applicationNote='应用提示：来源为作者单方公开报告，未经独立核实；不含评论。Issue 关闭不代表一定已修复，此提示不是作者或官方原话。';
   }else if(d.kind==='document'){title=rawText.match(/^#\s+(.+)$/m)?.[1]||new URL(d.url).pathname.split('/').at(-1)||'公开文档';text=rawText;source='GitHub 文档 · 原始文件';}
   else{const type=response.headers.get('content-type')||'';if(!/text\/html|text\/plain/i.test(type))throw Error('来源不是可读取的文本网页。');title=plain(rawText.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1]||'公开网页');const main=rawText.match(/<(?:main|article)\b[^>]*>([\s\S]*?)<\/(?:main|article)>/i)?.[1];if(!main)throw Error('无法可靠定位网页正文，请手动复制相关段落。');text=plain(main);source=new URL(d.url).hostname+' · 网页抽取片段，非全文保证';truncated=true;}
   if(text.trim().length<40)throw Error('可读取正文不足，请手动补充。');truncated=truncated||text.length>8000;
-  return {url:d.url,row:{title:title.slice(0,200),text:text.slice(0,8000),date,author:author.slice(0,100),source,thread:d.url.slice(0,200),url:d.url,stance:'context',truncated}};
+  return {url:d.url,row:{title:title.slice(0,200),text:text.slice(0,8000),date,author:author.slice(0,100),source,thread:d.url.slice(0,200),url:d.url,stance:'context',truncated,...(applicationNote?{applicationNote}:{}),...(sourceState?{sourceState}:{})}};
  }catch(e){return {url:raw,error:e instanceof Error&&e.name==='TimeoutError'?'读取超时，未自动重试。':e instanceof Error&&e.name==='TypeError'?'来源连接失败，请手动补充或稍后显式重试。':e instanceof Error?e.message:'读取失败。'};}
 }
