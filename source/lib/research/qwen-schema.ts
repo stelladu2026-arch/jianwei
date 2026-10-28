@@ -20,6 +20,9 @@ export function providerErrorIssues(status:number,body:unknown){
  const data=body as {message?:unknown;error?:{message?:unknown;code?:unknown};code?:unknown}|null;
  const message=typeof data?.error?.message==='string'?data.error.message:typeof data?.message==='string'?data.message:'';
  const issues=['provider.http:'+status];
- for(const key of unsupportedQwenKeywords)if(message.includes(key))issues.push('provider_schema:unsupported_keyword:'+key);
+ const code=data?.error?.code??data?.code;
+ const knownCodes=['InvalidApiKey','invalid_api_key','InvalidApiKey.NotFound','InvalidApiKey.Expired','AccessDenied','AllocationQuota.FreeTierOnly'];
+ if(typeof code==='string'&&knownCodes.includes(code))issues.push('provider.code:'+code);
+ if(status===400||status===404)for(const key of unsupportedQwenKeywords)if(message.includes(key))issues.push('provider_schema:unsupported_keyword:'+key);
  return issues;
 }

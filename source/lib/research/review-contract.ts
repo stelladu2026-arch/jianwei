@@ -9,7 +9,9 @@ export function describeReviewIssue(issue:string){
   if(issue.endsWith('.reason:too_big'))return '核查说明超过长度上限，本轮结果未接受。新格式已改为选择受控原因项；旧说明不截断或修补，已有通过阶段仍可查看与导出。';
   if(issue.endsWith(':invalid_selected_fact_check'))return '旧格式中，资料事实笔记对应的核查条目不符合约定。失败记录保留；新格式通过原文片段编号生成定位证明，可明确新轮预算后重新研究。';
   if(issue.startsWith('provider_schema'))return '当前结构化格式含服务不支持的约束，需要更新应用格式；无需重新填写密钥，不会自动重试。';
-  if(issue.startsWith('provider.http:'))return '模型服务在生成前拒绝了请求参数，未取得用量回执；请保留本轮记录并核查应用配置。';
+  if(issue==='provider.http:401')return '模型服务返回 HTTP 401；未取得用量回执，不据此判断密钥已失效或消耗为零。请核查当前部署配置和服务访问策略。';
+  if(issue.startsWith('provider.code:'))return '模型服务错误码：'+issue.slice('provider.code:'.length);
+  if(issue.startsWith('provider.http:'))return '模型服务返回 HTTP '+issue.slice('provider.http:'.length)+'；未取得用量回执，请保留本轮记录并核查服务端配置。';
   if(/^data\.notes\.\d+:invalid_union$/.test(issue))return '笔记未按当前格式填写：资料事实只需原文片段编号；假设、未知和反例需在本条笔记内附核查信息。该结果未接受。';
   if(/^data\.proposal\.(problem_check|conclusion_check)/.test(issue))return '机会问题或机会结论缺少合规的自身核查信息；请选择本轮原文编号，依据不足时明确保留证据不足。';
   if(issue.startsWith('citation_format')||issue.startsWith('data.citation_quote_ids')||issue==='data.citations:forbidden_in_selection_format')return '引文编号未通过检查：只能选择本次输入的原文片段，且对应资料必须已被该判断引用；不能混入抄写引文、未知编号或重复编号。结果未接受，已有原文保留。';

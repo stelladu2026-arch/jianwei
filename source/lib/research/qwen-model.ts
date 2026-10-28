@@ -156,7 +156,7 @@ export class QwenModel implements ResearchModelAdapter{
     if(!response.ok){
       let quota=false;
       // Preserve fixed-vocabulary diagnostics only; provider text is discarded.
-      try{const body=await response.json() as {code?:string;error?:{code?:string}};quota=response.status===403&&(body.error?.code||body.code)==='AllocationQuota.FreeTierOnly';if(response.status===400||response.status===404)this.receipt.outputIssues=providerErrorIssues(response.status,body);}catch{if(response.status===400||response.status===404)this.receipt.outputIssues=['provider.http:'+response.status];}
+      try{const body=await response.json() as {code?:string;error?:{code?:string}};quota=response.status===403&&(body.error?.code||body.code)==='AllocationQuota.FreeTierOnly';this.receipt.outputIssues=providerErrorIssues(response.status,body);}catch{this.receipt.outputIssues=['provider.http:'+response.status];}
       throw new ProviderError(quota?'FREE_QUOTA_EXHAUSTED':response.status===401?'PROVIDER_AUTH_ERROR':response.status===403?'PROVIDER_FORBIDDEN':response.status===429?'PROVIDER_RATE_LIMIT':response.status===400||response.status===404?'PROVIDER_CONFIG_ERROR':'PROVIDER_UNAVAILABLE',this.receipt);
     }
     let raw:any;try{raw=await response.json();}catch{throw new ProviderError('INVALID_PROVIDER_RESPONSE',this.receipt);}
