@@ -1,0 +1,5 @@
+import Link from 'next/link';
+export const dynamic='force-dynamic';
+export default function ModelConnectionDiagnostic(){
+ return <div className="research-desk-shell" style={{minHeight:'100vh',padding:'clamp(24px,6vw,96px)'}}><main className="panel" style={{maxWidth:800,margin:'0 auto',padding:'clamp(24px,4vw,48px)'}}><p className="eyebrow">见微 · 运行环境验收</p><h1 style={{fontSize:'clamp(30px,4vw,46px)',lineHeight:1.3,margin:'20px 0'}}>先确认模型响应，再验证完整研究流程。</h1><p style={{fontSize:19,lineHeight:1.9}}>本次已授权最多一次最小生成测试，输出上限 16 词元。沿用当前模型、业务空间和免费额度用完即停配置，不自动重试，不计入研究轮次。</p><p style={{fontSize:17,lineHeight:1.8,margin:'20px 0 32px'}}>点击后通常需要数秒，最长约 45 秒。即使刷新、双击或重复打开，数据库也只允许首次请求。完成后会显示可复制的诊断结果；这还不是完整研究流程验收通过。</p><form action="/api/diagnostics/model-connection" method="post"><button className="button primary" type="submit">执行已授权的单次测试</button></form><nav style={{display:'flex',gap:24,flexWrap:'wrap',marginTop:28}}><a href="/api/diagnostics/model-connection">查看已保存结果（不调用模型）</a><Link href="/">返回研究工作台</Link></nav></main></div>;
+}
