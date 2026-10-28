@@ -36,7 +36,7 @@ if(!process.argv.includes('--harness-only')){
 if(process.env.JIANWEI_TEST_SUITE==='copy'){await import('./status-copy-smoke.mjs');}
 else if(process.env.JIANWEI_TEST_SUITE==='prose'){await import('./prose-completeness-smoke.mjs');}
 else if(process.env.JIANWEI_TEST_SUITE==='optional'){await import('./optional-output-smoke.mjs');}
-else if(process.env.JIANWEI_TEST_SUITE==='expanded'){await import('./expanded-source-smoke.mjs');await import('./news-sources-smoke.mjs');await import('./official-statistics-smoke.mjs');await import('./optional-output-smoke.mjs');await import('./prose-completeness-smoke.mjs');await import('./status-copy-smoke.mjs');}
+else if(process.env.JIANWEI_TEST_SUITE==='expanded'){await import('./expanded-source-smoke.mjs');await import('./news-sources-smoke.mjs');await import('./official-statistics-smoke.mjs');await import('./optional-output-smoke.mjs');await import('./prose-completeness-smoke.mjs');await import('./status-copy-smoke.mjs');await import('./conclusion-ui-smoke.mjs');await import('./workflow-budget-smoke.mjs');await import('./workflow-start-smoke.mjs');}
 else {
 await import('./api-smoke.mjs');
 await import('./execution-smoke.mjs');

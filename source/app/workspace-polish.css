@@ -140,3 +140,24 @@
 .research-desk-shell .start-alternative-copy strong{color:var(--studio-ink);font-size:18px;line-height:1.6}
 .research-desk-shell .start-alternative-copy .meta{max-width:none;margin:0;font-size:16px;line-height:1.85;word-break:normal;overflow-wrap:anywhere;text-wrap:pretty}
 @media(max-width:480px){.research-desk-shell .start-checklist :is(li,.start-alternative)>.button{width:100%;justify-content:center;text-align:center}}
+
+/* One action per paragraph; do not flatten stored newlines into a single block. */
+.research-desk-shell .conclusion-action-paragraphs{display:grid;gap:16px;margin:16px 0 20px;min-width:0}
+.research-desk-shell .conclusion-summary .conclusion-action-paragraphs>p{margin:0;line-height:1.85;white-space:pre-line;overflow-wrap:anywhere}
+
+/* Resource totals and search records have independent content heights. */
+.research-desk-shell :is(.workflow-resources,.workflow-search-plan){min-width:0;height:auto;align-self:start}
+.research-desk-shell :is(.workflow-resources,.workflow-search-plan)>h3{margin-bottom:20px;line-height:1.6}
+.research-desk-shell .workflow-resource-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,170px),1fr));align-items:start;gap:18px 24px;min-width:0}
+.research-desk-shell .workflow-resource-metrics>.budget-row{display:grid;align-content:start;gap:8px;min-width:0;margin:0;padding:0 0 16px;border-bottom:1px solid var(--studio-line)}
+.research-desk-shell .workflow-resource-metrics>.budget-row>span{font-size:16px;line-height:1.7;overflow-wrap:anywhere}
+.research-desk-shell .workflow-resource-metrics>.budget-row>strong{font-size:24px;line-height:1.4;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.research-desk-shell .workflow-resource-metrics>.model-request-details{grid-column:1/-1;display:grid;gap:12px;min-width:0}
+.research-desk-shell .model-request-details :is(p,details){margin:0;line-height:1.85}
+.research-desk-shell .workflow-resources>p.meta{margin:16px 0 0}
+.research-desk-shell .workflow-query-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));align-items:start;gap:20px;min-width:0}
+.research-desk-shell .workflow-query-grid>.workflow-query{min-width:0;margin:0;padding:20px;border:1px solid var(--studio-line);border-radius:14px;background:var(--studio-subtle)}
+.research-desk-shell .workflow-query .spread{align-items:flex-start;flex-wrap:wrap;gap:10px 16px}
+.research-desk-shell .workflow-query strong{font-size:18px;line-height:1.6;overflow-wrap:anywhere}
+.research-desk-shell .workflow-query p{margin:12px 0 0;line-height:1.85}
+.research-desk-shell .workflow-query-grid>p.subdued{grid-column:1/-1;margin:0;line-height:1.85}
