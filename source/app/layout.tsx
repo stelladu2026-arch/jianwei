@@ -7,6 +7,8 @@ import "./research-portfolio.css";
 import "./observatory.css";
 import "./workspace-polish.css";
 import "./glass-system.css";
+import "./workflow-layout.css";
+import "./evidence-layout.css";
 
 export const metadata: Metadata = {
   title: "见微 · 产品机会研究",
