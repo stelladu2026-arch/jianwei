@@ -9,6 +9,10 @@ export function describeReviewIssue(issue:string){
   if(issue.endsWith('.reason:too_big'))return '核查说明超过长度上限，本轮结果未接受。新格式已改为选择受控原因项；旧说明不截断或修补，已有通过阶段仍可查看与导出。';
   if(issue.endsWith(':invalid_selected_fact_check'))return '旧格式中，资料事实笔记对应的核查条目不符合约定。失败记录保留；新格式通过原文片段编号生成定位证明，可明确新轮预算后重新研究。';
   if(issue.startsWith('provider_schema'))return '当前结构化格式含服务不支持的约束，需要更新应用格式；无需重新填写密钥，不会自动重试。';
+  if(issue.startsWith('provider.network:')){
+    const names:Record<string,string>={REQUEST_ABORTED:'请求被中止',DNS_FAILURE:'域名解析失败',TLS_FAILURE:'TLS 安全连接失败',CONNECT_TIMEOUT:'建立连接超时',HEADERS_TIMEOUT:'等待响应头超时',BODY_TIMEOUT:'读取响应体超时',CONNECTION_REFUSED:'连接被拒绝',CONNECTION_RESET:'连接被重置或提前关闭',NETWORK_RESTRICTED:'网络访问受限',UNKNOWN:'底层网络原因未识别'};
+    return (names[issue.slice('provider.network:'.length)]||'底层网络原因未识别')+'；没有取得完整服务回执，是否执行与用量仍未确认，不自动重发。';
+  }
   if(issue==='provider.http:401')return '模型服务返回 HTTP 401；未取得用量回执，不据此判断密钥已失效或消耗为零。请核查当前部署配置和服务访问策略。';
   if(issue.startsWith('provider.code:'))return '模型服务错误码：'+issue.slice('provider.code:'.length);
   if(issue.startsWith('provider.http:'))return '模型服务返回 HTTP '+issue.slice('provider.http:'.length)+'；未取得用量回执，请保留本轮记录并核查服务端配置。';
