@@ -217,7 +217,7 @@ export function isQwenCredentialConfigured(secret:unknown){
   return /^[\x21-\x7E]{8,1024}$/.test(key)&&!/["'`]/.test(key);
 }
 export function requireQwenCredentials(secret:unknown,protectionConfigured:boolean,confirmed:boolean){
-  if(!protectionConfigured||!confirmed)throw new Error('请先在百炼开启 qwen3.7-plus 的免费额度用完即停，等待生效并完成服务端确认配置后再运行。应用无法查询该开关或保证账单金额。');
+  if(!protectionConfigured||!confirmed)throw new Error(`请先在百炼开启 ${QWEN_MODEL} 的免费额度用完即停，等待生效并完成服务端确认配置后再运行。应用无法查询该开关或保证账单金额。`);
   const key=typeof secret==='string'?secret.trim():'';
   if(!isQwenCredentialConfigured(secret))throw new Error('请在服务端将同一北京业务空间的 API Key 配置为 DASHSCOPE_API_KEY 密钥；密钥不能为空或包含空白、引号及控制字符。');
   return key;

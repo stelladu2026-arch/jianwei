@@ -1,3 +1,4 @@
+import {QWEN_MODEL} from './provider-config';
 import {EXPANDED_SOURCE_NAMES,EXPANDED_SOURCE_SCOPE} from './source-catalog';
 import {collectionStartBlocker} from './workflow-start';
 import type {Project,Evidence} from './domain';
@@ -104,7 +105,7 @@ function analysisEvidence(p:Project,w:ResearchWorkflow){
 }
 export function analysisTask(p:Project,w:ResearchWorkflow,id:string){
   const evidence=analysisEvidence(p,w);if(!evidence.length)throw new Error('NO_USABLE_EVIDENCE');
-  const temporary:Project={...p,run:undefined,evidence};const r=makeRun(temporary,'single','normal',1);r.adapter='qwen';r.model='qwen3.7-plus';r.paidBudget=0;r.freeTierOnlyConfirmed=true;r.simulation=false;
+  const temporary:Project={...p,run:undefined,evidence};const r=makeRun(temporary,'single','normal',1);r.adapter='qwen';r.model=QWEN_MODEL;r.paidBudget=0;r.freeTierOnlyConfirmed=true;r.simulation=false;
   temporary.run=r;const reserved=reserve(temporary,id);const task=buildTask(temporary,r,reserved.task,id);task.allow_tools=!w.useExistingEvidence&&w.sourceProfile!=='v2ex';task.brief={...task.brief,...brief(p,w)};
   task.context!.rules.push('按问题主题归纳需求，保留不同作者和线程；不要把同一讨论计作多个客户。优先给出一个可验证的机会及其商业假设、已有替代、反证和下一步验证计划。公开自述和点击兴趣不能升级成真实付费承诺。需求卡字段和访谈问题可以省略，省略就保持缺失，不得编造访谈记录或市场结论。');
   const retrieval=formatProjectRetrieval(w.retrieval||[]);if(retrieval)task.context!.rules.push(retrieval);

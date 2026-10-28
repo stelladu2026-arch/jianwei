@@ -1,3 +1,4 @@
+import {QWEN_MODEL} from './provider-config';
 import {checkAssessmentLabel} from './review-contract';
 import {z} from 'zod';
 import type {Evidence,Project} from './domain';
@@ -36,8 +37,8 @@ export async function initializeFour(p:Project,w:ResearchWorkflow){
   const memories=context.memories.slice(0,6),evidence=structuredClone(input.evidence as Evidence[]),hash=await fingerprint(input.brief,evidence,memories);
   w.frozen={brief:structuredClone(input.brief),evidence,memories:structuredClone(memories),fingerprint:hash};w.usableIds=ids;
   const baseline=baseTask?.output&&baselineRun?{runId:baselineRun.id,model:baseTask.output.model,at:baselineRun.updated,output:structuredClone(baseTask.output),report:baselineRun.report,usage:baseTask.output.usage,elapsedMs:baseTask.elapsedMs,fingerprint:await fingerprint(input.brief,evidence,input.context?.memories||[])}:undefined;
-  w.comparison={baseline,matched:!!baseline&&baseline.fingerprint===hash&&baseline.model==='qwen3.7-plus',candidateFingerprint:hash,reason:baseline?baseline.fingerprint===hash?'复用单角色的同一范围、资料片段和有效记忆；角色提示及前序摘要为本次干预。':'有效记忆与旧基线不同，保留报告供参考，不能作为严格同输入对照。':'没有可复用的真实单角色基线，未自动增加生成请求。'};
-  const r=makeRun({...p,run:undefined,evidence},'four','normal',w.budget.modelLimit);r.adapter='qwen';r.model='qwen3.7-plus';r.simulation=false;r.paidBudget=0;r.freeTierOnlyConfirmed=true;r.reviewProtocol=REVIEW_VERSION;w.analysisRun=r;
+  w.comparison={baseline,matched:!!baseline&&baseline.fingerprint===hash&&baseline.model===QWEN_MODEL,candidateFingerprint:hash,reason:baseline?baseline.fingerprint===hash?'复用单角色的同一范围、资料片段和有效记忆；角色提示及前序摘要为本次干预。':'有效记忆与旧基线不同，保留报告供参考，不能作为严格同输入对照。':'没有可复用的真实单角色基线，未自动增加生成请求。'};
+  const r=makeRun({...p,run:undefined,evidence},'four','normal',w.budget.modelLimit);r.adapter='qwen';r.model=QWEN_MODEL;r.simulation=false;r.paidBudget=0;r.freeTierOnlyConfirmed=true;r.reviewProtocol=REVIEW_VERSION;w.analysisRun=r;
   w.limitations.push('本轮复用已有原文，四角色通常各调用一次；每阶段最多 2 次、整轮最多 8 次。失败不自动重试，不追加规划、采集或自动补搜。','片段位置由代码核对；支持程度是模型判断，待人工核查。','同标识模型在不同时间生成，缓存基线对照不是随机实验或准确率评测。');
   for(const line of sourceCoverage(evidence).qualification)if(!w.limitations.includes(line))w.limitations.push(line);
 }
