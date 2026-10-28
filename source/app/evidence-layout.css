@@ -1,7 +1,7 @@
 /* Fixed preview cards; full saved content is rendered only in the dialog. */
-.research-desk-shell .evidence-workspace{container-name:evidence-library}
-.research-desk-shell .evidence-workspace .evidence-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(0,340px));justify-content:start;align-items:start;gap:24px}
-.research-desk-shell .evidence-workspace .evidence-card{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:32px 60px minmax(0,1fr) 24px 44px;row-gap:12px;width:340px;height:400px;min-height:400px;max-height:400px;padding:22px;overflow:hidden;text-align:left;white-space:normal}
+.research-desk-shell .evidence-workspace{container:evidence-library/inline-size}
+.research-desk-shell .evidence-workspace .evidence-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));justify-content:stretch;align-items:start;gap:28px 36px}
+.research-desk-shell .evidence-workspace .evidence-card{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:32px 60px minmax(0,1fr) 24px 44px;row-gap:12px;width:100%;height:400px;min-height:400px;max-height:400px;padding:22px;overflow:hidden;text-align:left;white-space:normal}
 .research-desk-shell .evidence-workspace .evidence-card>.spread{display:flex;align-items:center;justify-content:space-between;flex-wrap:nowrap;gap:10px;min-width:0;margin:0}
 .research-desk-shell .evidence-workspace .evidence-card .spread .tag{min-width:0;padding:4px 8px;font-size:14px;line-height:1.4;white-space:nowrap}
 .research-desk-shell .evidence-workspace .evidence-card .spread .mono{padding:4px 8px;max-width:124px;font-size:13px;line-height:1.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -28,3 +28,6 @@
 .evidence-detail-body>.meta{margin:0;font-size:16px;line-height:1.8}
 @container evidence-library (max-width:360px){.research-desk-shell .evidence-workspace .evidence-grid{grid-template-columns:minmax(0,1fr)}.research-desk-shell .evidence-workspace .evidence-card{width:100%}}
 @media(max-width:600px){.evidence-detail-dialog[data-slot=dialog-content]{width:calc(100vw - 24px);max-height:92dvh;padding:20px;gap:20px;border-radius:16px}.evidence-detail-dialog [data-slot=dialog-title]{font-size:21px}.evidence-detail-body{gap:20px}.evidence-detail-body blockquote{padding:18px;font-size:17px;line-height:1.9}.evidence-detail-body .source-details{grid-template-columns:minmax(0,1fr);gap:5px}.evidence-detail-body .source-details dd+dt{margin-top:14px}}
+
+@container evidence-library (max-width:1000px){.research-desk-shell .evidence-workspace .evidence-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:28px}}
+@container evidence-library (max-width:640px){.research-desk-shell .evidence-workspace .evidence-grid{grid-template-columns:minmax(0,1fr);gap:24px}}

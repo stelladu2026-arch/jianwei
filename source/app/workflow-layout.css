@@ -131,3 +131,13 @@
 .workspace-tools-body .budget-row strong{font-size:18px}
 .workspace-tools-body .version-row{font-size:16px;min-height:52px;gap:16px}
 @media(prefers-reduced-motion:reduce){.workspace-tools-drawer[data-slot=sheet-content]{animation:none!important;transition:none!important}}
+
+/* Keep five resource totals together at desktop widths. */
+.research-desk-shell .workflow-workspace .workflow-resource-metrics{grid-template-columns:repeat(5,minmax(0,1fr));gap:16px}
+.research-desk-shell .workflow-workspace .workflow-resource-metrics>.budget-row{padding:18px 16px}
+.research-desk-shell .role-context-layout{align-items:stretch}
+.research-desk-shell .role-context-main{display:flex;flex-direction:column;min-width:0}
+.research-desk-shell .role-context-empty{flex:1;min-height:220px}
+@container research-flow (max-width:900px){.research-desk-shell .workflow-workspace .workflow-resource-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@container research-flow (max-width:600px){.research-desk-shell .workflow-workspace .workflow-resource-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@container research-flow (max-width:400px){.research-desk-shell .workflow-workspace .workflow-resource-metrics{grid-template-columns:minmax(0,1fr)}}
