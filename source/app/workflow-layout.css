@@ -111,3 +111,23 @@
  .research-desk-shell .report-workspace>.report-tools,
  .research-desk-shell .execution-grid>.execution-sidebar{grid-template-columns:minmax(0,1fr)}
 }
+
+.research-desk-shell .workspace-tools-bar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:20px;margin-bottom:24px;padding:4px 0 20px;border-bottom:1px solid var(--studio-line)}
+.research-desk-shell .workspace-tools-bar p{margin:8px 0 0;font-size:16px;line-height:1.8}
+.research-desk-shell .workspace-tools-trigger{min-height:52px;gap:16px;font-size:17px;white-space:normal}
+.workspace-tools-drawer[data-slot=sheet-content]{width:min(520px,100vw);max-width:520px!important;height:100dvh;padding:0;gap:0;background:linear-gradient(140deg,#13263bf5,#080f1dfc);color:#eaf4ff;border-left:1px solid #91d8ff55;backdrop-filter:blur(22px);box-shadow:-24px 0 80px #0008}
+.workspace-tools-drawer [data-slot=sheet-header]{padding:32px 60px 24px 28px;border-bottom:1px solid #91d8ff26;flex-shrink:0}
+.workspace-tools-drawer [data-slot=sheet-title]{font-size:25px;line-height:1.6;color:#f2f8ff}
+.workspace-tools-drawer [data-slot=sheet-description]{font-size:16px;line-height:1.8;color:#afc3da}
+.workspace-tools-drawer>button{width:40px;height:40px;display:grid;place-items:center}
+.workspace-tools-body{overflow-y:auto;min-height:0;padding:28px;overscroll-behavior:contain}
+.workspace-tools-body :is(.report-tools,.execution-sidebar){display:grid;grid-template-columns:minmax(0,1fr);gap:28px}
+.workspace-tools-body .panel{margin:0;padding:0 0 28px;border:0;border-bottom:1px solid #91d8ff26;border-radius:0;background:transparent;box-shadow:none;min-width:0}
+.workspace-tools-body h3{font-size:21px;line-height:1.6;margin:0 0 16px}
+.workspace-tools-body :is(p,summary){font-size:16px;line-height:1.85;overflow-wrap:anywhere}
+.workspace-tools-body p{margin:12px 0}
+.workspace-tools-body .button{min-height:52px;height:auto;margin-top:14px;font-size:17px;line-height:1.6;white-space:normal}
+.workspace-tools-body .budget-row{grid-template-columns:minmax(0,1fr) minmax(0,1fr);font-size:16px;gap:16px;border-color:#91d8ff26}
+.workspace-tools-body .budget-row strong{font-size:18px}
+.workspace-tools-body .version-row{font-size:16px;min-height:52px;gap:16px}
+@media(prefers-reduced-motion:reduce){.workspace-tools-drawer[data-slot=sheet-content]{animation:none!important;transition:none!important}}
