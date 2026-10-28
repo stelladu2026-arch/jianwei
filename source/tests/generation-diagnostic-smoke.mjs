@@ -16,4 +16,13 @@ const unknownDb=database();let failures=0;const failed=()=>{failures++;throw Obj
 const expired=await runGenerationDiagnostic({...options(database()),now:Date.parse('2026-10-30'),fetcher});assert.equal(expired.state,'authorization_expired');assert.equal(calls,1);checks++;
 await assert.rejects(()=>runGenerationDiagnostic({...options({prepare(){throw Error('DB_FAILURE')}}),fetcher}));assert.equal(calls,1);checks++;
 const http=await runGenerationDiagnostic({...options(database()),fetcher:async()=>Response.json({error:{code:'invalid_api_key',message:'PRIVATE_SECRET'}},{status:401})});assert.equal(http.state,'http_error');assert.deepEqual(http.issues,['provider.http:401','provider.code:invalid_api_key']);assert.ok(!JSON.stringify(http).includes('PRIVATE_SECRET'));checks++;
+const runningDb=database();let release,entered;
+const gate=new Promise(resolve=>{entered=resolve});
+const pending=runGenerationDiagnostic({...options(runningDb),fetcher:()=>{entered();return new Promise(resolve=>{release=resolve})}});
+await gate;
+assert.equal((await runGenerationDiagnostic({...options(runningDb),fetcher})).state,'running');
+assert.equal((await readGenerationDiagnostic(runningDb,options(runningDb).now)).state,'running');checks++;
+assert.equal((await readGenerationDiagnostic(runningDb,options(runningDb).now+90001)).state,'result_unknown');checks++;
+release(Response.json({choices:[{message:{content:'OK'}}],usage:{prompt_tokens:8,completion_tokens:1}}));
+await pending;assert.equal((await readGenerationDiagnostic(runningDb)).state,'success');assert.equal(calls,1);checks++;
 console.log(JSON.stringify({generation_diagnostic_checks:checks,real_http_requests:0,real_model_calls:0}));

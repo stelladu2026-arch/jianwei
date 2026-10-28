@@ -8,7 +8,7 @@ export const maxDuration=60;
 const headers={'Cache-Control':'no-store','X-Robots-Tag':'noindex, nofollow'};
 export async function GET(){
  try{const database=env.DB;if(!database)throw Error('DIAGNOSTIC_DATABASE_REQUIRED');return NextResponse.json(await readGenerationDiagnostic(database),{headers})}
- catch{return NextResponse.json({state:'diagnostic_storage_unavailable',modelRequestAttempts:0},{status:503,headers})}
+ catch{return NextResponse.json({state:'diagnostic_storage_unavailable',modelRequestAttempts:null,requestAttemptsThisInvocation:0},{status:503,headers})}
 }
 export async function POST(request:Request){
  const origin=request.headers.get('origin');
