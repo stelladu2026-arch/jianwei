@@ -89,3 +89,25 @@
  .research-desk-shell .workflow-workspace .workflow-recovery dl{grid-template-columns:minmax(0,1fr);gap:6px}
  .research-desk-shell .workflow-workspace .workflow-recovery dd+dt{margin-top:10px}
 }
+
+/* Reset the inherited label/value grid inside resource metric tiles. */
+.research-desk-shell .workflow-workspace .workflow-resource-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr));gap:20px;align-items:stretch}
+.research-desk-shell .workflow-workspace .workflow-resource-metrics>.budget-row{display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;gap:16px;padding:20px;margin:0;min-width:0;border:1px solid var(--studio-line);border-radius:12px;background:var(--studio-subtle)}
+.research-desk-shell .workflow-workspace .workflow-resource-metrics>.budget-row>span{font-size:16px;line-height:1.7;min-height:3.4em}
+.research-desk-shell .workflow-workspace .workflow-resource-metrics>.budget-row>strong{font-size:24px;line-height:1.5;text-align:left;max-width:100%;overflow-wrap:anywhere}
+.research-desk-shell .workflow-workspace .model-request-details{grid-column:1/-1;padding-top:4px}
+/* Supporting tools follow the full-width primary content. */
+.research-desk-shell :is(.report-workspace,.execution-grid){display:grid;grid-template-columns:minmax(0,1fr);gap:24px;align-items:start}
+.research-desk-shell :is(.report-workspace,.execution-grid)>*{min-width:0}
+.research-desk-shell .report-workspace>.report-tools,
+.research-desk-shell .execution-grid>.execution-sidebar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;align-items:start}
+.research-desk-shell :is(.report-tools,.execution-sidebar)>.panel{height:auto;min-width:0;margin:0;padding:24px}
+.research-desk-shell :is(.report-tools,.execution-sidebar) h3{margin:0 0 20px;font-size:21px;line-height:1.6}
+.research-desk-shell :is(.report-tools,.execution-sidebar) :is(p,summary){font-size:16px;line-height:1.85;overflow-wrap:anywhere}
+.research-desk-shell :is(.report-tools,.execution-sidebar) .button{min-height:52px;height:auto;white-space:normal;line-height:1.6;margin-top:16px}
+.research-desk-shell .execution-sidebar .budget-row{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;font-size:16px}
+.research-desk-shell .execution-sidebar .budget-row strong{font-size:18px}
+@media(max-width:760px){
+ .research-desk-shell .report-workspace>.report-tools,
+ .research-desk-shell .execution-grid>.execution-sidebar{grid-template-columns:minmax(0,1fr)}
+}
