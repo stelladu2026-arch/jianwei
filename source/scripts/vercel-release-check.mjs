@@ -2,6 +2,7 @@ import {spawnSync} from 'node:child_process';
 // Keep the platform build command short while preserving explicit, sequential
 // checks. Public HTTP is bounded and report-only; model tests remain synthetic.
 const steps=[
+ [process.execPath,['--experimental-strip-types','tests/full-flow-acceptance-smoke.mjs']],
  [process.execPath,['--experimental-strip-types','tests/generation-diagnostic-smoke.mjs']],
  [process.execPath,['--experimental-strip-types','tests/provider-network-smoke.mjs']],
  [process.execPath,['--experimental-strip-types','tests/run-local-api.mjs'],{JIANWEI_TEST_SUITE:'expanded'}],
