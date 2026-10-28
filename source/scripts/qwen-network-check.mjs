@@ -1,5 +1,6 @@
 import {pathToFileURL} from 'node:url';
 import {QWEN_BASE_URL} from '../lib/research/provider-config.ts';
+import {providerErrorIssues} from '../lib/research/qwen-schema.ts';
 
 // Fixed-address preflight: anonymous HEAD; optional server-only empty JSON auth.
 // No model, prompt, generation fields or redirect following.
@@ -16,7 +17,12 @@ async function probeQwen(fetcher,request){
  const started=Date.now(),controller=new AbortController(),timer=setTimeout(()=>controller.abort(),10000);
  try{
   const response=await fetcher(QWEN_BASE_URL+'/chat/completions',{...request,redirect:'manual',signal:controller.signal});
-  return {reachable:true,httpStatus:response.status,redirect:response.status>=300&&response.status<400,modelRequests:0,elapsedMs:Date.now()-started};
+  let issues,requestId;
+  if(request.method==='POST'){
+   try{const body=await response.json();issues=providerErrorIssues(response.status,body);const id=body?.request_id??body?.requestId;if(typeof id==='string'&&/^[a-f0-9]{8}(-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(id))requestId=id;}catch{issues=['provider.http:'+response.status];}
+   const id=response.headers.get('x-request-id');if(id&&/^[a-f0-9]{8}(-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(id))requestId=id;
+  }
+  return {reachable:true,httpStatus:response.status,redirect:response.status>=300&&response.status<400,modelRequests:0,elapsedMs:Date.now()-started,...(issues?{issues}:{}),...(requestId?{requestId}:{})};
  }catch(error){
   const codes=[error?.code,error?.cause?.code,...(Array.isArray(error?.cause?.errors)?error.cause.errors.map(x=>x?.code):[])];
   const has=(...values)=>codes.some(x=>values.includes(x));
