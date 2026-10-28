@@ -125,3 +125,18 @@
 @media(max-width:767px){.role-context-heading{gap:14px;margin-bottom:28px}.role-context-symbol{width:48px;height:48px;flex-basis:48px;border-radius:12px}.role-context-heading h2{font-size:25px}.role-context-layout{gap:24px}.role-context-controls{gap:16px}.role-context-controls>label{flex-basis:100%}.role-context-controls>.button{width:100%}.role-context-empty{padding:22px;gap:14px}.role-context-counts{grid-template-columns:1fr;gap:14px}.role-context-counts>div{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:20px}.role-context-counts dd{margin:0;font-size:30px}.role-context-boundary{padding:22px}}
 .research-desk-shell :is(input:not([type=checkbox]):not([type=radio]):not([type=file]),select){height:var(--control-height);min-height:var(--control-height);padding-block:0;box-sizing:border-box;line-height:1.5}
 .research-desk-shell .search-field input:not([type=checkbox]):not([type=radio]):not([type=file]){height:100%;min-height:0;padding:0}
+
+/* Start-help lives inside a narrow launch column even on wide screens.
+   Keep explanatory copy and actions in reading order instead of fixed columns. */
+.research-desk-shell .start-checklist{min-width:0;margin-block:0 24px}
+.research-desk-shell .start-checklist h3{margin:0 0 20px;font-size:20px;line-height:1.6}
+.research-desk-shell .start-checklist ul{display:grid;grid-template-columns:minmax(0,1fr);gap:0;margin:0;padding:0;list-style:none}
+.research-desk-shell .start-checklist li{display:flex;flex-direction:column;align-items:flex-start;gap:16px;min-width:0;padding:20px 0!important;border-color:var(--studio-line)}
+.research-desk-shell .start-checklist li:first-child{padding-top:0!important;border-top:0}
+.research-desk-shell .start-checklist li p{min-width:0;max-width:none;margin:0;font-size:17px;line-height:1.85;word-break:normal;overflow-wrap:anywhere;text-wrap:pretty}
+.research-desk-shell .start-checklist :is(li,.start-alternative)>.button{grid-column:auto;grid-row:auto;order:0;width:auto;max-width:100%;min-height:var(--control-height);align-self:flex-start;justify-self:start;white-space:normal;text-align:left;line-height:1.5}
+.research-desk-shell .start-checklist .start-alternative{display:flex;flex-direction:column;align-items:flex-start;gap:20px;min-width:0;margin-top:8px;padding-top:24px;border-top:1px solid var(--studio-line)}
+.research-desk-shell .start-alternative-copy{display:grid;gap:10px;min-width:0;width:100%}
+.research-desk-shell .start-alternative-copy strong{color:var(--studio-ink);font-size:18px;line-height:1.6}
+.research-desk-shell .start-alternative-copy .meta{max-width:none;margin:0;font-size:16px;line-height:1.85;word-break:normal;overflow-wrap:anywhere;text-wrap:pretty}
+@media(max-width:480px){.research-desk-shell .start-checklist :is(li,.start-alternative)>.button{width:100%;justify-content:center;text-align:center}}
