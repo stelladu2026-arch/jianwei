@@ -68,15 +68,15 @@ export async function executeFlowAcceptance({db,buildRef,call}:{db:DiagnosticDat
    await action('advance',id,version);
    report.steps.push({stage:report.stage,state:p!.workflow!.status,modelAttempts:p!.workflow!.budget.modelAttempts});await save();
    if(p!.workflow!.status==='failed')throw Error(p!.workflow!.error||'FLOW_STAGE_FAILED');
-   if(!controlChecked&&p!.workflow!.status==='ready'){
+   if(!controlChecked&&currentState()==='ready'){
     const count=p!.workflow!.budget.modelAttempts,records=p!.workflow!.records.length,stage=p!.workflow!.stage;
     await action('advance',id,version);
     if(p!.workflow!.budget.modelAttempts!==count||p!.workflow!.records.length!==records)throw Error('FLOW_DUPLICATE_STAGE_CHANGED');
     report.duplicateStageDidNotCallModel=true;
     await action('pause');await request('/api/projects/'+p!.id,'GET');
-    if(p!.workflow!.status!=='paused'||p!.workflow!.budget.modelAttempts!==count)throw Error('FLOW_PAUSE_NOT_PRESERVED');
+    if(currentState()!=='paused'||p!.workflow!.budget.modelAttempts!==count)throw Error('FLOW_PAUSE_NOT_PRESERVED');
     await action('resume');await request('/api/projects/'+p!.id,'GET');
-    if(p!.workflow!.status!=='ready'||p!.workflow!.stage!==stage||p!.workflow!.budget.modelAttempts!==count)throw Error('FLOW_RESUME_NOT_PRESERVED');
+    if(currentState()!=='ready'||p!.workflow!.stage!==stage||p!.workflow!.budget.modelAttempts!==count)throw Error('FLOW_RESUME_NOT_PRESERVED');
     report.pauseResumePreserved=true;controlChecked=true;await save();
    }
   }
