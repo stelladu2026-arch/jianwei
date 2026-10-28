@@ -1,10 +1,12 @@
+import {QWEN_MODEL} from '../provider-config';
+import {QUALITY_POLICY_VERSION,evidenceQualitySummary} from '../evidence-quality';
 import type {Project} from '../domain';
 import type {LoopInput} from '../agent-loop';
 import type {HarnessDatabase} from './storage';
 import {initializeHarnessDatabase} from './storage';
 import {ResearchCheckpointSaver} from './checkpointer';
 
-export type StageInput=Pick<LoopInput,'task'|'evidence'|'budget'|'since'|'allowFollowUp'|'finalizeAtLimit'>&{retrievalMode?:'lexical'|'semantic'};
+export type StageInput=Pick<LoopInput,'task'|'evidence'|'budget'|'since'|'allowFollowUp'|'finalizeAtLimit'>&{retrievalMode?:'lexical'|'semantic';model?:string;qualityPolicy?:string;sourceHints?:ReturnType<typeof evidenceQualitySummary>};
 export async function saveStageInput(db:HarnessDatabase,thread:string,input:StageInput){
  await initializeHarnessDatabase(db);
  await db.prepare('INSERT INTO research_harness_stage_inputs (thread_id,input) VALUES (?,?) ON CONFLICT(thread_id) DO NOTHING').bind(thread,JSON.stringify(input)).run();
@@ -29,6 +31,7 @@ export async function stageRecovery(db:HarnessDatabase,p:Project){
   const unknown=await db.prepare("SELECT COUNT(*) AS n FROM research_harness_operations WHERE thread_id=? AND state!='done'").bind(record.harnessThreadId).first<{n:number}>();
   if(unknown?.n)return no('请求结果不明，不能自动重发。请保留记录并核查服务用量。');
   const snapshot=await loadStageInput(db,record.harnessThreadId);
+  if(snapshot.model!==QWEN_MODEL||snapshot.qualityPolicy!==QUALITY_POLICY_VERSION)return no('模型或证据边界协议已变化，不能复用旧线程；请保留记录后准备新阶段。');
   if(snapshot.task.call_id!==record.id||snapshot.task.run_id!==w.id||snapshot.task.project_id!==p.id||snapshot.task.revision!==p.revision)return no('原始输入与当前研究不一致。');
   const checkpoint=await new ResearchCheckpointSaver(db).getTuple({configurable:{thread_id:record.harnessThreadId}});
   if(!checkpoint)return no('尚无可恢复的执行检查点。');

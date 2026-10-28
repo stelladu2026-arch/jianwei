@@ -1,3 +1,4 @@
+import {QUALITY_POLICY_VERSION,evidenceQualitySummary} from '@/lib/research/evidence-quality';
 import {env} from '@/lib/deployment/runtime-env';
 import {QwenEmbedding,retrieveSemanticEvidence} from '@/lib/research/semantic-retrieval';
 import {saveOpportunityDraft} from '@/lib/research/opportunity-drafts';
@@ -13,7 +14,7 @@ import {log,type Project} from '@/lib/research/domain';
 import {scanReflections} from '@/lib/research/governance';
 import {QwenModel} from '@/lib/research/qwen-model';
 import {qwenCredentials} from '@/lib/research/qwen-settings';
-import {QWEN_TIMEOUT_MS} from '@/lib/research/provider-config';
+import {QWEN_TIMEOUT_MS,QWEN_MODEL} from '@/lib/research/provider-config';
 import {collectV2exFeed} from '@/lib/research/v2ex-feed';
 import {collectPublic,SOURCE_REQUEST_CAP,type Collection} from '@/lib/research/collection';
 import {executeModel,completeTask,failTask,localStep,reserve,errorLabels,type Analysis} from '@/lib/research/execution';
@@ -114,7 +115,7 @@ export async function POST(request:Request,context:{params:Promise<{id:string}>}
     live.workflow.lease.expires=new Date(Date.now()+(w.harnessVersion?180000:75000)).toISOString();
     const saved=await save(live,expectedVersion);expectedVersion=saved.version;
   }
-  async function frozen(input:StageInput){if(!w.harnessVersion)return input;const value=restored||{...input,retrievalMode:embedding?'semantic' as const:'lexical' as const};await saveStageInput(db(),record.harnessThreadId!,value);return value;}
+  async function frozen(input:StageInput){if(!w.harnessVersion)return input;const value=restored||{...input,model:QWEN_MODEL,qualityPolicy:QUALITY_POLICY_VERSION,sourceHints:evidenceQualitySummary(input.task.evidence),retrievalMode:embedding?'semantic' as const:'lexical' as const};await saveStageInput(db(),record.harnessThreadId!,value);return value;}
   try{
     if(adapter&&task){
       if(w.mode==='four'){

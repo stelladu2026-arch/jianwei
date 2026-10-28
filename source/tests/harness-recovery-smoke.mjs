@@ -26,6 +26,17 @@ try{
   const permission=await stageRecovery(originalDb,p);assert.equal(permission.allowed,true,permission.reason);
   const response=await globalThis.__apiTestFetch(`http://test.local/api/projects/${p.id}/harness`);const status=await response.json();assert.equal(status.recovery.allowed,true);assert.equal(JSON.stringify(status).includes(p.evidence[0].text),false);
  });
+ await check('model or quality-policy drift refuses recovery without consuming budget',async()=>{
+  const thread=p.workflow.records.at(-1).harnessThreadId;
+  const row=await originalDb.prepare('SELECT input FROM research_harness_stage_inputs WHERE thread_id=?').bind(thread).first();
+  const snapshot=JSON.parse(row.input),n=calls;
+  for(const change of [{model:'old-model'},{qualityPolicy:'old-policy'},{model:undefined,qualityPolicy:undefined}]){
+   await originalDb.prepare('UPDATE research_harness_stage_inputs SET input=? WHERE thread_id=?').bind(JSON.stringify({...snapshot,...change}),thread).run();
+   const permission=await stageRecovery(originalDb,p);assert.equal(permission.allowed,false);assert.ok(permission.reason.includes('协议'));assert.equal(calls,n);
+  }
+  await originalDb.prepare('UPDATE research_harness_stage_inputs SET input=? WHERE thread_id=?').bind(row.input,thread).run();
+  assert.equal((await stageRecovery(originalDb,p)).allowed,true);
+ });
  globalThis.__testEnv.DB=originalDb;
  const before=p,recoveryId=crypto.randomUUID();r=await api(p,'recover-stage',recoveryId);p=r.project;
  await check('route recovery reuses the provider receipt without another reservation or HTTP call',async()=>{
