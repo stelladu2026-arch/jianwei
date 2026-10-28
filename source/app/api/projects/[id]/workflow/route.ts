@@ -40,7 +40,7 @@ export async function POST(request:Request,context:{params:Promise<{id:string}>}
   if(b.action==='analyze-existing'){
     qwenCredentials(b.freeTierOnlyConfirmed);
     const next=restartExistingAnalysis(p),previous=p.workflow!;
-    p.workflowHistory=[previous,...(p.workflowHistory||[])].slice(0,2);p.workflow=next;
+    if(previous)p.workflowHistory=[previous,...(p.workflowHistory||[])].slice(0,2);p.workflow=next;
     addAction(p,b.callId);log(p,'保留原轮记录，使用当前原文重新分析；新轮最多 2 次模型请求，未重新采集或重置累计用量');
     return response(await save(p,b.version));
   }

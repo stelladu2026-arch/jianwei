@@ -47,11 +47,11 @@ export function makeWorkflow(p:Project,allowSupplement:boolean,mode:'single'|'fo
 }
 export function existingAnalysisSources(p:Project){return p.evidence.filter(e=>!e.excluded&&e.kind!=='synthetic'&&e.text.trim().length>=40&&!/^该(帖子|条目)只有标题/.test(e.text));}
 export function existingAnalysisBlockReason(p:Project){
- if(!p.workflow||p.workflow.mode==='four'||!['failed','completed'].includes(p.workflow.status)||p.workflow.lease)return '仅支持从已停止或已保存草稿、且没有执行中请求的单角色研究重新分析。';
+ if(p.workflow&&(p.workflow.mode==='four'||!['failed','completed','partial','stale'].includes(p.workflow.status)||p.workflow.lease))return '仅支持从已停止或已保存草稿、且没有执行中请求的单角色研究重新分析。';
  if(!p.confirmed||p.archived||p.mode!=='manual'||['paused','cancelled','completed'].includes(p.status))return '请先确认并恢复当前真实研究范围。';
  if(p.evidence.some(e=>e.kind==='synthetic')||!existingAnalysisSources(p).length)return '至少需要一条当前可用的真实正文；只有标题或被排除的资料不能用于分析。';
  if(p.run&&['ready','running','paused','failed'].includes(p.run.status))return '请先结束执行与评测中的任务。';
- if(p.workflow.conclusionAudit&&['ready','running'].includes(p.workflow.conclusionAudit.status))return '请先完成或结束结论复核。';
+ if(p.workflow?.conclusionAudit&&['ready','running'].includes(p.workflow.conclusionAudit.status))return '请先完成或结束结论复核。';
  return '';
 }
 export function restartExistingAnalysis(p:Project){
