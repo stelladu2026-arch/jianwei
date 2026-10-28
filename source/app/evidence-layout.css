@@ -31,3 +31,5 @@
 
 @container evidence-library (max-width:1000px){.research-desk-shell .evidence-workspace .evidence-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:28px}}
 @container evidence-library (max-width:640px){.research-desk-shell .evidence-workspace .evidence-grid{grid-template-columns:minmax(0,1fr);gap:24px}}
+
+.link-import-preview{padding:20px;border:1px solid var(--studio-line);border-radius:12px;min-width:0}.link-import-preview label,.link-import-confirm{display:flex;align-items:flex-start;gap:12px;font-size:17px;line-height:1.8}.link-import-preview input,.link-import-confirm input{flex-shrink:0;margin-top:7px}.link-import-preview p{overflow-wrap:anywhere;margin-top:12px}.link-import-preview pre{max-height:260px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;font-size:16px;line-height:1.8}.link-import-preview details{margin-top:16px}.link-import-preview a{display:inline-block;margin-top:12px;text-decoration:underline}.link-import-dialog .button{min-height:52px;height:auto;white-space:normal}

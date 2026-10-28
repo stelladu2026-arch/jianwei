@@ -34,6 +34,7 @@ globalThis.fetch=async(url)=>{if(globalThis.__externalScenario==='failure')throw
 globalThis.__apiTestFetch=async(url,init)=>{const req=new Request(url,init);const parsed=new URL(url);if(parsed.pathname==='/api/model-status')return modelStatus[req.method](req);if(parsed.pathname==='/api/search')return search.POST(req);if(parsed.pathname==='/api/projects')return projects[req.method](req);const id=parsed.pathname.split('/')[3];if(parsed.pathname.endsWith('/harness'))return harness[req.method](req,{params:Promise.resolve({id})});if(parsed.pathname.endsWith('/workflow/background'))return background.POST(req,{params:Promise.resolve({id})});if(parsed.pathname.endsWith('/conclusion-review'))return audit[req.method](req,{params:Promise.resolve({id})});if(parsed.pathname.endsWith('/workflow'))return workflow[req.method](req,{params:Promise.resolve({id})});if(parsed.pathname.endsWith('/run'))return run[req.method](req,{params:Promise.resolve({id})});if(parsed.pathname.endsWith('/context'))return context.POST(req,{params:Promise.resolve({id})});return project[req.method](req,{params:Promise.resolve({id})})};
 if(!process.argv.includes('--harness-only')){
 await import('./evidence-quality-smoke.mjs');
+await import('./link-import-smoke.mjs');
 if(process.env.JIANWEI_TEST_SUITE==='copy'){await import('./status-copy-smoke.mjs');}
 else if(process.env.JIANWEI_TEST_SUITE==='prose'){await import('./prose-completeness-smoke.mjs');}
 else if(process.env.JIANWEI_TEST_SUITE==='optional'){await import('./optional-output-smoke.mjs');}
