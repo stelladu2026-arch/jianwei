@@ -8,7 +8,7 @@
     "quality_profile": "showcase",
     "repository": {
       "url": "https://github.com/stelladu2026-arch/jianwei.git",
-      "revision": "572a4152babb48ef5fe14c0ef12dffa334cdd78a",
+      "revision": "330083efd0e582f7be56d9c29641d3a694b8ab7e",
       "link_mode": "web"
     }
   },
@@ -112,8 +112,8 @@
       "sources": [
         {
           "path": "source/lib/research/qwen-model.ts",
-          "line": 142,
-          "end_line": 180
+          "line": 143,
+          "end_line": 194
         },
         {
           "path": "source/lib/research/provider-config.ts",
