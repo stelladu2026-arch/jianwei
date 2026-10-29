@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "fingerprint": "5bd35e46080bff4a97fac2c27e578bebf216a2699dbf0f21a253123bfdc846ec",
+  "fingerprint": "3beaa040a59985be520339a2cf3a14e7656d8d6109296dc97a72eec399fb659e",
   "typescript": "5.9.3",
   "scope": [
     "source/app",
@@ -47,7 +47,7 @@
     "source/components/research-overview-pulse.tsx": "38f8a624cc054f26c4a906da1cb318ef59b5bb3a5256328eb2ffee51c88faacd",
     "source/components/research-showcase.tsx": "ad6ff8bd39bf93f2805a2872fef5123e1634802f566745dfdbcfb0a6778838cf",
     "source/components/research-stage-outcome.tsx": "0a629ffdcf748b9c96878d2f66ef871e0a25a8f2f1ac17469f55b9ee9153c5d0",
-    "source/components/research-workflow.tsx": "f990bd8c9458c36b27f2f4c8ca4d7ae0de45bf0626b51544c4eae222f3ec5d18",
+    "source/components/research-workflow.tsx": "bcfec5de55d2117dea939e6bab9527149fce5cf1a20dc6c4c137a431c0ad9a62",
     "source/components/scope-confirmation-actions.tsx": "a5d84f3d3f8e004863a667f941b5e937d5a1b76b7bd99d3e5270ae76a8c3fc3f",
     "source/components/ui/accordion.tsx": "a4f153089ba886dfcf73fac26b5c01ca933fa12fbe88df6fb723912bfffdfbb0",
     "source/components/ui/alert-dialog.tsx": "9a8d950f2b9b4352d5ebb762fb44d5c28c2d353aa29712071973656a8736e311",
