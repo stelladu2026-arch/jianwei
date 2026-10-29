@@ -12,6 +12,7 @@
 | --- | --- |
 | 先看一次实际研究产生了什么 | [Dify 引用自检研究案例](docs/open-source/CASE_DIFY_CITATIONS.md) |
 | 查看随代码更新的研究逻辑图 | [逻辑文档入口](docs/logic/README.md) |
+| 查看 Archify 交互架构图 | [Archify 架构图](docs/logic/archify/README.md) |
 | 不运行程序，了解完整交互 | [免密钥演示阅读版](docs/open-source/DEMO_WALKTHROUGH.md) |
 | 安装并进行离线检查 | [上手与配置说明](docs/open-source/QUICKSTART.md) |
 | 查看对外发布还缺什么 | [发布准备记录](docs/open-source/RELEASE_READINESS.md) |

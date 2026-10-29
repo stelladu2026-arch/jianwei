@@ -1,0 +1,320 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "见微 · 产品机会研究架构",
+    "locale": "zh-CN",
+    "output": ".archify/architecture-jianwei-20261029-170145/jianwei-architecture.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/stelladu2026-arch/jianwei.git",
+      "revision": "e9f2feed36e546ece4a762dcec2a947b566d0ceb",
+      "link_mode": "web"
+    }
+  },
+  "components": [
+    {
+      "id": "desk",
+      "type": "frontend",
+      "label": "研究工作台",
+      "sublabel": "范围、证据与阶段操作",
+      "pos": [
+        40,
+        40
+      ],
+      "size": [
+        170,
+        78
+      ],
+      "sources": [
+        {
+          "path": "source/components/research-workflow.tsx",
+          "line": 49,
+          "end_line": 54
+        }
+      ]
+    },
+    {
+      "id": "control",
+      "type": "backend",
+      "label": "工作流控制器",
+      "sublabel": "版本、预算与状态推进",
+      "pos": [
+        340,
+        40
+      ],
+      "size": [
+        170,
+        78
+      ],
+      "sources": [
+        {
+          "path": "source/app/api/projects/[id]/workflow/route.ts",
+          "line": 63,
+          "end_line": 90
+        },
+        {
+          "path": "source/app/api/projects/[id]/workflow/route.ts",
+          "line": 105,
+          "end_line": 140
+        },
+        {
+          "path": "source/app/api/projects/[id]/workflow/route.ts",
+          "line": 142,
+          "end_line": 146
+        }
+      ]
+    },
+    {
+      "id": "harness",
+      "type": "backend",
+      "label": "研究执行保障",
+      "sublabel": "模型与工具循环 · 恢复",
+      "pos": [
+        680,
+        40
+      ],
+      "size": [
+        170,
+        78
+      ],
+      "sources": [
+        {
+          "path": "source/lib/research/harness/runner.ts",
+          "line": 55,
+          "end_line": 89
+        },
+        {
+          "path": "source/lib/research/harness/runner.ts",
+          "line": 101,
+          "end_line": 144
+        },
+        {
+          "path": "source/lib/research/harness/storage.ts",
+          "line": 49,
+          "end_line": 63
+        }
+      ]
+    },
+    {
+      "id": "model",
+      "type": "external",
+      "label": "Qwen 模型服务",
+      "sublabel": "经服务端模型适配器",
+      "pos": [
+        1020,
+        40
+      ],
+      "size": [
+        170,
+        78
+      ],
+      "sources": [
+        {
+          "path": "source/lib/research/qwen-model.ts",
+          "line": 141,
+          "end_line": 176
+        },
+        {
+          "path": "source/lib/research/provider-config.ts",
+          "line": 1,
+          "end_line": 5
+        }
+      ]
+    },
+    {
+      "id": "draft",
+      "type": "backend",
+      "label": "校验与草稿",
+      "sublabel": "控制器内校验和保存",
+      "pos": [
+        340,
+        300
+      ],
+      "size": [
+        170,
+        78
+      ],
+      "sources": [
+        {
+          "path": "source/app/api/projects/[id]/workflow/route.ts",
+          "line": 129,
+          "end_line": 140
+        },
+        {
+          "path": "source/app/api/projects/[id]/workflow/route.ts",
+          "line": 215,
+          "end_line": 224
+        }
+      ]
+    },
+    {
+      "id": "storage",
+      "type": "database",
+      "label": "Turso 数据库",
+      "sublabel": "项目、检查点与操作回执",
+      "pos": [
+        680,
+        300
+      ],
+      "size": [
+        170,
+        78
+      ],
+      "sources": [
+        {
+          "path": "source/lib/research/store.ts",
+          "line": 18,
+          "end_line": 20
+        },
+        {
+          "path": "source/lib/research/harness/storage.ts",
+          "line": 17,
+          "end_line": 37
+        },
+        {
+          "path": "source/lib/deployment/turso-database.ts",
+          "line": 4,
+          "end_line": 20
+        }
+      ]
+    },
+    {
+      "id": "tools",
+      "type": "backend",
+      "label": "证据工具集",
+      "sublabel": "白名单与共享请求预算",
+      "pos": [
+        1020,
+        300
+      ],
+      "size": [
+        170,
+        78
+      ],
+      "sources": [
+        {
+          "path": "source/lib/research/agent-loop.ts",
+          "line": 69,
+          "end_line": 100
+        },
+        {
+          "path": "source/lib/research/configured-sources.ts",
+          "line": 11,
+          "end_line": 16
+        }
+      ]
+    },
+    {
+      "id": "sources",
+      "type": "external",
+      "label": "公开资料渠道",
+      "sublabel": "社区、文档及可选搜索",
+      "pos": [
+        1020,
+        560
+      ],
+      "size": [
+        170,
+        78
+      ],
+      "sources": [
+        {
+          "path": "source/lib/research/collection.ts",
+          "line": 111,
+          "end_line": 144
+        },
+        {
+          "path": "source/lib/research/configured-sources.ts",
+          "line": 6,
+          "end_line": 16
+        }
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "desk-control",
+      "from": "desk",
+      "to": "control",
+      "label": "阶段请求",
+      "variant": "emphasis"
+    },
+    {
+      "id": "control-harness",
+      "from": "control",
+      "to": "harness",
+      "label": "新研究执行",
+      "variant": "emphasis"
+    },
+    {
+      "id": "harness-model",
+      "from": "harness",
+      "to": "model",
+      "label": "模型调用"
+    },
+    {
+      "id": "harness-tools",
+      "from": "harness",
+      "to": "tools",
+      "label": "受限工具调用"
+    },
+    {
+      "id": "tools-sources",
+      "from": "tools",
+      "to": "sources",
+      "label": "有界采集"
+    },
+    {
+      "id": "control-draft",
+      "from": "control",
+      "to": "draft",
+      "label": "结果通过检查"
+    },
+    {
+      "id": "draft-storage",
+      "from": "draft",
+      "to": "storage",
+      "label": "保存草稿"
+    },
+    {
+      "id": "control-storage",
+      "from": "control",
+      "to": "storage",
+      "label": "版本化读写"
+    },
+    {
+      "id": "harness-storage",
+      "from": "harness",
+      "to": "storage",
+      "label": "检查点与回执"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "先读主路径",
+      "items": [
+        "确认范围 → 规划与取证 → 机会和反证 → 引用检查 → 待人工确认的草稿。",
+        "图中展示新研究的 Harness 路径；历史执行器仍保留。"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "执行边界",
+      "items": [
+        "模型与来源请求在调用前预留预算；暂停、取消和输入版本变更优先。",
+        "复用已确认的操作回执；结果不明时禁止自动重发。后台推进采用有界接力。"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "如何理解图上的证据",
+      "items": [
+        "节点可查看固定代码版本的来源；箭头表示源码支持的责任关系，未绘制每个返回响应。",
+        "语义与付费仍需人工核查；图不是市场或真实全链路验收报告。",
+        "Turso 对应 Node 部署；原 Cloudflare / D1 兼容路径未在此展开。"
+      ]
+    }
+  ]
+}

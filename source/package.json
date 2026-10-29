@@ -6,6 +6,7 @@
     "node": ">=22.13.0"
   },
   "scripts": {
+    "docs:archify": "node scripts/render-archify.mjs",
     "docs:logic": "node scripts/sync-logic-docs.mjs",
     "docs:logic:check": "node scripts/sync-logic-docs.mjs --check",
     "test:logic-docs": "node tests/logic-docs-smoke.mjs",

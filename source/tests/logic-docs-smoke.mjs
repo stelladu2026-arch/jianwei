@@ -62,5 +62,17 @@ try{
   test('removing manual review cannot silently approve a business diagram',()=>{
     const p=path.join(root,'docs/logic/review.json');fs.unlinkSync(p);assert(buildArtifacts(root).pending.length>0);
   });
+  test('Archify definitions and newly referenced source files require review',()=>{
+    const dir=path.join(root,'docs/logic/archify');fs.mkdirSync(dir,{recursive:true});
+    const p=path.join(dir,'candidate.json'),ledger=path.join(root,'docs/logic/review.json');
+    fs.writeFileSync(p,JSON.stringify({components:[{id:'fixture-provider',sources:[{path:'source/lib/research/qwen-model.ts',line:1}]}]}));
+    let r=buildArtifacts(root);assert(r.pending.includes('Archify 架构定义待复核'));
+    assert(r.expectedReview['source/lib/research/qwen-model.ts']);
+    fs.writeFileSync(ledger,JSON.stringify({schema:1,reviewer:'fixture',summary:'Fixture approval only',sources:r.expectedReview,archify_candidate_sha256:r.expectedArchifyHash}));
+    assert.equal(buildArtifacts(root).pending.length,0);
+    const undo=rewrite('source/lib/research/qwen-model.ts',s=>s+'\n// fixture source drift\n');
+    assert(buildArtifacts(root).pending.includes('source/lib/research/qwen-model.ts'));undo();
+    fs.appendFileSync(p,'\n');assert(buildArtifacts(root).pending.includes('Archify 架构定义待复核'));
+  });
   console.log(`${passed} logic-documentation checks passed. No model, database or source-network requests.`);
 }finally{fs.rmSync(root,{recursive:true,force:true});}

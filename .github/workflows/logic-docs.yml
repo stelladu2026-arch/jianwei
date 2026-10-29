@@ -9,6 +9,7 @@ on:
       - 'source/db/**'
       - 'source/package.json'
       - 'source/scripts/sync-logic-docs.mjs'
+      - 'source/scripts/render-archify.mjs'
       - 'source/tests/logic-docs-smoke.mjs'
       - 'docs/logic/**'
       - '.github/workflows/logic-docs.yml'
@@ -21,6 +22,7 @@ on:
       - 'source/db/**'
       - 'source/package.json'
       - 'source/scripts/sync-logic-docs.mjs'
+      - 'source/scripts/render-archify.mjs'
       - 'source/tests/logic-docs-smoke.mjs'
       - 'docs/logic/**'
       - '.github/workflows/logic-docs.yml'
@@ -95,3 +97,42 @@ jobs:
       - name: Require reviewed business meaning
         working-directory: source
         run: node scripts/sync-logic-docs.mjs --check
+
+  archify:
+    if: github.event_name != 'pull_request' && !startsWith(github.event.head_commit.message, 'docs(logic):')
+    needs: update-on-push
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install documentation parser only
+        run: |
+          version=$(node -p 'JSON.parse(require("node:fs").readFileSync("source/package.json", "utf8")).devDependencies.typescript')
+          npm install --prefix "$RUNNER_TEMP/jianwei-logic-docs" "typescript@$version" --ignore-scripts --no-audit --no-fund
+          echo "JIANWEI_DOCS_TYPESCRIPT_ROOT=$RUNNER_TEMP/jianwei-logic-docs/node_modules" >> "$GITHUB_ENV"
+      - name: Obtain pinned official Archify
+        run: |
+          git clone --filter=blob:none --sparse https://github.com/tt-a1i/archify.git "$RUNNER_TEMP/jianwei-archify-tool"
+          git -C "$RUNNER_TEMP/jianwei-archify-tool" fetch --depth 1 origin d6059331abbddb49bca380ff46dca8ce33158b04
+          git -C "$RUNNER_TEMP/jianwei-archify-tool" checkout --detach d6059331abbddb49bca380ff46dca8ce33158b04
+          git -C "$RUNNER_TEMP/jianwei-archify-tool" sparse-checkout set archify
+          echo "JIANWEI_ARCHIFY_CLI=$RUNNER_TEMP/jianwei-archify-tool/archify/bin/archify.mjs" >> "$GITHUB_ENV"
+      - name: Generate and check Archify artifact
+        working-directory: source
+        run: |
+          node scripts/sync-logic-docs.mjs
+          node scripts/render-archify.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: jianwei-archify
+          path: .archify/
+          include-hidden-files: true
+          retention-days: 30

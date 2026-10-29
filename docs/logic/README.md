@@ -4,6 +4,7 @@
 
 | 想看什么 | 文档 | 更新方式 |
 | --- | --- | --- |
+| 查看 Archify 交互架构图 | [Archify 查看与更新说明](archify/README.md) | 源码核对后由官方 Archify 渲染，CI 提供 HTML 产物 |
 | 看懂研究与恢复的业务含义 | [业务流程](BUSINESS_FLOW.md) | 人工 / 编码助手复核；核心文件改变后标为待复核 |
 | 当前阶段、模式与具体转移 | [研究流程](WORKFLOW.generated.md) | TypeScript 语法树自动提取 |
 | 单 / 多角色依赖、工具、恢复拒绝条件 | [执行与恢复](EXECUTION.generated.md) | TypeScript 语法树自动提取 |
@@ -47,4 +48,4 @@ CI 使用独立安装的项目版本 TypeScript，不安装整个应用，不注
 
 [GitDiagram](https://github.com/ahmedkhaleel2004/gitdiagram) 提供仓库可视化和技能 / MCP 入口；[Google Code Wiki](https://developers.googleblog.com/en/introducing-code-wiki-accelerating-your-code-understanding/) 提供自动文档与图。它们适合辅助理解仓库。本项目把可确定的事实生成器和提交检查保留在源码内，避免外部索引仍指向旧默认分支时，把旧图当作最新逻辑。
 
-当前没有安装额外的个人技能，也没有把业务源码或凭据发送到新的图表服务。后续编码助手遵循根目录 `AGENTS.md` 的同步规则。
+本项目已按官方 Archify 技能生成交互架构图，并将引用源码与图定义纳入更新检查。Archify 在本地 / CI 中运行，不把业务凭据发送到新的图表服务；后续编码助手遵循根目录 `AGENTS.md` 的同步规则。
