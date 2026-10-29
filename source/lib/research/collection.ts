@@ -1,6 +1,6 @@
 import {researchSourceGoal,sourcePurpose,sourcePriority,type ResearchSourceGoal} from './source-allocation';
 import {canReadDiscovered,readDiscoveredOriginal} from './additional-channels';
-import {isAnalysisBody} from './evidence-eligibility';
+import {isResearchEvidence,isAnalysisBody} from './evidence-eligibility';
 import {sourceProfile,focusedSourceQuery,collectIssueComments,collectDifyOfficial,collectProductOfficial} from './research-channels';
 import type {Evidence} from './domain';
 import {collectNewsSearch,enrichNewsArticle,NEWS_SOURCE} from './news-search';
@@ -163,6 +163,6 @@ export async function collectPublic(query:string,since:number|null,cap=SOURCE_RE
   if(!options.webSearch)out.sourceDetails.push({source:'网页搜索发现',state:'skipped',requests:0,items:0,full:0,excerpts:0,code:'SEARCH_NOT_CONFIGURED'});
   const omitted=profile!=='general'?STATISTICS_SOURCE:chinese?'Hacker News':STATISTICS_SOURCE;
   out.sourceDetails.push({source:omitted,state:'skipped',requests:0,items:0,full:0,excerpts:0,code:profile!=='general'?'SOURCE_TOPIC_PRIORITY':'SOURCE_LANGUAGE_PRIORITY'});
-  out.usableIds=out.usableIds.filter(id=>out.evidence.some(e=>e.id===id&&isAnalysisBody(e)));
+  out.usableIds=out.usableIds.filter(id=>out.evidence.some(e=>e.id===id&&isResearchEvidence(e,query+' '+(options.topic||''))));
   out.limited||=allocations.length<7;return out;
 }

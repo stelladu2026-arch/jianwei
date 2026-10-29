@@ -5,7 +5,7 @@ import {sourceProfile,focusedSourceQuery,collectWebDiscovery} from './research-c
 import {collectBocha,collectDiscussions,collectCommunity,COMMUNITY_HOSTS,type CommunityKey} from './additional-channels';
 function settings(){return {bocha:env.BOCHA_SEARCH_ENABLED==='true'&&!!env.BOCHA_API_KEY?.trim(),tavily:env.WEB_SEARCH_ENABLED==='true'&&!!env.TAVILY_API_KEY?.trim(),discussions:env.GITHUB_DISCUSSIONS_ENABLED==='true'&&!!env.GITHUB_DISCUSSIONS_TOKEN?.trim(),communities:(env.RESEARCH_COMMUNITIES||'').split(',').map(x=>x.trim()).filter((x):x is CommunityKey=>Object.hasOwn(COMMUNITY_HOSTS,x)).filter((x,i,a)=>a.indexOf(x)===i).slice(0,1)};}
 export function publicSourceStatus(){const s=settings();return {webSearchReady:s.tavily||s.bocha,bochaReady:s.bocha,tavilyReady:s.tavily,discussionsReady:s.discussions,communities:s.communities};}
-export function sourcePolicy(){return 'topic-sources/4:'+JSON.stringify(publicSourceStatus());}
+export function sourcePolicy(){return 'topic-sources/5:'+JSON.stringify(publicSourceStatus());}
 export function matchingCommunities(query:string,topic:string,keys:CommunityKey[]){const text=query+' '+topic;return keys.filter(key=>key==='n8n'?/\bn8n\b/i.test(text):key==='cloudflare'?/\bcloudflare\b|workers|cloudflare pages/i.test(text):/\bdiscourse\b/i.test(text));}
 export function collectConfiguredPublic(query:string,since:number|null,cap=SOURCE_REQUEST_CAP,topic=''){
  const s=settings(),channels=[];

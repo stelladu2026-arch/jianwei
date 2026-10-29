@@ -1,4 +1,4 @@
-import {isAnalysisBody} from './evidence-eligibility';
+import {isResearchEvidence,isAnalysisBody} from './evidence-eligibility';
 import {QWEN_MODEL} from './provider-config';
 import {checkAssessmentLabel} from './review-contract';
 import {z} from 'zod';
@@ -27,9 +27,9 @@ export async function initializeFour(p:Project,w:ResearchWorkflow){
   let input:ModelTask;
   if(baseTask?.inputSnapshot){
     input=structuredClone(baseTask.inputSnapshot);
-    if((input.evidence as Evidence[]).some(e=>!p.evidence.some(current=>current.id===e.id&&!current.excluded&&current.kind!=='synthetic'&&current.text.startsWith(e.text))))throw new Error('BASELINE_INPUT_CHANGED');
+    if((input.evidence as Evidence[]).some(e=>!p.evidence.some(current=>current.id===e.id&&!current.excluded&&isResearchEvidence(current,p.title+' '+p.audience)&&current.text.startsWith(e.text))))throw new Error('BASELINE_INPUT_CHANGED');
   }else{
-    const evidence=p.evidence.filter(e=>isAnalysisBody(e));
+    const evidence=p.evidence.filter(e=>isResearchEvidence(e,p.title+' '+p.audience));
     if(!evidence.length)throw new Error('请先采集或导入至少一条真实原文。');
     const temporary:Project={...p,run:undefined,evidence};const r=makeRun(temporary,'single','normal',1);temporary.run=r;input=buildTask(temporary,r,reserve(temporary,crypto.randomUUID()).task,crypto.randomUUID());
   }
