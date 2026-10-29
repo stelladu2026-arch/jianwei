@@ -210,7 +210,7 @@ function interrupt(w:ResearchWorkflow){
   const r=w.analysisRun;if(r?.lease){const task=r.tasks.find(t=>t.id===r.lease?.taskId);if(task)failTask(r,task,record.error,r.lease.callId,record.elapsedMs);}
 }
 export function workflowReport(p:Project,w:ResearchWorkflow){
-  const selected=p.evidence.filter(e=>(w.usableIds.includes(e.id)||w.mode!=='four'&&e.kind==='imported')&&!e.excluded);
+  const selected=p.evidence.filter(e=>(w.usableIds.includes(e.id)||w.mode!=='four'&&e.kind==='imported')&&isAnalysisBody(e));
   const coverage=sourceCoverage(w.frozen?.evidence||selected);
   const sources=w.records.filter(r=>r.collection).map(r=>{const c=r.collection!;return `- ${w.sourceProfile==='v2ex'?'节点订阅采样':r.stage==='supplement'?'补搜':'初搜'}「${c.query}」${c.routing&&c.routing.effectiveQuery!==c.query?'（社区检索词：'+c.routing.effectiveQuery+'；程序映射，非语义验证）':''}：新增 ${c.added} 条资料；重复 ${c.duplicate} 条；无可分析正文 ${c.titleOnly} 条；请求失败 ${c.failed} 次。`}).join('\n');
   const usage=workflowModelUsage(w);
