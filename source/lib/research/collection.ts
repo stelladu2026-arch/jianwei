@@ -99,7 +99,7 @@ export async function collectZhWiki(query:string,since:number|null,cap=WIKI_MAX_
   }
   return out;
 }
-export async function collectPublic(query:string,since:number|null,cap=SOURCE_REQUEST_CAP,options:{topic?:string;webSearch?:(query:string,since:number|null,cap:number)=>Promise<Collection>}={}):Promise<Collection>{
+export async function collectPublic(query:string,since:number|null,cap=SOURCE_REQUEST_CAP,options:{topic?:string;webSearch?:(query:string,since:number|null,cap:number)=>Promise<Collection>;channels?:{name:string;run:(query:string,since:number|null,cap:number)=>Promise<Collection>;cap:number}[]}={}):Promise<Collection>{
   const limit=Math.max(0,Math.min(SOURCE_REQUEST_CAP,Math.floor(cap))),out=blank(query,since);out.sourceDetails=[];
   if(!limit){out.limited=true;return out;}
   // Reserve fixed allocations first. Results settle independently, with no retries.
@@ -107,6 +107,7 @@ export async function collectPublic(query:string,since:number|null,cap=SOURCE_RE
   const add=(amount:number,name:string,run:(cap:number)=>Promise<Collection>)=>{const room=Math.min(amount,remaining);if(room<1)return;remaining-=room;allocations.push({cap:room,name,run:()=>run(room)});};
   const chinese=/[\p{Script=Han}]/u.test(query);
   const profile=sourceProfile(query,options.topic),focused=focusedSourceQuery(query,profile);out.routing={profile,effectiveQuery:focused};
+  for(const channel of options.channels||[])add(channel.cap,channel.name,n=>channel.run(query,since,n));
   if(profile!=='general'){
    add(3,'GitHub Issues 与人工评论',async n=>{const root=await collectGithubIssues(focused,since,1),comments=n>1?await collectIssueComments(root.evidence,focused,since,n-1):null;if(comments){root.evidence.push(...comments.evidence);root.usableIds.push(...comments.usableIds);root.requests+=comments.requests;root.failed+=comments.failed;root.sourceDetails.push(...(comments.sourceDetails||[]));}return root;});
    if(profile==='dify')add(2,'GitHub 文档 · Dify 官方项目',n=>collectDifyOfficial(focused,since,n));

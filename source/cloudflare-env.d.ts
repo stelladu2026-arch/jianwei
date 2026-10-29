@@ -1,5 +1,10 @@
 declare namespace Cloudflare {
   interface Env {
+    BOCHA_API_KEY?: string;
+    BOCHA_SEARCH_ENABLED?: string;
+    GITHUB_DISCUSSIONS_TOKEN?: string;
+    GITHUB_DISCUSSIONS_ENABLED?: string;
+    RESEARCH_COMMUNITIES?: string;
     TAVILY_API_KEY?: string;
     WEB_SEARCH_ENABLED?: string;
     SEMANTIC_RETRIEVAL_ENABLED?: string;

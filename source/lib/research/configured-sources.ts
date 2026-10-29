@@ -1,10 +1,15 @@
-// Server boundary: credentials are captured by the collector closure, never snapshots.
+// Server-only credentials never enter snapshots or status responses.
 import {env} from '@/lib/deployment/runtime-env';
 import {collectPublic,SOURCE_REQUEST_CAP} from './collection';
-import {collectWebDiscovery} from './research-channels';
-export function publicSourceStatus(){return {webSearchReady:env.WEB_SEARCH_ENABLED==='true'&&typeof env.TAVILY_API_KEY==='string'&&!!env.TAVILY_API_KEY.trim()};}
-export function sourcePolicy(){return 'topic-sources/1:web'+Number(publicSourceStatus().webSearchReady);}
+import {sourceProfile,focusedSourceQuery,collectWebDiscovery} from './research-channels';
+import {collectBocha,collectDiscussions,collectCommunity,COMMUNITY_HOSTS,type CommunityKey} from './additional-channels';
+function settings(){return {bocha:env.BOCHA_SEARCH_ENABLED==='true'&&!!env.BOCHA_API_KEY?.trim(),tavily:env.WEB_SEARCH_ENABLED==='true'&&!!env.TAVILY_API_KEY?.trim(),discussions:env.GITHUB_DISCUSSIONS_ENABLED==='true'&&!!env.GITHUB_DISCUSSIONS_TOKEN?.trim(),communities:(env.RESEARCH_COMMUNITIES||'').split(',').map(x=>x.trim()).filter((x):x is CommunityKey=>Object.hasOwn(COMMUNITY_HOSTS,x)).filter((x,i,a)=>a.indexOf(x)===i).slice(0,1)};}
+export function publicSourceStatus(){const s=settings();return {webSearchReady:s.tavily||s.bocha,bochaReady:s.bocha,tavilyReady:s.tavily,discussionsReady:s.discussions,communities:s.communities};}
+export function sourcePolicy(){return 'topic-sources/2:'+JSON.stringify(publicSourceStatus());}
 export function collectConfiguredPublic(query:string,since:number|null,cap=SOURCE_REQUEST_CAP,topic=''){
- const ready=publicSourceStatus().webSearchReady,key=ready?env.TAVILY_API_KEY!.trim():'';
- return collectPublic(query,since,cap,{topic,...(ready?{webSearch:(q:string,s:number|null,n:number)=>collectWebDiscovery(q,s,n,key)}:{})});
+ const s=settings(),channels=[];
+ if(s.bocha)channels.push({name:'博查网页搜索',cap:1,run:(q:string,t:number|null,n:number)=>collectBocha(q,t,n,env.BOCHA_API_KEY!.trim())});
+ if(s.discussions)channels.push({name:'GitHub Discussions',cap:1,run:(q:string,t:number|null,n:number)=>collectDiscussions(focusedSourceQuery(q,sourceProfile(q,topic)),t,n,env.GITHUB_DISCUSSIONS_TOKEN!.trim())});
+ for(const key of s.communities)channels.push({name:'产品社区 · '+key,cap:2,run:(q:string,t:number|null,n:number)=>collectCommunity(q,t,n,key)});
+ return collectPublic(query,since,cap,{topic,channels,...(s.tavily?{webSearch:(q:string,t:number|null,n:number)=>collectWebDiscovery(q,t,n,env.TAVILY_API_KEY!.trim())}:{})});
 }
