@@ -46,7 +46,7 @@ export function makeRun(p:Project,mode:Run['mode'],scenario:Scenario='normal',li
 export function currentRun(p:Project){if(!p.run)throw new Error('尚未创建执行任务。');const r=p.run;if(r.revision!==p.revision||r.evidenceVersion!==(p.evidenceVersion||0)||r.status==='stale')throw new Error('执行依据已变更，请取消旧执行并重新开始。');return r;}
 export function nextTask(r:Run){return r.tasks.find(t=>t.status==='pending'&&t.deps.every(id=>r.tasks.find(x=>x.id===id)?.status==='done'));}
 function selectedEvidence(p:Project):Evidence[]{
-  const active=p.evidence.filter(e=>!e.excluded&&(e.kind==='synthetic'||isResearchEvidence(e,p.title+' '+p.audience))),counter=active.filter(e=>e.stance==='counter'),ordered=[...counter.slice(0,3),...active.filter(e=>e.stance!=='counter'),...counter.slice(3)],seen=new Set<string>();
+  const active=p.evidence.filter(e=>!e.excluded&&(e.kind==='synthetic'||isResearchEvidence(e,p))),counter=active.filter(e=>e.stance==='counter'),ordered=[...counter.slice(0,3),...active.filter(e=>e.stance!=='counter'),...counter.slice(3)],seen=new Set<string>();
   const unique=ordered.filter(e=>{const key=e.thread||e.id;if(seen.has(key))return false;seen.add(key);return true});
   return [...unique,...ordered.filter(e=>!unique.includes(e))].slice(0,12);
 }

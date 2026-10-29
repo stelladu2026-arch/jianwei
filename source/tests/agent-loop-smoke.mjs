@@ -38,9 +38,9 @@ try{
     assert.ok(result.spend.collections[0].usableIds.includes('HN100'));
     assert.equal(result.spend.extraModelCalls,0);
   });
-  await check('payment, bill, interview and geographic gaps do not search',async()=>{
+  await check('public tools refuse explicit attempts to verify private facts',async()=>{
     fetches=[];
-    const queries=['payment invoices','unpaid bills','customer interview','geographic representativeness','付款意愿','真实账单','用户访谈','地域代表性'];
+    const queries=['verify actual payment','confirm real invoice','证明实际付款','核实真实账单','验证地域代表性'];
     for(const query of queries){
       const result=await runSingleRoleAgent({task,evidence:[],since:null,allowFollowUp:false,budget:budget(),invoke:async()=>({final:finalBody,toolCalls:[tool('hacker_news_search',query),tool('zh_wikipedia_extract',query)]})});
       assert.ok(result.spend.trace.every(row=>row.status==='refused'&&row.reason==='UNSEARCHABLE'));

@@ -3,7 +3,7 @@ import {rankResearchEvidence} from './research-relevance';
 import {readerWorkflowReport} from './reader-report';
 import {workflowModelUsage} from './workflow-usage';
 import {evidenceQualityReport} from './evidence-quality';
-import {QWEN_MODEL} from './provider-config';
+import {QWEN_MODEL,QWEN_MAX_OUTPUT_TOKENS} from './provider-config';
 import {EXPANDED_SOURCE_NAMES,EXPANDED_SOURCE_SCOPE} from './source-catalog';
 import {collectionStartBlocker} from './workflow-start';
 import type {Project,Evidence} from './domain';
@@ -46,9 +46,9 @@ export function makeWorkflow(p:Project,allowSupplement:boolean,mode:'single'|'fo
   const since=sinceForPeriod(p.period);
   return {...(useExistingEvidence?{useExistingEvidence:true as const}:{}),...(sourceProfile==='v2ex'?{sourceProfile,sourceNode}:{}),mode,harnessVersion:'research-harness/1',id:crypto.randomUUID(),version:WORKFLOW_VERSION,revision:p.revision,evidenceVersion:p.evidenceVersion||0,created:new Date().toISOString(),status:'ready',stage:useExistingEvidence?'analyze':mode==='four'?'needs':sourceProfile==='v2ex'?'collect':'plan',allowSupplement:mode==='single'&&allowSupplement,queries:sourceProfile==='v2ex'?[{query:sourceNode,purpose:'initial',reason:'操作者选择的公开节点订阅，非关键词搜索'}]:[],collectIndex:0,usableIds:useExistingEvidence?existingAnalysisSources(p).map(e=>e.id):[],freshIds:[],limitations:useExistingEvidence?['本轮只分析当前已保存原文，不重新规划、采集或调用工具；来源及人群覆盖仍需核查。','正常分析使用 1 次模型请求；新轮最多 2 次，仅在失败后由用户显式准备重试；不自动重试、不改变旧轮用量。']:sourceProfile==='v2ex'?['公开来源为 V2EX 中文技术社区的节点订阅，不代表全体国内用户或目标客户。',`本轮仅采样「${V2EX_NODES[sourceNode]}」订阅，最多 6 篇有正文的主题；不按关键词搜全站，不读评论、不翻页、不访问外链。`,'未采样的历史讨论、反例和付费事实仍未知。先核查主题与研究范围是否相关；无相关线索不等于没有需求。','单角色只分析采样及已有导入原文，最多 2 次模型请求，不追加工具或补搜，不自动重试。']:mode==='four'?['本轮只复核冻结的已有资料；来源、人群、地域与时间覆盖需结合原始采集记录核查。']:['公开来源包括中国新闻网、国家统计局、少数派、博客园、OSCHINA、GitHub Issues、Hacker News 与中文维基百科；新闻、技术社区与资讯不能代表目标地域或全部国内用户。','每个检索词最多 10 次来源请求，多渠道共享上限。按关键词语言分配来源，中文优先国家统计局，英文保留 Hacker News 帖子和评论；未安排的渠道单独标记。中国新闻网按关键词搜索公开报道；中文订阅只筛选近期条目。在剩余请求内取得中国新闻网、少数派或博客园正文，未取得全文时标记摘要，不访问任意外链。','单角色模型步骤由受限研究执行器运行工具循环。模型可请求多渠道公开检索、Hacker News 阅读、中文维基百科摘录及本项目资料检索；沿用原有次数上限，不自动追加请求。',...(since===null&&!/不限|全部|所有时间/.test(p.period)?['无法把当前时间描述转换为日期过滤，原始日期已保留，时间匹配需人工核查。']:[])],records:[],budget:{modelLimit:useExistingEvidence||sourceProfile==='v2ex'?2:mode==='four'||allowSupplement?8:4,modelAttempts:0,stageLimit:2,stageAttempts:{},sourceLimit:30,sourceAttempts:0,searchLimit:3,searches:0},error:'',needsRetry:false,report:'',since};
 }
-export function existingAnalysisSources(p:Project){return p.evidence.filter(e=>isResearchEvidence(e,p.title+' '+p.audience));}
+export function existingAnalysisSources(p:Project){return p.evidence.filter(e=>isResearchEvidence(e,p));}
 export function existingAnalysisBlockReason(p:Project){
- if(p.workflow&&(p.workflow.mode==='four'||!['failed','completed','partial','stale'].includes(p.workflow.status)||p.workflow.lease))return '仅支持从已停止或已保存草稿、且没有执行中请求的单角色研究重新分析。';
+ if(p.workflow&&(p.workflow.mode==='four'||!['failed','completed','partial','stale','cancelled'].includes(p.workflow.status)||p.workflow.lease))return '仅支持从已停止或已保存草稿、且没有执行中请求的单角色研究重新分析。';
  if(!p.confirmed||p.archived||p.mode!=='manual'||['paused','cancelled','completed'].includes(p.status))return '请先确认并恢复当前真实研究范围。';
  if(p.evidence.some(e=>e.kind==='synthetic')||!existingAnalysisSources(p).length)return '至少需要一条当前可用的真实正文；只有标题或被排除的资料不能用于分析。';
  if(p.run&&['ready','running','paused','failed'].includes(p.run.status))return '请先结束执行与评测中的任务。';
@@ -103,7 +103,7 @@ function balanceSources(items:Evidence[]){
 }
 function analysisEvidence(p:Project,w:ResearchWorkflow){
   const allowed=new Set([...w.usableIds,...p.evidence.filter(e=>e.kind==='imported').map(e=>e.id)]),fresh=new Set(w.freshIds);
-  const current=rankResearchEvidence(p.evidence.filter(e=>allowed.has(e.id)&&isResearchEvidence(e,p.title+' '+p.audience)),[p.title,p.audience,p.decision,...w.queries.map(q=>q.query)].join(' '));
+  const current=rankResearchEvidence(p.evidence.filter(e=>allowed.has(e.id)&&isResearchEvidence(e,p)),[p.title,p.audience,p.decision,...w.queries.map(q=>q.query)].join(' '));
   const cited=new Set(w.initialAnalysis?.tasks.find(t=>t.role==='coordinator')?.output?.data.proposal?.refs||[]);
   // Keep cited earlier items, new bodies and different threads before duplicate contexts.
   return [...current.filter(e=>cited.has(e.id)).slice(0,4),...balanceSources(current.filter(e=>fresh.has(e.id)&&!cited.has(e.id))),...balanceSources(current.filter(e=>!fresh.has(e.id)&&!cited.has(e.id)))].filter((e,i,all)=>all.findIndex(x=>x.id===e.id)===i);
@@ -128,7 +128,7 @@ export function collectionCloseout(p:Project,w=p.workflow){
  const reason=w.budget.searches>=w.budget.searchLimit?'search_limit':p.budget.searches>=6?'project_search_limit':w.budget.sourceAttempts+workflowSourceCap(w)>w.budget.sourceLimit?'source_limit':null;
  if(!reason)return null;
  const allowed=new Set(w.usableIds);
- const usable=p.evidence.filter(e=>isResearchEvidence(e,p.title+' '+p.audience)&&(allowed.has(e.id)||e.kind==='imported'));
+ const usable=p.evidence.filter(e=>isResearchEvidence(e,p)&&(allowed.has(e.id)||e.kind==='imported'));
  let next:'analyze'|'reanalyze'|'check'|'partial';
  if(w.stage==='supplement'){
    const accepted=w.analysisRun?.tasks.find(t=>t.role==='coordinator'&&t.status==='done'&&t.output&&t.inputSnapshot);
@@ -168,10 +168,16 @@ export function researchHasLease(p:Project){return !!(p.run?.lease||p.workflow?.
 export function unfinishedResearch(p:Project){return !!([p.workflow,p.run].some(r=>r&&['ready','running','paused'].includes(r.status))||p.workflow?.conclusionAudit&&['ready','running'].includes(p.workflow.conclusionAudit.status));}
 export function workflowRetryBlockReason(p:Project){
   const w=p.workflow;if(!w||w.status!=='failed')return '当前没有失败步骤。';
+  if(w.lease)return '当前仍有执行检查点，请先确认请求已结束。';
   if(w.mode==='four'&&w.budget.stageLimit!==2&&!['check','deliver'].includes(w.stage))return '四角色预算仅覆盖各角色一次，失败请求仍占用预算；本轮不能追加重试。';
   if(['plan','analyze','gap','reanalyze','needs','commercial','verifier','synthesis'].includes(w.stage)&&w.budget.modelAttempts>=w.budget.modelLimit)return `本轮模型调用预算已用完（请求次数 ${w.budget.modelAttempts} / ${w.budget.modelLimit}），不能在原轮追加重试；账户余额和免费额度需在百炼核查。`;
   if(stageBudgetBlock(w))return stageBudgetBlock(w);
-  if(w.budget.stageLimit===2&&['plan','analyze','gap','reanalyze','needs','commercial','verifier','synthesis'].includes(w.stage)&&!w.records.at(-1)?.preparation){const reason=modelRetryBlock(w.error);if(reason)return reason;}
+  if(w.budget.stageLimit===2&&['plan','analyze','gap','reanalyze','needs','commercial','verifier','synthesis'].includes(w.stage)&&!w.records.at(-1)?.preparation){
+    const record=w.records.at(-1),receipt=record?.agentModelReceipts?.at(-1)||record;
+    const confirmedTruncation=w.error==='MODEL_OUTPUT_TRUNCATED'&&record?.stage===w.stage&&record.error===w.error&&!!receipt?.requestId&&!!receipt.usage&&receipt.usage.output_tokens>0&&receipt.usage.output_tokens<QWEN_MAX_OUTPUT_TOKENS;
+    const reason=modelRetryBlock(w.error);
+    if(reason&&!confirmedTruncation)return w.error==='MODEL_OUTPUT_TRUNCATED'?'截断请求必须有已确认回执，且当前输出上限高于失败时用量，才能在剩余额度内手动重试。':reason;
+  }
   if(['collect','supplement'].includes(w.stage)&&(w.budget.sourceAttempts+workflowSourceCap(w)>w.budget.sourceLimit||w.budget.searches>=w.budget.searchLimit||p.budget.searches>=6))return '采集预算已用完，不能重试。';
   if(['check','deliver'].includes(w.stage)){const t=w.analysisRun?.tasks.find(t=>t.id===w.stage);if(!t||t.attempts>=2)return '该校验与保存步骤已达到重试上限。';}
   return '';
@@ -210,7 +216,7 @@ function interrupt(w:ResearchWorkflow){
   const r=w.analysisRun;if(r?.lease){const task=r.tasks.find(t=>t.id===r.lease?.taskId);if(task)failTask(r,task,record.error,r.lease.callId,record.elapsedMs);}
 }
 export function workflowReport(p:Project,w:ResearchWorkflow){
-  const selected=p.evidence.filter(e=>(w.usableIds.includes(e.id)||w.mode!=='four'&&e.kind==='imported')&&isResearchEvidence(e,p.title+' '+p.audience));
+  const selected=p.evidence.filter(e=>(w.usableIds.includes(e.id)||w.mode!=='four'&&e.kind==='imported')&&isResearchEvidence(e,p));
   const coverage=sourceCoverage(w.frozen?.evidence||selected);
   const sources=w.records.filter(r=>r.collection).map(r=>{const c=r.collection!;return `- ${w.sourceProfile==='v2ex'?'节点订阅采样':r.stage==='supplement'?'补搜':'初搜'}「${c.query}」${c.routing?.goal?'（渠道目标：'+({general:'通用发现',capability:'已有能力与配置',feedback:'实际使用反馈',background:'背景与统计'}[c.routing.goal])+'；程序规则分配）':''}${c.routing&&c.routing.effectiveQuery!==c.query?'（社区检索词：'+c.routing.effectiveQuery+'；程序映射，非语义验证）':''}：新增 ${c.added} 条资料；重复 ${c.duplicate} 条；无可分析正文 ${c.titleOnly} 条；请求失败 ${c.failed} 次。`}).join('\n');
   const usage=workflowModelUsage(w);
