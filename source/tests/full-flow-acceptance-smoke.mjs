@@ -26,7 +26,7 @@ function fixture(scenario='success'){
   return {status:200,data:{project:structuredClone(p)}};
  };return {call,models:()=>models,reads:()=>reads};
 }
-let checks=0;const buildRef='b'.repeat(40),now=Date.now();
+let checks=0;const buildRef='b'.repeat(40),now=Date.parse('2026-10-28T04:00:00Z');
 const db=database();assert.equal((await readFlowAcceptance(db)).state,'not_started');checks++;
 const claims=await Promise.all([claimFlowAcceptance(db,buildRef,now),claimFlowAcceptance(db,buildRef,now)]);assert.equal(claims.filter(c=>c.claimed).length,1);checks++;
 const success=fixture();const report=await executeFlowAcceptance({db,buildRef,call:success.call});assert.equal(report.state,'success');assert.equal(report.modelAttempts,2);assert.equal(success.models(),2);assert.equal(report.reportSaved,true);assert.equal(report.draftCount,1);assert.equal(report.pauseResumePreserved,true);assert.equal(report.duplicateStageDidNotCallModel,true);assert.ok(success.reads()>=3);checks++;

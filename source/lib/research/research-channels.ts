@@ -1,9 +1,17 @@
+import {businessScope} from './source-fit';
 import type {Evidence} from './domain';
 import type {Collection} from './collection';
 import {sourceResponse,sourceFailure,articleText} from './expanded-sources';
 import {previewImportLink} from './link-import';
-export function sourceProfile(query:string,topic=''){const text=query+' '+topic;return /\bdify\b/i.test(text)?'dify':/\bn8n\b|\bcloudflare\b|\bdiscourse\b|\brag\b|知识库|引用|citation|chatflow|开源|sdk|api\b/i.test(text)?'software':/实施|交接|客户成功|onboarding|handoff|customer success/i.test(text)?'business':'general';}
-export function focusedSourceQuery(query:string,profile:string){if(profile==='dify'){if(/引用|citation|attribution/i.test(query))return 'Dify citation';if(/知识库|knowledge|rag/i.test(query))return 'Dify knowledge';return 'Dify '+(query.match(/\b(?:workflow|chatflow|onboarding|metadata)\b/i)?.[0]||'issue');}if(profile==='business'&&/[\p{Script=Han}]/u.test(query)){if(/交接/.test(query))return 'customer handoff';if(/实施|上线/.test(query))return 'SaaS onboarding';if(/客户成功/.test(query))return 'customer success';}if(profile==='software'&&/[\p{Script=Han}]/u.test(query)){if(/引用/.test(query))return 'citation missing';if(/知识库/.test(query))return 'knowledge retrieval';}return query;}
+export function sourceProfile(query:string,topic=''){const text=query+' '+topic;if(!/\b(n8n|dify|cloudflare|discourse)\b/i.test(text)&&businessScope(topic||query))return 'receivables';return /\bdify\b/i.test(text)?'dify':/\bn8n\b|\bcloudflare\b|\bdiscourse\b|\brag\b|知识库|引用|citation|chatflow|开源|sdk|api\b/i.test(text)?'software':/实施|交接|客户成功|onboarding|handoff|customer success/i.test(text)?'business':'general';}
+export function focusedSourceQuery(query:string,profile:string,topic=''){
+ if(profile==='receivables'){
+  const actor=/自由职业|freelanc/i.test(topic||query)?'freelance':'agency';
+  if(new RegExp(actor,'i').test(query)&&/invoice|payment|billing|receivable/i.test(query))return query;
+  const actions=/[\p{Script=Han}]/u.test(query)?/逾期|催收/.test(query)?['overdue','invoice']:/开具|开票/.test(query)?['invoice','creation']:['invoice']:[...new Set(query.toLowerCase().match(/\b(?:invoices?|payment|billing|receivables?|overdue|late|creation|reminder|tracking|collection)\b/g)||['invoice'])].slice(0,2);
+  return [actor,...actions].join(' ');
+ }
+if(profile==='dify'){if(/引用|citation|attribution/i.test(query))return 'Dify citation';if(/知识库|knowledge|rag/i.test(query))return 'Dify knowledge';return 'Dify '+(query.match(/\b(?:workflow|chatflow|onboarding|metadata)\b/i)?.[0]||'issue');}if(profile==='business'&&/[\p{Script=Han}]/u.test(query)){if(/交接/.test(query))return 'customer handoff';if(/实施|上线/.test(query))return 'SaaS onboarding';if(/客户成功/.test(query))return 'customer success';}if(profile==='software'&&/[\p{Script=Han}]/u.test(query)){if(/引用/.test(query))return 'citation missing';if(/知识库/.test(query))return 'knowledge retrieval';}return query;}
 function blank(query:string,since:number|null):Collection{return {query,since,evidence:[],usableIds:[],requests:0,failed:0,skipped:0,limited:false,sourceDetails:[]};}
 function finish(out:Collection,source:string,code?:string){out.usableIds=out.evidence.map(e=>e.id);out.sourceDetails=[{source,state:out.failed&&!out.evidence.length?'failed':out.evidence.length?'ok':'empty',requests:out.requests,items:out.evidence.length,full:out.evidence.filter(e=>!e.truncated).length,excerpts:out.evidence.filter(e=>e.truncated).length,...(code?{code}:{})}];return out;}
 async function author(login:string){return 'github:'+Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode('github:'+login)))).slice(0,6).map(x=>x.toString(16).padStart(2,'0')).join('');}

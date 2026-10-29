@@ -1,3 +1,4 @@
+import {unknownAlternativeWire} from './alternative-wire-fixture.mjs';
 import assert from 'node:assert/strict';
 import {componentURL} from './render-component.mjs';
 import {readFileSync} from 'node:fs';
@@ -20,7 +21,7 @@ async function wf(p,action,extra={}){return api(`/api/projects/${p.id}/workflow`
 async function advance(p){const r=await wf(p,'advance');assert.equal(r.status,200,JSON.stringify(r.data));return r.data.project}
 async function seed(){let p=newProject({title:'Synthetic stage outcome fixture',audience:'Synthetic teams',decision:'Validate contracts only'});p.confirmed=true;p.status='collecting';p.evidence=[1,2].map(i=>({id:'E'+i,title:'Synthetic source '+i,text:'Synthetic source '+i+' describes repeated setup questions and low volume users who keep existing tools. This fixture does not prove actual payment.',source:'Synthetic fixture only',date:'2026-10-14',fetched:'2026-10-14',author:'author'+i,thread:'t'+i,url:'',kind:'imported',stance:'context',excluded:false,truncated:false}));p.workflow=makeWorkflow(p,false,'four');await initializeFour(p,p.workflow);owned.push(p.id);return create(p)}
 function coorData(refs){return {notes:[{claim:'Synthetic conditional pain point.',refs,kind:'hypothesis'},{claim:'Synthetic unresolved frequency and payment.',refs:[],kind:'gap'}],citations:[],proposal:{title:'Synthetic opportunity',problem:'Synthetic problem',audience:'Fixture teams',alternative:'Existing tools',conclusion:'Synthetic conditional candidate',decision:'evidence',payment:'none',refs,counter:'Low volume may not justify change',unknowns:'Frequency, purchasing and payment unknown',plan:'Interview and check originals; not executed'}}}
-function envelope(wire){return Response.json({usage:{prompt_tokens:100,completion_tokens:80},choices:[{finish_reason:'stop',message:{content:JSON.stringify(wire)}}]},{headers:{'x-request-id':'fixture-outcome'}})}
+function envelope(wire){return Response.json({usage:{prompt_tokens:100,completion_tokens:80},choices:[{finish_reason:'stop',message:{content:JSON.stringify(unknownAlternativeWire(wire))}}]},{headers:{'x-request-id':'fixture-outcome'}})}
 globalThis.fetch=async(url,init)=>{
  if(String(url).startsWith('https://hn.algolia.com/'))return Response.json({hits:[{objectID:'771001'}]});
  if(String(url).startsWith('https://hacker-news.firebaseio.com/'))return Response.json({id:771001,type:'story',title:'Synthetic setup friction tool original',by:'fixture-user',time:Math.floor(Date.now()/1000),text:'Synthetic tool-acquired original describes repeated setup questions, and does not establish actual payments or verified demand.'});

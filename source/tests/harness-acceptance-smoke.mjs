@@ -1,3 +1,4 @@
+import {unknownAlternativeWire} from './alternative-wire-fixture.mjs';
 // Actual SDK + SQL; injected model port only. No real model or cloud database.
 import assert from 'node:assert/strict';
 import {DatabaseSync} from 'node:sqlite';
@@ -26,7 +27,7 @@ try{
    const request=JSON.parse(init.body),next=JSON.parse(request.messages[1].content);
    if(calls===2){assert.equal(next.allow_tools,false);assert.match(JSON.stringify(next.context.rules),/应用工具回执/);assert.match(JSON.stringify(next.context.rules),/retrieve_project_evidence/);}
    const wire={citation_format:'citation-selections/1',fact_format:'source-quote/1',status:'partial',data:{notes:[{claim:'虚构资料仅用于验证接口，不能证明需求或付款。',kind:'hypothesis',refs:['E1']}],citation_quote_ids:[]},evidence_ids:['E1'],gaps:['工程样例不构成市场事实'],tool_calls:calls===1?[{name:'retrieve_project_evidence',arguments:{query:'重新整理问题'}}]:[]};
-   return Response.json({choices:[{finish_reason:'stop',message:{content:JSON.stringify(wire)}}],usage:{prompt_tokens:10,completion_tokens:5}},{headers:{'x-request-id':'fixture-wire-'+calls}});
+   return Response.json({choices:[{finish_reason:'stop',message:{content:JSON.stringify(unknownAlternativeWire(wire))}}],usage:{prompt_tokens:10,completion_tokens:5}},{headers:{'x-request-id':'fixture-wire-'+calls}});
   });
   const options={db,adapter:qwen,runId:crypto.randomUUID(),buildRef:'fixture-qwen-json-wire'};
   const result=await verifyHarnessAcceptance(options);

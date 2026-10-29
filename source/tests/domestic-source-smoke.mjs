@@ -1,3 +1,4 @@
+import {unknownAlternativeWire} from './alternative-wire-fixture.mjs';
 import assert from 'node:assert/strict';
 import {collectV2exFeed} from '../lib/research/v2ex-feed.ts';
 import {newProject} from '../lib/research/domain.ts';
@@ -16,7 +17,7 @@ globalThis.fetch=async(url,init)=>{
   modelCalls++;const payload=JSON.parse(init.body);lastTask=JSON.parse(payload.messages[1].content);const refs=lastTask.evidence_ids;
   const wire={fact_format:'source-quote/1',status:'partial',data:{notes:[{kind:'fact',quote_id:'Q1'},{kind:'gap',claim:'Frequency and payment are not verified',refs:[]}],citations:[],proposal:{title:'Synthetic candidate',problem:'Conditional synthetic problem',audience:'Fixture users',alternative:'Existing tools',conclusion:'More evidence needed before investing',decision:'evidence',payment:'none',refs,counter:'Low frequency may defeat the idea',unknowns:'Frequency and actual purchasing unknown',plan:'Interview actual users; this is an unexecuted plan'}},evidence_ids:refs,gaps:['Synthetic fixture only'],tool_calls:[]};
   if(scenario==='tool')wire.tool_calls=[{name:'hacker_news_search',arguments:{query:'setup'}}];
-  return Response.json({usage:{prompt_tokens:50,completion_tokens:50},choices:[{finish_reason:'stop',message:{content:JSON.stringify(wire)}}]});
+  return Response.json({usage:{prompt_tokens:50,completion_tokens:50},choices:[{finish_reason:'stop',message:{content:JSON.stringify(unknownAlternativeWire(wire))}}]});
  }
  assert.ok(/^https:\/\/www\.v2ex\.com\/feed\/(programmer|create|qna)\.json$/.test(address),'Unapproved source request '+address);
  if(scenario==='redirect')return new Response('',{status:302,headers:{location:'https://unexpected.invalid'}});

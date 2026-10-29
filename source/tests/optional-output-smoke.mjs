@@ -1,3 +1,4 @@
+import {unknownAlternativeWire} from './alternative-wire-fixture.mjs';
 // Production-shaped empty optionals, fake provider HTTP and actual SQLite routes.
 import assert from 'node:assert/strict';
 import {createRequire} from 'node:module';
@@ -14,7 +15,7 @@ const require=createRequire(import.meta.url),Ajv=createRequire(require.resolve('
 const source={id:'E1',title:'Synthetic original',text:'This synthetic source describes a possible setup problem without verifying any actual customer payment.',source:'Fixture',kind:'public',excluded:false,truncated:false,author:'fixture',thread:'fixture',date:'2026-10-18',fetched:'2026-10-18',url:'https://example.invalid/fixture'};
 const task={project_id:'P',run_id:'R',call_id:'C',revision:1,role:'coordinator',brief:{},evidence_ids:['E1'],evidence:[source],allow_tools:false};
 function wire(){return {citation_format:'citation-selections/1',fact_format:'source-quote/1',status:'partial',data:{notes:[{kind:'hypothesis',claim:'Fixture hypothesis only',refs:['E1']}],citation_quote_ids:['Q1'],proposal:{title:'Conditional fixture',problem:'Unverified problem',audience:'Fixture users',alternative:'Existing tools',conclusion:'Need more evidence',decision:'evidence',payment:'none',refs:['E1'],counter:'May be rare',unknowns:'Frequency unknown',plan:'Read originals first',demand:{who:'',problem:'',effect:'',workaround:''},interview:{questions:[],decision_evidence:''}}},evidence_ids:['E1'],gaps:['Fixture only'],tool_calls:[]}}
-const envelope=raw=>Response.json({usage:{prompt_tokens:120,completion_tokens:80},choices:[{finish_reason:'stop',message:{content:JSON.stringify(raw)}}]},{headers:{'x-request-id':'optional-fixture-request'}});
+const envelope=raw=>Response.json({usage:{prompt_tokens:120,completion_tokens:80},choices:[{finish_reason:'stop',message:{content:JSON.stringify(unknownAlternativeWire(raw))}}]},{headers:{'x-request-id':'optional-fixture-request'}});
 let passed=0;async function check(name,fn){await fn();passed++;console.log('PASS '+name)}
 const execute=async raw=>{const q=new QwenModel('sk-synthetic-only',async()=>envelope(raw));const result=await q.execute(task,new AbortController().signal);return {q,result}};
 await check('all five observed optional blanks become missing without changing input or inventing text',()=>{const raw=wire(),before=JSON.stringify(raw),{value,normalizations}=omitBlankOptionalOutput(raw);assert.equal(JSON.stringify(raw),before);assert.deepEqual(value.data.proposal.demand,{});assert.deepEqual(value.data.proposal.interview,{questions:[]});assert.equal(normalizations.length,5);assert.match(renderDemandCard(value.data.proposal.demand,[]),/未提供/);assert.match(renderInterviewPlan(value.data.proposal.interview,[]),/会改变决策的证据：未提供/)});

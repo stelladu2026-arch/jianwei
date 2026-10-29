@@ -1,3 +1,4 @@
+import {unknownAlternativeWire} from './alternative-wire-fixture.mjs';
 import assert from 'node:assert/strict';
 import {createRequire} from 'node:module';
 import {newProject} from '../lib/research/domain.ts';
@@ -36,7 +37,7 @@ globalThis.fetch=async(url,init)=>{
   if(scenario==='crossquote')checks[1].anchors[0].quote=quoteChoices([task.evidence[1]])[0];
   if(scenario==='other_support'){checks[1].anchors=[{evidence_id:task.evidence_ids[1],quote:quoteChoices([task.evidence[1]])[0]}];}
   if(scenario==='tool')wire.tool_calls=[];
-  return Response.json({usage:{prompt_tokens:300,completion_tokens:200},choices:[{finish_reason:scenario==='truncated'?'length':'stop',message:{content:JSON.stringify(wire)}}]},{headers:{'x-request-id':'fixture-audit'}});
+  return Response.json({usage:{prompt_tokens:300,completion_tokens:200},choices:[{finish_reason:scenario==='truncated'?'length':'stop',message:{content:JSON.stringify(unknownAlternativeWire(wire))}}]},{headers:{'x-request-id':'fixture-audit'}});
  }
  if(task.role==='verifier'){assert.deepEqual(task.context.prior_results,[]);assert.deepEqual(task.context.memories,[])}
  const data={notes:[{claim:'Synthetic conditional pain point.',kind:'hypothesis'},{claim:'Synthetic low volume counterexample.',kind:'counter'}],checks:[0,1].map(i=>({target:'note:'+i,judgment:'partial',reason:'Synthetic only.',anchors:[{evidence_id:task.evidence_ids[0],quote:quoteChoices([task.evidence[0]])[0]}]}))};
@@ -44,7 +45,7 @@ globalThis.fetch=async(url,init)=>{
   data.proposal={title:'Synthetic opportunity',problem:'Synthetic problem',audience:'Synthetic teams',alternative:'Existing tools',conclusion:'Synthetic conditional conclusion',decision:'evidence',payment:'none',counter:'Low frequency',unknowns:'Payment unverified',plan:'Interview; no actual payments claimed'};data.disagreements=[];
   for(const target of ['proposal:problem','proposal:conclusion'])data.checks.push({target,judgment:'partial',reason:'Synthetic only.',anchors:[{evidence_id:task.evidence_ids[0],quote:quoteChoices([task.evidence[0]])[0]}]});
  }
- return Response.json({usage:{prompt_tokens:100,completion_tokens:80},choices:[{finish_reason:'stop',message:{content:JSON.stringify({review_format:'claim-anchors/1',status:'partial',data,gaps:[]})}}]});
+ return Response.json({usage:{prompt_tokens:100,completion_tokens:80},choices:[{finish_reason:'stop',message:{content:JSON.stringify(unknownAlternativeWire({review_format:'claim-anchors/1',status:'partial',data,gaps:[]}))}}]});
 };
 try{
  globalThis.__testEnv.DASHSCOPE_API_KEY=key;globalThis.__testEnv.QWEN_FREE_TIER_ONLY_CONFIRMED='true';

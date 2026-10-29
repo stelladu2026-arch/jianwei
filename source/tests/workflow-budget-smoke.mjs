@@ -1,3 +1,4 @@
+import {unknownAlternativeWire} from './alternative-wire-fixture.mjs';
 import assert from 'node:assert/strict';
 import React from 'react';
 import {renderToStaticMarkup} from 'react-dom/server';
@@ -15,7 +16,7 @@ const original='Synthetic budget fixture describes repeated configuration questi
 const evidence={id:'E1',title:'Synthetic imported original',text:original,source:'Synthetic offline fixture',date:'2026-10-15',fetched:'2026-10-15',author:'fixture-author',thread:'fixture-thread',url:'',kind:'imported',stance:'context',excluded:false,truncated:false};
 const record={id:'fixture-loop',stage:'plan',kind:'model',state:'failed',error:'MODEL_BUDGET',started:'2026-10-15',elapsedMs:1,usage:{input_tokens:60,output_tokens:12},agentModelReceipts:[10,20,30,undefined].map(n=>n===undefined?{}:{usage:{input_tokens:n,output_tokens:4}})};
 const history={records:[record],budget:{modelAttempts:4,modelLimit:4}};
-function wire(body){return Response.json({usage:{prompt_tokens:10,completion_tokens:4},choices:[{finish_reason:'stop',message:{content:JSON.stringify(body)}}]})}
+function wire(body){return Response.json({usage:{prompt_tokens:10,completion_tokens:4},choices:[{finish_reason:'stop',message:{content:JSON.stringify(unknownAlternativeWire(body))}}]})}
 globalThis.fetch=async(url,init)=>{
  if(String(url)===QWEN_BASE_URL+'/chat/completions'){
   models++;const body=JSON.parse(init.body),task=JSON.parse(body.messages[1].content);payloads.push({task,schema:body.response_format.json_schema.schema});

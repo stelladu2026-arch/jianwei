@@ -1,3 +1,4 @@
+import {unknownAlternativeWire} from './alternative-wire-fixture.mjs';
 import assert from 'node:assert/strict';
 import {QWEN_BASE_URL} from '../lib/research/provider-config.ts';
 import {quoteChoices} from '../lib/research/qwen-model.ts';
@@ -41,7 +42,7 @@ globalThis.fetch=async(url,init)=>{
   }
   const wire=task.review?{review_format:'claim-anchors/1',status:'partial',data:{...data,notes:data.notes.map(({refs,...n})=>n),...(data.proposal?{proposal:Object.fromEntries(Object.entries(data.proposal).filter(([k])=>k!=='refs'))}:{})},gaps:['Synthetic gaps; not semantic quality']}:{status:'partial',data,evidence_ids:refs,gaps:['Synthetic gaps; not semantic quality']};
   if(scenario==='unexpected_refs'&&task.review)wire.data.notes[0].refs=['FOREIGN'];
-  return Response.json({usage:{prompt_tokens:200,completion_tokens:100},choices:[{finish_reason:'stop',message:{content:JSON.stringify(wire)}}]},{headers:{'x-request-id':'fixture-collaboration'}});
+  return Response.json({usage:{prompt_tokens:200,completion_tokens:100},choices:[{finish_reason:'stop',message:{content:JSON.stringify(unknownAlternativeWire(wire))}}]},{headers:{'x-request-id':'fixture-collaboration'}});
 };
 try{
  globalThis.__testEnv.DASHSCOPE_API_KEY=key;globalThis.__testEnv.QWEN_FREE_TIER_ONLY_CONFIRMED='true';

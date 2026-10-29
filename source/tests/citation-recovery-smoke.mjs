@@ -1,3 +1,4 @@
+import {unknownAlternativeWire} from './alternative-wire-fixture.mjs';
 // Synthetic source text and provider HTTP; actual SQLite routes, no live models.
 import assert from 'node:assert/strict';
 import {createRequire} from 'node:module';
@@ -16,7 +17,7 @@ const proposal={title:'仅供离线检查的条件性机会',problem:'问题仍�
 const task={project_id:'fixture-project',run_id:'fixture-run',call_id:'fixture-call',revision:1,role:'coordinator',brief:{title:'Synthetic'},evidence_ids:['E1'],evidence:[source],allow_tools:false};
 const catalog=sourceQuoteCatalog(task.evidence,quoteChoices,task.evidence_ids);
 function wire(){return {citation_format:CITATION_SELECTION_FORMAT,fact_format:'source-quote/1',status:'partial',data:{notes:[{kind:'hypothesis',claim:'这是中文推断，英文引文由编号附回。',refs:['E1']}],proposal:structuredClone(proposal),citation_quote_ids:['Q1']},evidence_ids:['E1'],gaps:['地区与付费未核实'],tool_calls:[]}}
-function envelope(raw){return Response.json({usage:{prompt_tokens:150,completion_tokens:100},choices:[{finish_reason:'stop',message:{content:JSON.stringify(raw)}}]},{headers:{'x-request-id':'synthetic-citation-request'}})}
+function envelope(raw){return Response.json({usage:{prompt_tokens:150,completion_tokens:100},choices:[{finish_reason:'stop',message:{content:JSON.stringify(unknownAlternativeWire(raw))}}]},{headers:{'x-request-id':'synthetic-citation-request'}})}
 const ajv=new Ajv({strict:false}),owned=[],oldFetch=globalThis.fetch,oldEnv={...globalThis.__testEnv};let passed=0,providerCalls=0;
 async function check(label,fn){await fn();passed++;console.log('PASS '+label)}
 async function persist(p){owned.push(p.id);return create(p)}

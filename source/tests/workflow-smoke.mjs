@@ -1,3 +1,4 @@
+import {unknownAlternativeWire} from './alternative-wire-fixture.mjs';
 // Full workflow with real routes/SQLite and synthetic external HTTP. No live calls.
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
@@ -29,7 +30,7 @@ async function create(demo=false){let p=(await api('/api/projects','POST',{demo,
 async function start(supplement=false){let p=await create();const r=await action(p,'start',{allowSupplement:supplement});assert.equal(r.status,200);return r.data.project}
 async function advance(p){const r=await action(p,'advance');assert.equal(r.status,200,JSON.stringify(r.data));return r.data.project}
 async function finish(p){for(let i=0;i<16&&p.workflow.status==='ready';i++)p=await advance(p);return p}
-function response(content,status=200){return Response.json({usage:{prompt_tokens:100,completion_tokens:50},choices:[{finish_reason:'stop',message:{content:JSON.stringify(content)}}]},{status,headers:{'x-request-id':'fixture-workflow-request'}})}
+function response(content,status=200){return Response.json({usage:{prompt_tokens:100,completion_tokens:50},choices:[{finish_reason:'stop',message:{content:JSON.stringify(unknownAlternativeWire(content))}}]},{status,headers:{'x-request-id':'fixture-workflow-request'}})}
 globalThis.fetch=async(url,init={})=>{
   const address=String(url);const expanded=address.startsWith('https://api.github.com/search/issues?')||['https://sspai.com/feed','https://feed.cnblogs.com/blog/sitehome/rss','https://www.oschina.net/news/rss'].includes(address);destinations.push(address);assert.ok(expanded||address.startsWith('https://sou.chinanews.com.cn/search.do?')||address.startsWith(QWEN_BASE_URL)||address.startsWith('https://hn.algolia.com/api/v1/search?')||address.startsWith('https://hacker-news.firebaseio.com/v0/item/')||address.startsWith('https://zh.wikipedia.org/w/api.php?'));
   assert.equal(init.redirect,'manual');

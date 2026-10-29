@@ -109,8 +109,8 @@ export async function collectPublic(query:string,since:number|null,cap=SOURCE_RE
   const candidates:{run:(cap:number)=>Promise<Collection>;cap:number;name:string}[]=[],allocations:{run:()=>Promise<Collection>;cap:number;name:string}[]=[];const originalReserve=(options.webSearch||options.channels?.some(c=>c.name==='博查网页搜索'))&&limit>=3?1:0;let remaining=limit-originalReserve;
   const add=(cap:number,name:string,run:(cap:number)=>Promise<Collection>)=>{candidates.push({cap,name,run});};
   const chinese=/[\p{Script=Han}]/u.test(query);
-  const profile=sourceProfile(query,options.topic),focused=focusedSourceQuery(query,profile);out.routing={profile,effectiveQuery:focused};
-  for(const channel of options.channels||[])add(channel.cap,channel.name,n=>channel.run(query,since,n));
+  const profile=sourceProfile(query,options.topic),focused=focusedSourceQuery(query,profile,options.topic);out.routing={profile,effectiveQuery:focused};
+  for(const channel of options.channels||[])add(channel.cap,channel.name,n=>channel.run(profile==='receivables'?focused:query,since,n));
   if(profile!=='general'){
    add(3,'GitHub Issues 与人工评论',async n=>{const root=await collectGithubIssues(focused,since,1),comments=n>1?await collectIssueComments(root.evidence,focused,since,n-1):null;if(comments){root.evidence.push(...comments.evidence);root.usableIds.push(...comments.usableIds);root.requests+=comments.requests;root.failed+=comments.failed;root.sourceDetails.push(...(comments.sourceDetails||[]));}return root;});
    if(profile==='dify')add(2,'GitHub 文档 · Dify 官方项目',n=>collectDifyOfficial(focused,since,n));

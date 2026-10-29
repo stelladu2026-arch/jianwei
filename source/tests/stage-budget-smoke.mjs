@@ -1,3 +1,4 @@
+import {unknownAlternativeWire} from './alternative-wire-fixture.mjs';
 // Actual route handlers, Qwen parser, SDK and SQLite. All HTTP is synthetic.
 import assert from 'node:assert/strict';
 import {newProject} from '../lib/research/domain.ts';
@@ -21,7 +22,7 @@ async function seed(mode='single',supplement=true){
  calls=0;seen={};const p=newProject({title:'Synthetic stage allowance',audience:'Fixture teams',decision:'Offline engineering verification'});p.confirmed=true;p.status='collecting';p.evidence=[structuredClone(evidence)];owned.push(p.id);await create(p);
  const r=await api(p,'start',{mode,allowSupplement:supplement});assert.equal(r.status,200,JSON.stringify(r));return r.project;
 }
-function wire(body){return Response.json({choices:[{finish_reason:'stop',message:{content:JSON.stringify(body)}}],usage:{prompt_tokens:10,completion_tokens:4}},{headers:{'x-request-id':'fixture-stage-'+calls}})}
+function wire(body){return Response.json({choices:[{finish_reason:'stop',message:{content:JSON.stringify(unknownAlternativeWire(body))}}],usage:{prompt_tokens:10,completion_tokens:4}},{headers:{'x-request-id':'fixture-stage-'+calls}})}
 globalThis.fetch=async(url,init)=>{
  if(String(url)===QWEN_BASE_URL+'/chat/completions'){
   calls++;

@@ -1,3 +1,4 @@
+import {unknownAlternativeWire} from './alternative-wire-fixture.mjs';
 import assert from 'node:assert/strict';
 import {parsePublicFeed,collectPublicFeed,collectGithubIssues,enrichFeedArticle,decodeEntities} from '../lib/research/expanded-sources.ts';
 import {collectPublic} from '../lib/research/collection.ts';
@@ -21,7 +22,7 @@ const mock=async(url,init)=>{
   modelCalls++;const payload=JSON.parse(init.body),task=JSON.parse(payload.messages[1].content);
   let wire;if(task.purpose==='search_plan')wire={status:'ok',data:{framing:{target_user:'测试团队',scenario:'人工核对工作流',questions:['哪些步骤重复？']},notes:[{kind:'gap',claim:'工作流',refs:[]}]},evidence_ids:[],gaps:[],tool_calls:[]};
   else {analysisInput=task;wire={fact_format:'source-quote/1',status:'partial',data:{notes:[{kind:'fact',quote_id:'Q1'}],citations:[],proposal:{title:'待验证的工作流假设',problem:'需要核实重复录入的频率',audience:'测试团队',alternative:'现有模板',conclusion:'仅建议访谈，尚未验证购买',decision:'evidence',payment:'none',refs:task.evidence_ids.slice(0,3),counter:'低频可能无需新产品',unknowns:'真实发生频率与购买行为',plan:'先访谈真实用户，不把本用例当作市场研究'}},evidence_ids:task.evidence_ids.slice(0,3),gaps:['未核实付款'],tool_calls:[]};}
-  return Response.json({choices:[{finish_reason:'stop',message:{content:JSON.stringify(wire)}}],usage:{prompt_tokens:120,completion_tokens:80}});
+  return Response.json({choices:[{finish_reason:'stop',message:{content:JSON.stringify(unknownAlternativeWire(wire))}}],usage:{prompt_tokens:120,completion_tokens:80}});
  }
  if(address==='https://www.stats.gov.cn/sj/zxfb/')return new Response('<div class="list-content"><ul><li><a href="./202610/t20261018_1234567.html">工作流统计案例</a><span>'+date.slice(0,10)+'</span></li></ul></div>',{headers:{'Content-Type':'text/html'}});
  if(address==='https://www.stats.gov.cn/sj/zxfb/202610/t20261018_1234567.html')return new Response('<div class="trs_editor_view"><p>'+text+text+'</p></div>',{headers:{'Content-Type':'text/html'}});

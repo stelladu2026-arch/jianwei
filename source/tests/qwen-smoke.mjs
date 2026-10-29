@@ -1,3 +1,4 @@
+import {unknownAlternativeWire} from './alternative-wire-fixture.mjs';
 // Real HTTP adapter and route handlers, with all external HTTP replaced by fixtures.
 import assert from 'node:assert/strict';
 import {QWEN_BASE_URL,QWEN_MODEL,QWEN_MAX_OUTPUT_TOKENS} from '../lib/research/provider-config.ts';
@@ -27,7 +28,7 @@ globalThis.fetch=async(url,init)=>{
   const refs=task.evidence_ids.slice(0,1),result={status:'partial',data:{notes:[{claim:'Synthetic HTTP fixture; not a semantic quality test.',refs,kind:'hypothesis'}]},evidence_ids:refs,gaps:['Only a synthetic fixture.']};
   if(task.role==='coordinator')result.data.proposal={title:'Synthetic fixture',problem:'unverified',audience:'fixture users',alternative:'unverified',conclusion:'unverified',decision:'evidence',payment:'none',refs,counter:'unknown',unknowns:'unknown',plan:'manual review'};
   if(scenario==='foreign')result.data.notes[0].refs=['FOREIGN'];if(scenario==='missing_declared')result.evidence_ids=[];
-  const content=scenario==='json'?'not JSON':JSON.stringify(result),usage=scenario==='no_usage'?undefined:{prompt_tokens:123,completion_tokens:45};
+  const content=scenario==='json'?'not JSON':JSON.stringify(unknownAlternativeWire(result)),usage=scenario==='no_usage'?undefined:{prompt_tokens:123,completion_tokens:45};
   return Response.json({model:'untrusted-envelope-alias',usage,choices:[{finish_reason:scenario==='truncated'?'length':'stop',message:{content,reasoning_content:'private reasoning should never persist'}}]},{headers:{'x-request-id':'fixture-request-1'}});
 };
 try{
@@ -65,7 +66,7 @@ delete globalThis.__testEnv.DASHSCOPE_API_KEY;x=await control(p,'advance');check
 const old=p,id=crypto.randomUUID();p=(await control(p,'advance',{},key,id)).data.project;
 x=await control(old,'advance',{},key,id);check('HTTP request stays idempotent and keeps trusted usage metadata',()=>{assert.equal(requests,1);assert.equal(x.status,200);assert.equal(p.budget.modelCalls,1);assert.equal(p.run.budget.requests,1);assert.equal(p.run.tasks[0].output.model,QWEN_MODEL);assert.deepEqual(p.run.tasks[0].calls[0].usage,{input_tokens:123,output_tokens:45});assert.equal(p.run.tasks[0].calls[0].requestId,'fixture-request-1');assert.ok(!JSON.stringify(p).includes(key));assert.ok(!JSON.stringify(p).includes('reasoning_content'))});
 delete globalThis.__testEnv.DASHSCOPE_API_KEY;p=(await control(p,'advance',{},null)).data.project;p=(await control(p,'advance',{},null)).data.project;globalThis.__testEnv.DASHSCOPE_API_KEY=key;check('local checks and report need no key or additional model calls',()=>{assert.equal(requests,1);assert.equal(p.run.status,'completed');assert.match(p.run.report,/真实模型生成/);assert.match(p.run.report,/实际费用：待百炼账单核对/);assert.match(p.run.report,/123 \/ 45/);assert.equal(p.reports.length,0);assert.equal(p.opportunities.length,1);assert.equal(p.opportunities[0].status,'draft')});
-scenario='missing_declared';p=(await control(p,'start')).data.project;p=(await control(p,'advance')).data.project;check('Qwen constrains IDs in schema and completes redundant declarations only for unchanged allowed nested refs',()=>{assert.equal(p.run.status,'ready');assert.deepEqual(p.run.tasks[0].output.data.notes[0].refs,p.run.tasks[0].output.evidence_ids);assert.deepEqual(p.run.tasks[0].calls[0].normalizations,['nested_refs_declared_in_envelope'])});p=(await control(p,'cancel')).data.project;scenario='normal';
+scenario='missing_declared';p=(await control(p,'start')).data.project;p=(await control(p,'advance')).data.project;check('Qwen constrains IDs in schema and completes redundant declarations only for unchanged allowed nested refs',()=>{assert.equal(p.run.status,'ready');assert.deepEqual(p.run.tasks[0].output.data.notes[0].refs,p.run.tasks[0].output.evidence_ids);assert.deepEqual(p.run.tasks[0].calls[0].normalizations,['alternative_unknown_preserved','nested_refs_declared_in_envelope'])});p=(await control(p,'cancel')).data.project;scenario='normal';
 p=(await control(p,'start',{mode:'four'})).data.project;
 for(let i=0;i<6;i++)p=(await control(p,'advance')).data.project;
 check('four roles share Qwen while verifier remains independent',()=>{assert.equal(p.run.status,'completed');assert.equal(requests,6);assert.equal(p.run.budget.limit,8);assert.ok(p.run.tasks.filter(t=>t.role).every(t=>t.output.model===QWEN_MODEL));assert.deepEqual(p.run.tasks.find(t=>t.role==='verifier').inputSnapshot.context.prior_results,[]);assert.ok(p.run.tasks.filter(t=>t.role).every(t=>!t.inputSnapshot.context.simulation))});

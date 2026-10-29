@@ -1,3 +1,4 @@
+import {sourceSkipMessage} from './source-allocation';
 import {isResearchEvidence,isAnalysisBody} from './evidence-eligibility';
 import {rankResearchEvidence} from './research-relevance';
 import {readerWorkflowReport} from './reader-report';
@@ -215,10 +216,13 @@ function interrupt(w:ResearchWorkflow){
   record.state='failed';record.error='EXECUTION_INTERRUPTED';record.elapsedMs=Date.now()-Date.parse(record.started);w.error=record.error;w.needsRetry=true;
   const r=w.analysisRun;if(r?.lease){const task=r.tasks.find(t=>t.id===r.lease?.taskId);if(task)failTask(r,task,record.error,r.lease.callId,record.elapsedMs);}
 }
+function channelReceipts(c:Pick<Collection,'sourceDetails'>){
+ return c.sourceDetails?.length?'\n'+c.sourceDetails.map(s=>`  - 渠道回执：${s.source}；${s.state==='skipped'?sourceSkipMessage(s.code):s.state==='failed'?'请求失败':s.state==='empty'?'未命中':'已返回'}；请求 ${s.requests} 次；正文 ${s.full} / 摘要 ${s.excerpts}。`).join('\n'):'';
+}
 export function workflowReport(p:Project,w:ResearchWorkflow){
   const selected=p.evidence.filter(e=>(w.usableIds.includes(e.id)||w.mode!=='four'&&e.kind==='imported')&&isResearchEvidence(e,p));
   const coverage=sourceCoverage(w.frozen?.evidence||selected);
-  const sources=w.records.filter(r=>r.collection).map(r=>{const c=r.collection!;return `- ${w.sourceProfile==='v2ex'?'节点订阅采样':r.stage==='supplement'?'补搜':'初搜'}「${c.query}」${c.routing?.goal?'（渠道目标：'+({general:'通用发现',capability:'已有能力与配置',feedback:'实际使用反馈',background:'背景与统计'}[c.routing.goal])+'；程序规则分配）':''}${c.routing&&c.routing.effectiveQuery!==c.query?'（社区检索词：'+c.routing.effectiveQuery+'；程序映射，非语义验证）':''}：新增 ${c.added} 条资料；重复 ${c.duplicate} 条；无可分析正文 ${c.titleOnly} 条；请求失败 ${c.failed} 次。`}).join('\n');
+  const sources=w.records.filter(r=>r.collection).map(r=>{const c=r.collection!;return `- ${w.sourceProfile==='v2ex'?'节点订阅采样':r.stage==='supplement'?'补搜':'初搜'}「${c.query}」${c.routing?.goal?'（渠道目标：'+({general:'通用发现',capability:'已有能力与配置',feedback:'实际使用反馈',background:'背景与统计'}[c.routing.goal])+'；程序规则分配）':''}${c.routing&&c.routing.effectiveQuery!==c.query?'（渠道聚焦词：'+c.routing.effectiveQuery+'；程序映射，非语义验证）':''}：新增 ${c.added} 条资料；重复 ${c.duplicate} 条；无可分析正文 ${c.titleOnly} 条；请求失败 ${c.failed} 次。${channelReceipts(c)}`}).join('\n');
   const usage=workflowModelUsage(w);
   const directory=selected.slice(0,30).map(e=>`### [${e.id}] ${e.title}\n资料日期：${e.date||'未知'}；抓取时间：${e.fetched||'未知'}；讨论线程：${e.thread}；${e.truncated?'原文已裁剪':'已保存正文'}\n\n${e.applicationNote?'应用附注（非原文）：'+e.applicationNote+'\n':''}${e.sourceState?'抓取时 Issue 状态：'+e.sourceState+'\n':''}\n${e.text}\n\n${e.url}`).join('\n\n');
   const framing=w.framing?`目标用户：${w.framing.target_user}\n场景：${w.framing.scenario}\n研究问题：\n${w.framing.questions.map(q=>'- '+q).join('\n')}`:w.useExistingEvidence?'本轮复用已有原文直接分析，未重新调用规划或采集。':w.mode==='four'?'本轮是四角色复核，没有单角色规划结构。':w.sourceProfile==='v2ex'?'本轮使用操作者确认的研究范围，未调用模型规划检索词。':'模型未提供目标用户、场景和研究问题。应用没有补写。';

@@ -1,3 +1,4 @@
+import {ALTERNATIVE_FORMAT,alternativeInstructions,bindAlternativeSchema,decodeAlternativeSelection} from './alternative-selection';
 import {qualityInstructions,evidenceUseHint} from './evidence-quality';
 import {CITATION_SELECTION_FORMAT,decodeCitationSelections,citationSelectionInstructions} from './citation-selections';
 import {providerSchemaIssues,providerErrorIssues} from './qwen-schema';
@@ -19,7 +20,7 @@ export class ProviderError extends Error{
   constructor(code:string,receipt:Receipt={}){super(code);this.receipt=receipt;}
 }
 const planningRules={
- search_plan:'检索词必须包含目标业务动作或问题信号，如交接遗漏、实施返工、handoff gaps；不要只用 SaaS 或 AI 泛词。优先找目标角色的经历，开发任务只作方案背景，覆盖不到时说明缺口。你负责把模糊的研究方向写成结构化研究问题，再给出中英文检索词；研究国内人群时，优先一条中文短词和一条英文短词。data.framing 必须包含 target_user、scenario，以及 1 至 3 条 research questions。data.notes 只包含 1 至 2 条检索词，每条 claim 为 2 至 100 字符、仅 1 至 3 个中文或英文关键词（例如 customer support、help desk），不得用长句或堆叠人群及修饰词，refs 为空数组，kind 为 gap。同一检索词会搜索中国新闻网公开报道、GitHub Issues、Hacker News、中文维基百科，并筛选少数派、博客园与 OSCHINA 的近期公开订阅。中文关键词优先国家统计局相关报告，英文关键词保留 Hacker News 评论采集。中国新闻网支持关键词搜索；订阅不是全站历史检索，搜索摘要和订阅摘要都不等于全文，百科、新闻和企业宣传不是客户需求原话。需要工具预检时优先使用 public_source_search；单站检索不能视作完成多渠道采集。tool_calls 最多 2 个，只能使用白名单工具；不需要工具时为空数组。不得生成 URL、市场结论，也不得把主张标成事实或观察。用不同角度覆盖具体痛点、已有替代或反例。status 为 ok，evidence_ids 为空数组；gaps 可说明来源、人群或地域覆盖限制。',
+ search_plan:'检索词必须同时保留目标人群或产品对象与具体业务动作，例如 freelance overdue invoice、外包 回款；gaps、issues、follow-up 等泛词不能替代业务动作。至少一条检索词明确包含目标人群；不要只用 SaaS 或 AI 泛词。优先找目标角色的经历，开发任务只作方案背景，覆盖不到时说明缺口。你负责把模糊的研究方向写成结构化研究问题，再给出中英文检索词；研究国内人群时，优先一条中文短词和一条英文短词。data.framing 必须包含 target_user、scenario，以及 1 至 3 条 research questions。data.notes 只包含 1 至 2 条检索词，每条 claim 为 2 至 100 字符、仅 1 至 3 个中文或英文关键词（例如 customer support、help desk），不得用长句或堆叠人群及修饰词，refs 为空数组，kind 为 gap。同一检索词会搜索中国新闻网公开报道、GitHub Issues、Hacker News、中文维基百科，并筛选少数派、博客园与 OSCHINA 的近期公开订阅。中文关键词优先国家统计局相关报告，英文关键词保留 Hacker News 评论采集。中国新闻网支持关键词搜索；订阅不是全站历史检索，搜索摘要和订阅摘要都不等于全文，百科、新闻和企业宣传不是客户需求原话。需要工具预检时优先使用 public_source_search；单站检索不能视作完成多渠道采集。tool_calls 最多 2 个，只能使用白名单工具；不需要工具时为空数组。不得生成 URL、市场结论，也不得把主张标成事实或观察。用不同角度覆盖具体痛点、已有替代或反例。status 为 ok，evidence_ids 为空数组；gaps 可说明来源、人群或地域覆盖限制。',
  gap_plan:'你负责判断当前研究缺口是否能通过额外一次公开检索改善。公开搜索覆盖 GitHub Issues、Hacker News、中文维基百科和中文公开订阅，不能验证个人付款承诺、真实账单、访谈和地域代表性。若缺口属于这些不可检索项或不需要补搜，status 为 ok，data.notes 仅一条 claim=STOP、refs=[]、kind=gap，tool_calls 为空数组。若存在可检索缺口且能改变判断，status 为 partial，data.notes 仅一条 claim 为 2 至 100 字符、仅 1 至 3 个中文或英文关键词的检索词、refs=[]、kind=gap，必须不同于此前的检索词；也可以在 tool_calls 里请求一次白名单检索。gaps 简述此检索可以补什么及不能验证什么。不得编造新证据，不得把主张标成事实或观察。'
 } as const;
 const string={type:'string'};
@@ -147,7 +148,7 @@ export function researchSystemInstructions(task:ModelTask,schema:unknown){
  const concise='只给一个候选机会，每项文本用一至两句说明；notes 最多两条，gaps 最多三条。保留必要引用、反证及未知，不重复资料全文。验证计划写清对象、动作、指标与继续或停止条件。';
  const hints='资料用途提示（规则提示）：'+JSON.stringify(task.evidence.map(evidenceUseHint));
  const contract=task.review?selectionReviewInstructions(task.role,schema):`你是产品机会研究的${task.role}角色。${roleRules[task.role]} ${citationSelectionInstructions()} ${task.allow_tools===false?'这是固定资料分析，tool_calls 必须为 []，不得请求工具。':''} ${format}`;
- return prefix+' '+concise+' '+qualityInstructions+' '+hints+' '+contract;
+ return prefix+' '+concise+' '+qualityInstructions+' '+hints+' '+contract+(task.role==='coordinator'?' '+alternativeInstructions:'');
 }
 // There is exactly one HTTP request per execute. No automatic retry or provider fallback.
 export class QwenModel implements ResearchModelAdapter{
@@ -157,6 +158,7 @@ export class QwenModel implements ResearchModelAdapter{
   private fetcher:typeof fetch;
   async execute(task:ModelTask,signal:AbortSignal):Promise<ModelResult>{
     this.receipt={};const catalog=sourceQuoteCatalog(task.evidence,quoteChoices,task.evidence_ids);let response:Response;const schema=task.purpose==='conclusion_review'?auditResponseSchema(task):!task.review&&!task.purpose?singleCitationResponseSchema(task.role,task.evidence_ids,task.evidence,task.allow_tools!==false):responseSchema(task.role,task.evidence_ids,!!task.review,undefined,task.evidence,task.purpose,task.allow_tools!==false);
+    if(task.role==='coordinator'&&!task.purpose)bindAlternativeSchema(schema,catalog);
     const schemaIssues=providerSchemaIssues(schema);if(schemaIssues.length){this.receipt.outputIssues=schemaIssues;throw new ProviderError('PROVIDER_SCHEMA_UNSUPPORTED',this.receipt);}
     try{response=await this.fetcher(QWEN_BASE_URL+'/chat/completions',{method:'POST',redirect:'manual',signal,headers:{'Content-Type':'application/json',Authorization:'Bearer '+this.key},body:JSON.stringify({model:QWEN_MODEL,stream:false,enable_thinking:false,max_tokens:QWEN_MAX_OUTPUT_TOKENS,temperature:0.2,response_format:{type:'json_schema',json_schema:{name:(task.review?'review_v8_':'research_')+(task.purpose||task.role),strict:true,schema:schema}},messages:[{role:'system',content:researchSystemInstructions(task,schema)},{role:'user',content:JSON.stringify({...task,...(!task.purpose&&catalog.length?{source_quote_options:catalog}:{})})}]})});}
     catch(error){
@@ -182,14 +184,16 @@ export class QwenModel implements ResearchModelAdapter{
     if(choice?.finish_reason==='length')throw new ProviderError('MODEL_OUTPUT_TRUNCATED',this.receipt);
     if(choice?.finish_reason!=='stop'||typeof choice?.message?.content!=='string'||!this.receipt.usage)throw new ProviderError('INVALID_PROVIDER_RESPONSE',this.receipt);
     let parsed:any;try{parsed=JSON.parse(choice.message.content);}catch{this.receipt.outputIssues=['root:invalid_json'];throw new ProviderError('INVALID_MODEL_OUTPUT',this.receipt);}
+    let alternativeRef:string|undefined;
+    try{const selected=parsed?.alternative_format===ALTERNATIVE_FORMAT;const alternative=decodeAlternativeSelection(parsed,catalog,task.role==='coordinator'&&!task.purpose);parsed=alternative.value;alternativeRef=alternative.ref;if(selected)this.receipt.normalizations=[alternativeRef?'alternative_quote_expanded':'alternative_unknown_preserved'];}catch(error){this.receipt.outputIssues=['data.proposal.alternative_quote_id:invalid_selection'];throw new ProviderError((error as Error).message,this.receipt);}
     const optional=omitBlankOptionalOutput(parsed);parsed=optional.value;
-    if(optional.normalizations.length)this.receipt.normalizations=optional.normalizations;
+    if(optional.normalizations.length)this.receipt.normalizations=[...(this.receipt.normalizations||[]),...optional.normalizations];
     if(task.purpose==='conclusion_review'){
       try{parsed=decodeAuditWire(parsed,issues=>{this.receipt.outputIssues=issues;});}catch{throw new ProviderError('INVALID_MODEL_OUTPUT',this.receipt);}
       return {status:parsed.status,data:parsed.data,gaps:parsed.gaps,evidence_ids:[...new Set<string>(parsed.data.checks.flatMap((c:any)=>c.anchors.map((a:any)=>a.evidence_id)))],errors:[],revision:task.revision,usage:this.receipt.usage,model:QWEN_MODEL};
     }
     if(task.review&&isSelectionReviewFormat(parsed?.review_format)){
-      try{parsed=decodeSelectionReview(parsed,task.role,catalog,issues=>{this.receipt.outputIssues=issues;});this.receipt.normalizations=[...(this.receipt.normalizations||[]),'claim_selections_expanded'];}catch(error){throw new ProviderError((error as Error).message==='INVALID_MODEL_REFERENCE'?'INVALID_MODEL_REFERENCE':'INVALID_MODEL_OUTPUT',this.receipt);}
+      try{parsed=decodeSelectionReview(parsed,task.role,catalog,issues=>{this.receipt.outputIssues=issues;});if(alternativeRef&&parsed.data.proposal){parsed.data.proposal.refs=[...new Set([...parsed.data.proposal.refs,alternativeRef])];parsed.evidence_ids=[...new Set([...parsed.evidence_ids,alternativeRef])];}this.receipt.normalizations=[...(this.receipt.normalizations||[]),'claim_selections_expanded'];}catch(error){throw new ProviderError((error as Error).message==='INVALID_MODEL_REFERENCE'?'INVALID_MODEL_REFERENCE':'INVALID_MODEL_OUTPUT',this.receipt);}
       return {...parsed,errors:[],revision:task.revision,usage:this.receipt.usage,model:QWEN_MODEL};
     }
     if(!task.review&&!task.purpose){try{const selected=parsed?.citation_format===CITATION_SELECTION_FORMAT;parsed=decodeCitationSelections(parsed,catalog,issues=>{this.receipt.outputIssues=issues});if(selected)this.receipt.normalizations=[...(this.receipt.normalizations||[]),'citation_selections_expanded'];}catch(error){throw new ProviderError((error as Error).message==='INVALID_MODEL_REFERENCE'?'INVALID_MODEL_REFERENCE':'INVALID_MODEL_OUTPUT',this.receipt)}}

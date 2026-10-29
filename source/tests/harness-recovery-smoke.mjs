@@ -1,3 +1,4 @@
+import {unknownAlternativeWire} from './alternative-wire-fixture.mjs';
 // Route + SQL + actual DeepAgents execution; all provider HTTP is synthetic.
 import assert from 'node:assert/strict';
 import {fixtureProject} from '../lib/research/evaluation.ts';
@@ -15,7 +16,7 @@ globalThis.fetch=async(url,init)=>{
  calls++;if(uncertain)throw Error('SYNTHETIC_LOST_RESPONSE');
  const task=JSON.parse(JSON.parse(init.body).messages[1].content),refs=task.evidence_ids.slice(0,1);
  const content=task.purpose?{status:'ok',data:{notes:[{claim:'fixture research',refs:[],kind:'gap'}],framing:{target_user:'Fixture teams',scenario:'Synthetic repeated setup',questions:['What is repeated?']}},evidence_ids:[],gaps:[]}:{status:'partial',data:{notes:[{claim:'Synthetic conditional result',refs,kind:'hypothesis'}],proposal:{title:'Synthetic recovery opportunity',problem:'Unverified friction',audience:'Fixture teams',alternative:'Existing tools',conclusion:'Conditional fixture only',decision:'evidence',payment:'none',refs,counter:'Synthetic counterexample',unknowns:'Payment unknown',plan:'Review originals',demand:{who:'Fixture teams',problem:'Repeated questions',effect:'Unverified effort',workaround:'Existing templates'}}},evidence_ids:refs,gaps:['Synthetic fixture, no market claim']};
- return Response.json({usage:{prompt_tokens:23,completion_tokens:7},choices:[{finish_reason:'stop',message:{content:JSON.stringify(content)}}]},{headers:{'x-request-id':'synthetic-recovery-receipt'}});
+ return Response.json({usage:{prompt_tokens:23,completion_tokens:7},choices:[{finish_reason:'stop',message:{content:JSON.stringify(unknownAlternativeWire(content))}}]},{headers:{'x-request-id':'synthetic-recovery-receipt'}});
 };
 try{
  let p=(await api(await project(),'start')).project;
@@ -62,7 +63,7 @@ try{
     const next=JSON.parse(JSON.parse(init.body).messages[1].content);
     if(requests===2)assert.match(JSON.stringify(next.context.rules),/retrieve_project_evidence/);
     const content={status:'ok',data:{notes:[{claim:'fixture research',refs:[],kind:'gap'}],framing:{target_user:'Fixture teams',scenario:'Synthetic retrieval',questions:['What is repeated?']}},evidence_ids:[],gaps:[],tool_calls:requests===1?[{name:'retrieve_project_evidence',arguments:{query:'fixture research'}}]:[]};
-    return Response.json({usage:{prompt_tokens:11,completion_tokens:3},choices:[{finish_reason:'stop',message:{content:JSON.stringify(content)}}]},{headers:{'x-request-id':'synthetic-attached-'+requests}});
+    return Response.json({usage:{prompt_tokens:11,completion_tokens:3},choices:[{finish_reason:'stop',message:{content:JSON.stringify(unknownAlternativeWire(content))}}]},{headers:{'x-request-id':'synthetic-attached-'+requests}});
    };
    const started=(await api(await project(),'start',undefined,{allowSupplement:true})).project,result=await api(started,'advance');
    assert.equal(result.status,200,JSON.stringify(result));assert.equal(result.project.workflow.status,'ready',JSON.stringify(result.project.workflow));assert.equal(result.project.workflow.stage,'collect');assert.equal(requests,2);assert.equal(result.project.workflow.budget.modelAttempts,2);

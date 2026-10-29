@@ -1,3 +1,4 @@
+import {unknownAlternativeWire} from './alternative-wire-fixture.mjs';
 import assert from 'node:assert/strict';
 import {runSingleRoleAgent,acceptAgentFinal,AgentStepFailure} from '../lib/research/agent-loop.ts';
 import {retrieveSemanticEvidence,QwenEmbedding,EMBEDDING_MODEL} from '../lib/research/semantic-retrieval.ts';
@@ -77,7 +78,7 @@ await check('real route persists both model receipts and budget reservations; du
     const next=JSON.parse(JSON.parse(init.body).messages[1].content);
     if(calls===2)assert.match(JSON.stringify(next),/应用工具回执/);
     const body={status:'ok',data:{notes:[{claim:'support workflow',refs:[],kind:'gap'}],framing:{target_user:'Teams',scenario:'Setup',questions:['What repeats?']}},evidence_ids:[],gaps:[],tool_calls:calls===1?[{name:'retrieve_project_evidence',arguments:{query:'configuration',id:''}}]:[]};
-    return Response.json({usage:{prompt_tokens:calls===1?11:13,completion_tokens:5},choices:[{finish_reason:'stop',message:{content:JSON.stringify(body)}}]});
+    return Response.json({usage:{prompt_tokens:calls===1?11:13,completion_tokens:5},choices:[{finish_reason:'stop',message:{content:JSON.stringify(unknownAlternativeWire(body))}}]});
   };
   try{
     let state=await api(p,'start');assert.equal(state.status,200);const before=state.project,callId=crypto.randomUUID();state=await api(before,'advance',callId);
