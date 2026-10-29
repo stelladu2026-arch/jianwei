@@ -1,6 +1,7 @@
+import {researchSourceGoal,sourcePurpose,sourcePriority,type ResearchSourceGoal} from './source-allocation';
 import {canReadDiscovered,readDiscoveredOriginal} from './additional-channels';
 import {isAnalysisBody} from './evidence-eligibility';
-import {sourceProfile,focusedSourceQuery,collectIssueComments,collectDifyOfficial} from './research-channels';
+import {sourceProfile,focusedSourceQuery,collectIssueComments,collectDifyOfficial,collectProductOfficial} from './research-channels';
 import type {Evidence} from './domain';
 import {collectNewsSearch,enrichNewsArticle,NEWS_SOURCE} from './news-search';
 import {collectOfficialStatistics,STATISTICS_SOURCE} from './official-statistics';
@@ -28,7 +29,7 @@ export async function publicJSON(url:string,signal?:AbortSignal){
   if(!response.ok)throw new Error('SOURCE_'+response.status);
   return response.json() as Promise<any>;
 }
-export type Collection={routing?:{profile:string;effectiveQuery:string};query:string;evidence:Evidence[];usableIds:string[];requests:number;failed:number;skipped:number;limited:boolean;since:number|null;sourceErrors?:string[];sourceDetails?:SourceReceipt[]};
+export type Collection={routing?:{profile:string;effectiveQuery:string;goal?:ResearchSourceGoal;allocation?:{source:string;purpose:string;cap:number;reallocated?:boolean}[]};query:string;evidence:Evidence[];usableIds:string[];requests:number;failed:number;skipped:number;limited:boolean;since:number|null;sourceErrors?:string[];sourceDetails?:SourceReceipt[]};
 function blank(query:string,since:number|null):Collection{return {query,evidence:[],usableIds:[],requests:0,failed:0,skipped:0,limited:false,since};}
 async function anonAuthor(name:string){if(!name)return '';const hash=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(name));return Array.from(new Uint8Array(hash)).slice(0,6).map(x=>x.toString(16).padStart(2,'0')).join('');}
 // Search and source items are fixed public destinations. Links inside posts or articles are never fetched.
@@ -105,14 +106,15 @@ export async function collectPublic(query:string,since:number|null,cap=SOURCE_RE
   const limit=Math.max(0,Math.min(SOURCE_REQUEST_CAP,Math.floor(cap))),out=blank(query,since);out.sourceDetails=[];
   if(!limit){out.limited=true;return out;}
   // Reserve fixed allocations first. Results settle independently, with no retries.
-  const allocations:{run:()=>Promise<Collection>;cap:number;name:string}[]=[];let remaining=limit-((options.webSearch||options.channels?.some(c=>c.name==='博查网页搜索'))&&limit>=3?1:0);
-  const add=(amount:number,name:string,run:(cap:number)=>Promise<Collection>)=>{const room=Math.min(amount,remaining);if(room<1)return;remaining-=room;allocations.push({cap:room,name,run:()=>run(room)});};
+  const candidates:{run:(cap:number)=>Promise<Collection>;cap:number;name:string}[]=[],allocations:{run:()=>Promise<Collection>;cap:number;name:string}[]=[];const originalReserve=(options.webSearch||options.channels?.some(c=>c.name==='博查网页搜索'))&&limit>=3?1:0;let remaining=limit-originalReserve;
+  const add=(cap:number,name:string,run:(cap:number)=>Promise<Collection>)=>{candidates.push({cap,name,run});};
   const chinese=/[\p{Script=Han}]/u.test(query);
   const profile=sourceProfile(query,options.topic),focused=focusedSourceQuery(query,profile);out.routing={profile,effectiveQuery:focused};
   for(const channel of options.channels||[])add(channel.cap,channel.name,n=>channel.run(query,since,n));
   if(profile!=='general'){
    add(3,'GitHub Issues 与人工评论',async n=>{const root=await collectGithubIssues(focused,since,1),comments=n>1?await collectIssueComments(root.evidence,focused,since,n-1):null;if(comments){root.evidence.push(...comments.evidence);root.usableIds.push(...comments.usableIds);root.requests+=comments.requests;root.failed+=comments.failed;root.sourceDetails.push(...(comments.sourceDetails||[]));}return root;});
    if(profile==='dify')add(2,'GitHub 文档 · Dify 官方项目',n=>collectDifyOfficial(focused,since,n));
+   else if(/\bn8n\b/i.test(query+' '+options.topic))add(2,'GitHub 文档 · n8n 官方项目',n=>collectProductOfficial(focused,since,n,'n8n'));
    if(options.webSearch)add(1,'网页搜索发现',n=>options.webSearch!(query,since,n));
    add(3,'Hacker News',n=>collectHN(focused,since,n));
    if(chinese)add(1,NEWS_SOURCE,n=>collectNewsSearch(query,since,n));
@@ -127,12 +129,25 @@ export async function collectPublic(query:string,since:number|null,cap=SOURCE_RE
   if(!chinese)add(3,'Hacker News',n=>collectHN(query,since,n));
   add(2,WIKI_SOURCE,n=>collectZhWiki(query,since,n));
   }
+  const goal=researchSourceGoal(query,options.topic||'',profile);out.routing!.goal=goal;out.routing!.allocation=[];
+  const ranked=candidates.map((job,index)=>({job,index})).sort((a,b)=>sourcePriority(b.job.name,goal)-sourcePriority(a.job.name,goal)||a.index-b.index);
+  const selectedCaps=new Map<string,number>();
+  // Product research keeps at least one capability check and one user-feedback source when possible.
+  if(profile!=='general'&&remaining>=2){for(const purpose of [...new Set(ranked.map(({job})=>sourcePurpose(job.name)).filter(p=>p==='capability'||p==='feedback'))]){const job=ranked.find(r=>sourcePurpose(r.job.name)===purpose)?.job;if(job&&remaining>0){selectedCaps.set(job.name,1);remaining--;}}}
+  for(const {job} of ranked){const selected=selectedCaps.get(job.name)||0,extra=Math.min(job.cap-selected,remaining);selectedCaps.set(job.name,selected+extra);remaining-=extra;}
+  for(const {job} of ranked){const room=selectedCaps.get(job.name)||0;if(!room)continue;allocations.push({name:job.name,cap:room,run:()=>job.run(room)});out.routing!.allocation.push({source:job.name,purpose:sourcePurpose(job.name),cap:room});}
   const results=await Promise.allSettled(allocations.map(job=>job.run()));
   for(let i=0;i<results.length;i++){
     const result=results[i];if(result.status==='rejected'){out.requests+=allocations[i].cap;out.failed++;out.sourceDetails.push({source:allocations[i].name,state:'failed',requests:allocations[i].cap,items:0,full:0,excerpts:0,code:'SOURCE_FAILURE'});continue;}
     const value=result.value;out.evidence.push(...value.evidence);out.usableIds.push(...value.usableIds);out.requests+=value.requests;out.failed+=value.failed;out.skipped+=value.skipped;out.limited||=value.limited;
     out.sourceErrors=[...(out.sourceErrors||[]),...(value.sourceErrors||[])];out.sourceDetails.push(...(value.sourceDetails||[{source:allocations[i].name,state:value.failed&&!value.usableIds.length?'failed':value.usableIds.length?'ok':'empty',requests:value.requests,items:value.usableIds.length,full:value.evidence.filter(e=>value.usableIds.includes(e.id)&&!e.truncated).length,excerpts:value.evidence.filter(e=>value.usableIds.includes(e.id)&&e.truncated).length}]));
   }
+  // Reassign only unspent capacity to one never-attempted channel. No failed channel is retried.
+  const goalMissing=goal!=='general'&&!out.evidence.some(e=>isAnalysisBody(e)&&sourcePurpose(e.source)===goal);
+  const spare=limit-out.requests-originalReserve;
+  const fallback=goalMissing&&spare>0?ranked.find(({job})=>!allocations.some(a=>a.name===job.name)&&sourcePurpose(job.name)===goal)?.job:undefined;
+  if(fallback){const room=Math.min(spare,fallback.cap);out.routing!.allocation.push({source:fallback.name,purpose:sourcePurpose(fallback.name),cap:room,reallocated:true});try{const value=await fallback.run(room);out.requests+=value.requests;out.failed+=value.failed;out.skipped+=value.skipped;out.evidence.push(...value.evidence);out.usableIds.push(...value.usableIds);out.sourceErrors=[...(out.sourceErrors||[]),...(value.sourceErrors||[])];out.sourceDetails.push(...(value.sourceDetails||[{source:fallback.name,state:value.evidence.length?'ok':value.failed?'failed':'empty',requests:value.requests,items:value.evidence.length,full:value.evidence.filter(e=>!e.truncated).length,excerpts:value.evidence.filter(e=>e.truncated).length}]));}catch{out.requests+=room;out.failed++;out.sourceDetails.push({source:fallback.name,state:'failed',requests:room,items:0,full:0,excerpts:0,code:'SOURCE_FAILURE'});}}
+  for(const {job} of ranked)if(!out.routing!.allocation.some(a=>a.source===job.name))out.sourceDetails.push({source:job.name,state:'skipped',requests:0,items:0,full:0,excerpts:0,code:'SOURCE_BUDGET_PRIORITY'});
   // A bounded original read is reserved for discovery; unsupported hosts remain summaries.
   for(let i=0;i<out.evidence.length&&out.requests<limit;i++){const e=out.evidence[i];if(e.contentBasis!=='excerpt'||!/博查|网页搜索发现/.test(e.source)||!canReadDiscovered(e.url))continue;const receipt=out.sourceDetails.find(r=>e.source.startsWith(r.source));if(!receipt)continue;out.requests++;receipt.requests++;
     try{const original=await readDiscoveredOriginal(e);const date=Date.parse(original.date);if(since!==null&&Number.isFinite(date)&&date<since*1000)throw Error('SOURCE_OUTSIDE_PERIOD');out.evidence[i]=original;if(!original.truncated){receipt.full++;receipt.excerpts--;}out.usableIds.push(e.id);}catch{out.failed++;receipt.code='SOURCE_ORIGINAL_UNAVAILABLE';(out.sourceErrors||=[]).push('SOURCE_ORIGINAL_UNAVAILABLE');}break;

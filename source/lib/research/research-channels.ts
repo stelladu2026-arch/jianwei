@@ -18,13 +18,16 @@ export async function collectIssueComments(items:Evidence[],query:string,since:n
   }catch(e){out.failed++;out.sourceErrors=[...(out.sourceErrors||[]),sourceFailure(e)];}
  }return finish(out,source);
 }
-export async function collectDifyOfficial(query:string,since:number|null,cap:number,fetcher:typeof fetch=fetch){
- const out=blank(query,since),source='GitHub 文档 · Dify 官方项目';if(cap<1)return finish(out,source);
- out.requests++;const doc=await previewImportLink('https://github.com/langgenius/dify-docs/blob/main/en/cloud/use-dify/nodes/knowledge-retrieval.mdx',fetcher);
- if(doc.row)out.evidence.push({...doc.row,id:'OFFICIAL_DIFY_RETRIEVAL',source,fetched:new Date().toISOString(),kind:'public',excluded:false,applicationNote:'官方项目功能文档；发布日期未知，不保证符合研究时间范围，不证明用户痛点或购买需求。'});else{out.failed++;out.sourceErrors=['SOURCE_OFFICIAL_DOCUMENT_UNAVAILABLE'];}
- if(cap>=2){out.requests++;try{const body=await sourceResponse('https://api.github.com/repos/langgenius/dify/releases?per_page=5',600000,fetcher,'application/vnd.github+json');const releases=JSON.parse(body.text);if(!Array.isArray(releases))throw Error('SOURCE_BAD_FEED');
-  for(const r of releases.slice(0,5)){const text=articleText(typeof r.body==='string'?r.body:''),date=Date.parse(r.published_at),url=typeof r.html_url==='string'?r.html_url:'';if(r.draft||text.length<40||!Number.isFinite(date)||date>Date.now()||since!==null&&date<since*1000||!/^https:\/\/github\.com\/langgenius\/dify\/releases\/tag\//.test(url)||!Number.isSafeInteger(r.id)){out.skipped++;continue;}
-  out.evidence.push({id:'GHR'+r.id,title:('Dify 版本记录 · '+(r.name||r.tag_name)).slice(0,180),text:text.slice(0,5000),source:'GitHub 文档 · Dify 官方版本记录',date:new Date(date).toISOString().slice(0,10),fetched:new Date().toISOString(),author:'',thread:url,url,kind:'public',stance:'context',excluded:false,truncated:text.length>5000,contentType:'article',applicationNote:'仅取最近5个版本供核查，不代表检索过全部版本；未提到某问题不等于未修复。'});}
+export async function collectDifyOfficial(query:string,since:number|null,cap:number,fetcher:typeof fetch=fetch){return collectProductOfficial(query,since,cap,'dify',fetcher);}
+export async function collectProductOfficial(query:string,since:number|null,cap:number,product:'dify'|'n8n',fetcher:typeof fetch=fetch){
+ const repo=product==='dify'?'langgenius/dify':'n8n-io/n8n',label=product==='dify'?'Dify':'n8n';
+ const out=blank(query,since),source='GitHub 文档 · '+label+' 官方项目';if(cap<1)return finish(out,source);
+ const scheduling=product==='n8n'&&/timezone|schedule|时区|定时/i.test(query);
+ out.requests++;const doc=await previewImportLink(product==='dify'?'https://github.com/langgenius/dify-docs/blob/main/en/cloud/use-dify/nodes/knowledge-retrieval.mdx':scheduling?'https://github.com/n8n-io/n8n-docs/blob/main/docs/integrations/builtin/core-nodes/n8n-nodes-base.scheduletrigger/common-issues.md':'https://github.com/n8n-io/n8n-docs/blob/main/docs/build/understand-workflows/understand-executions/view-all-executions.md',fetcher);
+ if(doc.row)out.evidence.push({...doc.row,id:product==='dify'?'OFFICIAL_DIFY_RETRIEVAL':scheduling?'OFFICIAL_N8N_SCHEDULE':'OFFICIAL_N8N_EXECUTIONS',source,fetched:new Date().toISOString(),kind:'public',excluded:false,applicationNote:'官方项目功能文档；发布日期未知，不保证符合研究时间范围，不证明用户痛点或购买需求。'});else{out.failed++;out.sourceErrors=['SOURCE_OFFICIAL_DOCUMENT_UNAVAILABLE'];}
+ if(cap>=2){out.requests++;try{const body=await sourceResponse('https://api.github.com/repos/'+repo+'/releases?per_page=5',600000,fetcher,'application/vnd.github+json');const releases=JSON.parse(body.text);if(!Array.isArray(releases))throw Error('SOURCE_BAD_FEED');
+  for(const r of releases.slice(0,5)){const text=articleText(typeof r.body==='string'?r.body:''),date=Date.parse(r.published_at),url=typeof r.html_url==='string'?r.html_url:'';if(r.draft||text.length<40||!Number.isFinite(date)||date>Date.now()||since!==null&&date<since*1000||!url.startsWith('https://github.com/'+repo+'/releases/tag/')||!Number.isSafeInteger(r.id)){out.skipped++;continue;}
+  out.evidence.push({id:'GHR'+r.id,title:(label+' 版本记录 · '+(r.name||r.tag_name)).slice(0,180),text:text.slice(0,5000),source:'GitHub 文档 · '+label+' 官方版本记录',date:new Date(date).toISOString().slice(0,10),fetched:new Date().toISOString(),author:'',thread:url,url,kind:'public',stance:'context',excluded:false,truncated:text.length>5000,contentType:'article',applicationNote:'仅取最近5个版本供核查，不代表检索过全部版本；未提到某问题不等于未修复。'});}
  }catch(e){out.failed++;out.sourceErrors=[...(out.sourceErrors||[]),sourceFailure(e)];}}
  return finish(out,source);
 }

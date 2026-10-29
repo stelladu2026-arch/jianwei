@@ -14,7 +14,7 @@ import {judgments,judgmentLabels,type ClaimCheck,type LocatedCheck} from './revi
 export {judgments,judgmentLabels,targetLabels} from './review-contract';
 export type {ClaimCheck,LocatedCheck,Disagreement} from './review-contract';
 export type FrozenInput={brief:Record<string,string>;evidence:Evidence[];memories:Memory[];fingerprint:string};
-export type Baseline={runId:string;model:string;at:string;output:ModelResult&{data:Analysis};report:string;usage:{input_tokens:number;output_tokens:number};elapsedMs:number;fingerprint:string};
+export type Baseline={requests?:number;runId:string;model:string;at:string;output:ModelResult&{data:Analysis};report:string;usage:{input_tokens:number;output_tokens:number};elapsedMs:number;fingerprint:string};
 export type HumanJudgment={target:string;judgment:typeof judgments[number];note:string};
 export type HumanReview={baseline:HumanJudgment[];candidate:HumanJudgment[];decision:'single'|'four'|'inconclusive';comment:string;at:string};
 export type Comparison={baseline?:Baseline;matched:boolean;reason:string;candidateFingerprint:string;human?:HumanReview};
@@ -37,7 +37,7 @@ export async function initializeFour(p:Project,w:ResearchWorkflow){
   // All non-verifier roles share frozen current memories; verifier gets none.
   const memories=context.memories.slice(0,6),evidence=structuredClone(input.evidence as Evidence[]),hash=await fingerprint(input.brief,evidence,memories);
   w.frozen={brief:structuredClone(input.brief),evidence,memories:structuredClone(memories),fingerprint:hash};w.usableIds=ids;
-  const baseline=baseTask?.output&&baselineRun?{runId:baselineRun.id,model:baseTask.output.model,at:baselineRun.updated,output:structuredClone(baseTask.output),report:baselineRun.report,usage:baseTask.output.usage,elapsedMs:baseTask.elapsedMs,fingerprint:await fingerprint(input.brief,evidence,input.context?.memories||[])}:undefined;
+  const baseline=baseTask?.output&&baselineRun?{requests:baselineRun.budget.requests??baselineRun.budget.attempts,runId:baselineRun.id,model:baseTask.output.model,at:baselineRun.updated,output:structuredClone(baseTask.output),report:baselineRun.report,usage:baseTask.output.usage,elapsedMs:baseTask.elapsedMs,fingerprint:await fingerprint(input.brief,evidence,input.context?.memories||[])}:undefined;
   w.comparison={baseline,matched:!!baseline&&baseline.fingerprint===hash&&baseline.model===QWEN_MODEL,candidateFingerprint:hash,reason:baseline?baseline.fingerprint===hash?'复用单角色的同一范围、资料片段和有效记忆；角色提示及前序摘要为本次干预。':'有效记忆与旧基线不同，保留报告供参考，不能作为严格同输入对照。':'没有可复用的真实单角色基线，未自动增加生成请求。'};
   const r=makeRun({...p,run:undefined,evidence},'four','normal',w.budget.modelLimit);r.adapter='qwen';r.model=QWEN_MODEL;r.simulation=false;r.paidBudget=0;r.freeTierOnlyConfirmed=true;r.reviewProtocol=REVIEW_VERSION;w.analysisRun=r;
   w.limitations.push('本轮复用已有原文，四角色通常各调用一次；每阶段最多 2 次、整轮最多 8 次。失败不自动重试，不追加规划、采集或自动补搜。','片段位置由代码核对；支持程度是模型判断，待人工核查。','同标识模型在不同时间生成，缓存基线对照不是随机实验或准确率评测。');
@@ -101,7 +101,7 @@ export function saveHumanReview(w:ResearchWorkflow,value:z.infer<typeof reviewIn
 export function comparisonMetrics(w:ResearchWorkflow){
   const final=w.analysisRun?.tasks.find(t=>t.role==='coordinator')?.output,baseline=w.comparison?.baseline;
   const usage=w.records.filter(r=>r.kind==='model'&&r.usage).map(r=>r.usage!);
-  return {baseline:baseline?{claims:claims(baseline.output.data).length,counterNotes:baseline.output.data.notes.filter(n=>n.kind==='counter').length,gaps:baseline.output.gaps.length,requests:1,input:baseline.usage.input_tokens,output:baseline.usage.output_tokens,elapsedMs:baseline.elapsedMs}:null,candidate:final?{claims:claims(final.data).length,counterNotes:final.data.notes.filter(n=>n.kind==='counter').length,gaps:final.gaps.length,requests:w.budget.modelAttempts,input:usage.reduce((n,u)=>n+u.input_tokens,0),output:usage.reduce((n,u)=>n+u.output_tokens,0),elapsedMs:w.records.filter(r=>r.kind==='model').reduce((n,r)=>n+r.elapsedMs,0)}:null,human:w.comparison?.human?{baselineUnsupported:w.comparison.human.baseline.filter(x=>['insufficient','contradicts'].includes(x.judgment)).length,candidateUnsupported:w.comparison.human.candidate.filter(x=>['insufficient','contradicts'].includes(x.judgment)).length}:null};
+  return {baseline:baseline?{claims:claims(baseline.output.data).length,counterNotes:baseline.output.data.notes.filter(n=>n.kind==='counter').length,gaps:baseline.output.gaps.length,requests:baseline.requests??null,input:baseline.usage.input_tokens,output:baseline.usage.output_tokens,elapsedMs:baseline.elapsedMs}:null,candidate:final?{claims:claims(final.data).length,counterNotes:final.data.notes.filter(n=>n.kind==='counter').length,gaps:final.gaps.length,requests:w.budget.modelAttempts,input:usage.reduce((n,u)=>n+u.input_tokens,0),output:usage.reduce((n,u)=>n+u.output_tokens,0),elapsedMs:w.records.filter(r=>r.kind==='model').reduce((n,r)=>n+r.elapsedMs,0)}:null,human:w.comparison?.human?{baselineUnsupported:w.comparison.human.baseline.filter(x=>['insufficient','contradicts'].includes(x.judgment)).length,candidateUnsupported:w.comparison.human.candidate.filter(x=>['insufficient','contradicts'].includes(x.judgment)).length}:null};
 }
 export function collaborationReport(w:ResearchWorkflow){
   if(w.mode!=='four')return '';

@@ -1,0 +1,7 @@
+export type ResearchSourceGoal='general'|'capability'|'feedback'|'background';
+export type SourcePurpose='discovery'|'capability'|'feedback'|'background';
+export function researchSourceGoal(query:string,topic:string,profile:string):ResearchSourceGoal{const text=query+' '+topic;if(/时区|timezone|schedule|版本|配置|修复|已有替代|现有能力|官方|alternative|existing|release/i.test(text))return 'capability';if(profile==='dify'||profile==='software'||profile==='business'||/用户反馈|实际经历|user feedback/i.test(text))return 'feedback';if(/统计|市场规模|消费|就业|产业/i.test(text))return 'background';return 'general';}
+export function sourcePurpose(name:string):SourcePurpose{if(/官方|文档/.test(name))return 'capability';if(/搜索发现|博查/.test(name))return 'discovery';if(/GitHub|Hacker News|产品社区/.test(name))return 'feedback';return 'background';}
+export function sourcePriority(name:string,goal:ResearchSourceGoal){const purpose=sourcePurpose(name);if(goal==='general')return 0;if(purpose===goal)return 100;if(purpose==='discovery')return 90;if(goal==='capability'&&purpose==='feedback'||goal==='feedback'&&purpose==='capability')return 70;return 10;}
+
+export function sourceSkipMessage(code?:string){if(code==='SEARCH_NOT_CONFIGURED'||code==='SOURCE_NOT_CONFIGURED')return '尚未配置或启用，本次未请求';if(code==='SOURCE_BUDGET_PRIORITY')return '按研究目标与剩余预算，本次未分配请求';if(code==='SOURCE_TOPIC_PRIORITY')return '与本轮主题优先级不匹配，本次未请求';if(code==='SOURCE_LANGUAGE_PRIORITY')return '按关键词语言分配，本次未请求';if(code==='SOURCE_TOPIC_ROUTING')return '主题分配记录，不单独产生请求';return '本次未安排请求，请核对配置与执行记录';}

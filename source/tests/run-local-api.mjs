@@ -38,6 +38,7 @@ await import('./p0-p2-smoke.mjs');
 await import('./research-channels-smoke.mjs');
 await import('./additional-channels-smoke.mjs');
 await import('./audit-remediation-smoke.mjs');
+await import('./source-allocation-smoke.mjs');
 await import('./link-import-smoke.mjs');
 if(process.env.JIANWEI_TEST_SUITE==='copy'){await import('./status-copy-smoke.mjs');}
 else if(process.env.JIANWEI_TEST_SUITE==='prose'){await import('./prose-completeness-smoke.mjs');}
