@@ -6,6 +6,9 @@
     "node": ">=22.13.0"
   },
   "scripts": {
+    "docs:logic": "node scripts/sync-logic-docs.mjs",
+    "docs:logic:check": "node scripts/sync-logic-docs.mjs --check",
+    "test:logic-docs": "node tests/logic-docs-smoke.mjs",
     "install:ci": "bash scripts/install-pnpm.sh",
     "dev": "node scripts/run-framework.mjs dev",
     "build": "node scripts/run-framework.mjs build",
@@ -79,3 +82,4 @@
   },
   "packageManager": "pnpm@11.25.0"
 }
+

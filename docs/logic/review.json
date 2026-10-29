@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "reviewer": "编码助手：源码阅读与静态分支核对",
+  "reviewed_at": "2026-10-29",
+  "base_commit": "ad7c00efd0fe1de4ff7aaec15fb7cfd7b0de13a6",
+  "summary": "核对当前研究模式、可选补证、来源资格规则、冻结输入与盲反证、任务依赖非并行调度，以及未知回执禁止重发。没有运行真实研究或确认市场结论。",
+  "sources": {
+    "source/lib/research/workflow.ts": "081372f72ffe6bdbbd2d231451b25668113a2336ab73cb41d248ccb71d946111",
+    "source/app/api/projects/[id]/workflow/route.ts": "20071bf026c9962ee5b48d26921c9459b913488d46aff93f0412b9eb2dda6fc5",
+    "source/lib/research/execution.ts": "dfca3d29eef8b72e510327d4cf4f1e624a82c2e470c9848f6c91a2fbe407922b",
+    "source/lib/research/collaboration.ts": "c95f91719a99cf4104cbc0b6c1f6ea7f399758ba1871262b2293e6b4078a9100",
+    "source/lib/research/agent-loop.ts": "59c42442455144a031336ce08da979566c2d4c354a4560e6fb2e0e0e9b78cadf",
+    "source/lib/research/harness/runner.ts": "0fc8b48b53a88508ddcda2a83c5472c2762ac356c755930e5d99bd270e074bdd",
+    "source/lib/research/harness/recovery.ts": "6b10c6e973e7a3a576755b9355f3bf913052f24254a22caecf902ac0dae73280",
+    "source/lib/research/harness/background.ts": "8b528af780240d590cbbf1fa9d90dbc5fb92120ad77fc26ec1d5e8cd00f91e3b",
+    "source/lib/research/collection.ts": "8391918cae3f33914c990be881f93566c8c104ea2f0b133c0d8429bff8bcf140",
+    "source/lib/research/configured-sources.ts": "47f1107b2ecfc255443db0f4b4333fb262d0ba175cc35928ff8e87e5f3374c1d",
+    "source/lib/research/evidence-eligibility.ts": "d130cd5dc3ecfccdd90c72aa76a46ad68d0f02b5a2a35b50889ee35d6832c586",
+    "source/lib/research/source-fit.ts": "c2f7866b524eb1920bad803fea0d408f8b6459ed6b59fef691df92fb35a28f8e"
+  }
+}
