@@ -1,0 +1,51 @@
+name: 研究试用反馈
+description: 反馈卡点、证据问题或具体研究价值；请先脱敏。
+title: "[试用反馈] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Issue 公开可见。不要上传密钥、数据库令牌、客户原文、账单、联系方式或私人部署信息。
+        完整研究导出可能含私人资料，请只填写你有权公开的摘要。
+  - type: textarea
+    id: context
+    attributes:
+      label: 角色与本次要做的决定
+      description: 用匿名描述说明问题和原来的处理方法。
+    validations:
+      required: true
+  - type: dropdown
+    id: completion
+    attributes:
+      label: 完成情况
+      options:
+        - 只阅读案例
+        - 体验虚构或模拟演示
+        - 独立完成真实研究
+        - 获得协助后完成真实研究
+        - 未完成真实研究
+    validations:
+      required: true
+  - type: textarea
+    id: observation
+    attributes:
+      label: 最有用的结果或具体卡点
+      description: 尽量说明来源、主张或操作步骤。公开链接可以提供，客户私人材料请勿上传。
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 预期与实际的差异
+      description: 哪个判断缺少支持？你希望下一步怎样操作？
+  - type: input
+    id: version
+    attributes:
+      label: 代码版本或提交 SHA（如知道）
+  - type: checkboxes
+    id: permission
+    attributes:
+      label: 公开内容确认
+      options:
+        - label: 我已移除私人内容、密钥及客户身份信息，所填内容可以公开。
+          required: true
