@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "fingerprint": "4f103cd97ee14a3a20bcea414eb0f3a1f46b5768afc62830f3e9248be27e415d",
+  "fingerprint": "5bd35e46080bff4a97fac2c27e578bebf216a2699dbf0f21a253123bfdc846ec",
   "typescript": "5.9.3",
   "scope": [
     "source/app",
@@ -47,7 +47,7 @@
     "source/components/research-overview-pulse.tsx": "38f8a624cc054f26c4a906da1cb318ef59b5bb3a5256328eb2ffee51c88faacd",
     "source/components/research-showcase.tsx": "ad6ff8bd39bf93f2805a2872fef5123e1634802f566745dfdbcfb0a6778838cf",
     "source/components/research-stage-outcome.tsx": "0a629ffdcf748b9c96878d2f66ef871e0a25a8f2f1ac17469f55b9ee9153c5d0",
-    "source/components/research-workflow.tsx": "ee09512cf0d0449ec007ef00f181f4acc4f4f2b81dec79567ac1ab0529fb72d8",
+    "source/components/research-workflow.tsx": "f990bd8c9458c36b27f2f4c8ca4d7ae0de45bf0626b51544c4eae222f3ec5d18",
     "source/components/scope-confirmation-actions.tsx": "a5d84f3d3f8e004863a667f941b5e937d5a1b76b7bd99d3e5270ae76a8c3fc3f",
     "source/components/ui/accordion.tsx": "a4f153089ba886dfcf73fac26b5c01ca933fa12fbe88df6fb723912bfffdfbb0",
     "source/components/ui/alert-dialog.tsx": "9a8d950f2b9b4352d5ebb762fb44d5c28c2d353aa29712071973656a8736e311",
@@ -178,9 +178,9 @@
     "source/lib/research/project-summary.ts": "020e8ee9ad2472ea3fbf58fd7dc2ab486d3368de81ac61dfbaa7163086c79473",
     "source/lib/research/project-updates.ts": "f0d012c4f5093683388e4e2b27cc4d8fe7e4abbe72d00dc0ceae27f78cefe15c",
     "source/lib/research/proposal-completeness.ts": "7565660f4cb758119c31f6e54498c8c8aea15f1883982b6d276d99f2fb0d0ffe",
-    "source/lib/research/provider-config.ts": "18cf3e148a4ee2cdee4904d35f1db1e3839d5b7800a1bbd1b8c962803369661e",
+    "source/lib/research/provider-config.ts": "d4606f198fa770cf437949adc8fe2f90d08267ce008ceb8ac864180aac6e703c",
     "source/lib/research/provider-network.ts": "153f8f7538fcb1915865388da0e1159dd0b3109a1d8a9e280dd87b783da7b276",
-    "source/lib/research/qwen-model.ts": "ea50ccf23863f3425d7e7a1a78273939d1f087bb80ffe8bc7214f92270414531",
+    "source/lib/research/qwen-model.ts": "1ac9db88db57f9feb7a4b360e0ce819407cf8c5fa5f65d86cc00a758e68c9536",
     "source/lib/research/qwen-schema.ts": "2c980cb87b390d39ff16d11ce73ca79c693fb483307e677a99c0a0c383df2cd7",
     "source/lib/research/qwen-settings.ts": "edd2e626d419705df9caf02c8faff550f6d7d9645240b3eb4de0f33b194767a7",
     "source/lib/research/reader-report.ts": "e2c11706c42a6c0b57d695ce884a27909e3f8bd952bfb13ce21225f18f8d6bf2",

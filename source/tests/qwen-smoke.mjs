@@ -17,7 +17,7 @@ globalThis.fetch=async(url,init)=>{
   requests++;
   assert.equal(url,QWEN_BASE_URL+'/chat/completions');assert.equal(init.redirect,'manual');assert.equal(init.headers.Authorization,'Bearer '+key);
   const body=JSON.parse(init.body),task=JSON.parse(body.messages[1].content);
-  assert.equal(body.model,QWEN_MODEL);assert.equal(body.enable_thinking,false);assert.equal(body.stream,false);assert.equal(body.max_tokens,QWEN_MAX_OUTPUT_TOKENS);assert.equal(body.response_format.json_schema.strict,true);assert.ok(!init.body.includes(key));assert.equal(task.context.simulation,false);assert.deepEqual(body.response_format.json_schema.schema.properties.evidence_ids.items.enum,[...new Set(task.evidence_ids)]);
+  assert.equal(body.model,QWEN_MODEL);assert.equal(body.enable_thinking,false);assert.equal(body.stream,false);assert.equal(body.max_tokens,QWEN_MAX_OUTPUT_TOKENS);assert.equal(body.max_tokens,4096);assert.ok(body.messages[0].content.includes('保留必要引用、反证及未知')); assert.equal(body.response_format.json_schema.strict,true);assert.ok(!init.body.includes(key));assert.equal(task.context.simulation,false);assert.deepEqual(body.response_format.json_schema.schema.properties.evidence_ids.items.enum,[...new Set(task.evidence_ids)]);
   if(scenario==='pending')await new Promise(resolve=>{pendingRelease=resolve});
   if(scenario==='redirect')return new Response(null,{status:302,headers:{Location:'https://untrusted.invalid/model'}});
   if(scenario==='network')throw new Error('private upstream error '+key);
