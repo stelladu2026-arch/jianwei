@@ -1,0 +1,6 @@
+import {z} from 'zod';
+import {log,type Project} from './domain';
+import {isAnalysisBody} from './evidence-eligibility';
+import {unfinishedResearch} from './workflow';
+const field=z.string().trim().min(1).max(2000);
+export function saveExperiment(p:Project,input:unknown){const d=z.object({opportunityId:z.string(),hypothesis:field,audience:field,action:field,metric:field,criteria:field,result:z.string().trim().max(4000),refs:z.array(z.string()).max(30)}).parse(input);if(unfinishedResearch(p))throw Error('先结束当前研究，再记录实验，避免改变运行中的判断依据。');const card=p.opportunities.find(o=>o.id===d.opportunityId);if(!card)throw Error('机会卡不存在');if(d.refs.some(id=>!p.evidence.some(e=>e.id===id&&isAnalysisBody(e))))throw Error('实验引用必须来自当前项目可用资料');if(d.result&&!d.refs.length)throw Error('记录结果前，请先导入访谈或实验原文并选择引用。');const row={...d,state:d.result?'recorded' as const:'planned' as const,revision:p.revision,evidenceVersion:p.evidenceVersion||0,updated:new Date().toISOString()};p.experiments=[...(p.experiments||[]).filter(x=>x.opportunityId!==d.opportunityId),row];if(d.result){if(p.status==='completed')p.status='awaiting_decision';card.stale=true;card.reviewReason='已录入实验结果，请结合来源重新复核判断；结果不是自动验证事实。';}log(p,d.result?'保存人工实验结果与引用；机会判断待复核':'保存结构化验证计划；尚未执行');}

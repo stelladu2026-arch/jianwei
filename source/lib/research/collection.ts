@@ -1,3 +1,5 @@
+import {canReadDiscovered,readDiscoveredOriginal} from './additional-channels';
+import {isAnalysisBody} from './evidence-eligibility';
 import {sourceProfile,focusedSourceQuery,collectIssueComments,collectDifyOfficial} from './research-channels';
 import type {Evidence} from './domain';
 import {collectNewsSearch,enrichNewsArticle,NEWS_SOURCE} from './news-search';
@@ -103,7 +105,7 @@ export async function collectPublic(query:string,since:number|null,cap=SOURCE_RE
   const limit=Math.max(0,Math.min(SOURCE_REQUEST_CAP,Math.floor(cap))),out=blank(query,since);out.sourceDetails=[];
   if(!limit){out.limited=true;return out;}
   // Reserve fixed allocations first. Results settle independently, with no retries.
-  const allocations:{run:()=>Promise<Collection>;cap:number;name:string}[]=[];let remaining=limit;
+  const allocations:{run:()=>Promise<Collection>;cap:number;name:string}[]=[];let remaining=limit-((options.webSearch||options.channels?.some(c=>c.name==='博查网页搜索'))&&limit>=3?1:0);
   const add=(amount:number,name:string,run:(cap:number)=>Promise<Collection>)=>{const room=Math.min(amount,remaining);if(room<1)return;remaining-=room;allocations.push({cap:room,name,run:()=>run(room)});};
   const chinese=/[\p{Script=Han}]/u.test(query);
   const profile=sourceProfile(query,options.topic),focused=focusedSourceQuery(query,profile);out.routing={profile,effectiveQuery:focused};
@@ -131,6 +133,10 @@ export async function collectPublic(query:string,since:number|null,cap=SOURCE_RE
     const value=result.value;out.evidence.push(...value.evidence);out.usableIds.push(...value.usableIds);out.requests+=value.requests;out.failed+=value.failed;out.skipped+=value.skipped;out.limited||=value.limited;
     out.sourceErrors=[...(out.sourceErrors||[]),...(value.sourceErrors||[])];out.sourceDetails.push(...(value.sourceDetails||[{source:allocations[i].name,state:value.failed&&!value.usableIds.length?'failed':value.usableIds.length?'ok':'empty',requests:value.requests,items:value.usableIds.length,full:value.evidence.filter(e=>value.usableIds.includes(e.id)&&!e.truncated).length,excerpts:value.evidence.filter(e=>value.usableIds.includes(e.id)&&e.truncated).length}]));
   }
+  // A bounded original read is reserved for discovery; unsupported hosts remain summaries.
+  for(let i=0;i<out.evidence.length&&out.requests<limit;i++){const e=out.evidence[i];if(e.contentBasis!=='excerpt'||!/博查|网页搜索发现/.test(e.source)||!canReadDiscovered(e.url))continue;const receipt=out.sourceDetails.find(r=>e.source.startsWith(r.source));if(!receipt)continue;out.requests++;receipt.requests++;
+    try{const original=await readDiscoveredOriginal(e);const date=Date.parse(original.date);if(since!==null&&Number.isFinite(date)&&date<since*1000)throw Error('SOURCE_OUTSIDE_PERIOD');out.evidence[i]=original;if(!original.truncated){receipt.full++;receipt.excerpts--;}out.usableIds.push(e.id);}catch{out.failed++;receipt.code='SOURCE_ORIGINAL_UNAVAILABLE';(out.sourceErrors||=[]).push('SOURCE_ORIGINAL_UNAVAILABLE');}break;
+  }
   // Spare requests enrich matching originals. Each publisher gets at most one;
   // every failure still counts, and no new search or hidden retry is started.
   for(const key of ['chinanews','sspai','cnblogs'] as const){if(out.requests>=limit)break;const index=out.evidence.findIndex(e=>e.source===(key==='chinanews'?NEWS_SOURCE:FEED_SOURCES[key].name)&&e.contentBasis==='excerpt');if(index<0)continue;
@@ -142,5 +148,6 @@ export async function collectPublic(query:string,since:number|null,cap=SOURCE_RE
   if(!options.webSearch)out.sourceDetails.push({source:'网页搜索发现',state:'skipped',requests:0,items:0,full:0,excerpts:0,code:'SEARCH_NOT_CONFIGURED'});
   const omitted=profile!=='general'?STATISTICS_SOURCE:chinese?'Hacker News':STATISTICS_SOURCE;
   out.sourceDetails.push({source:omitted,state:'skipped',requests:0,items:0,full:0,excerpts:0,code:profile!=='general'?'SOURCE_TOPIC_PRIORITY':'SOURCE_LANGUAGE_PRIORITY'});
+  out.usableIds=out.usableIds.filter(id=>out.evidence.some(e=>e.id===id&&isAnalysisBody(e)));
   out.limited||=allocations.length<7;return out;
 }

@@ -1,3 +1,4 @@
+import {isAnalysisBody} from './evidence-eligibility';
 import {QWEN_BASE_URL} from './provider-config';
 import {isQwenCredentialConfigured} from './qwen-model';
 import {retrieveProjectEvidence,type RetrievalHit} from './retrieval';
@@ -39,7 +40,7 @@ export function cosine(a:number[],b:number[]){
 // Small-project bounded hybrid search. Full input remains in the project;
 // coverage and clipping travel with hits rather than claiming a global index.
 export async function retrieveSemanticEvidence(evidence:Evidence[],query:string,adapter:EmbeddingAdapter):Promise<RetrievalHit[]>{
-  const eligible=evidence.filter(e=>!e.excluded&&e.kind!=='synthetic'&&e.text.length>=40&&!/^该(帖子|条目)只有标题/.test(e.text));
+  const eligible=evidence.filter(e=>isAnalysisBody(e));
   const selected=eligible.slice(0,8);
   if(!query.trim()||!selected.length)return [];
   const texts=selected.map(e=>e.text.slice(0,900));

@@ -1,3 +1,4 @@
+import {isAnalysisBody} from './evidence-eligibility';
 import type {Project} from './domain';
 import type {SourceProfile} from './domestic-sources';
 
@@ -20,7 +21,7 @@ export function workflowStartBlockers(p:Project,options:{mode:'single'|'four';so
  if(p.workflow?.conclusionAudit&&['ready','running'].includes(p.workflow.conclusionAudit.status))rows.push({code:'audit_active',message:'结论复核尚未结束，请先完成或结束复核。',action:'audit',label:'前往结论复核'});
  if(p.workflow&&['ready','running','paused','failed'].includes(p.workflow.status)&&!(options.restartFour&&p.workflow.mode==='four'&&p.workflow.status==='failed'))rows.push({code:'workflow_active',message:'当前研究检查点尚未结束，先处理当前轮再创建新轮。',action:'checkpoint',label:'处理当前研究检查点'});
  if(options.mode==='single'){const collection=collectionStartBlocker(p,options.sourceProfile);if(collection)rows.push(collection);}
- if(options.mode==='four'&&!p.evidence.some(e=>!e.excluded&&e.kind!=='synthetic'&&e.text.trim().length>=40))rows.push({code:'originals',message:'至少需要一条可分析的真实正文；只有标题、已排除或虚构资料不能启动复核。',action:'sources',label:'去补充原文'});
+ if(options.mode==='four'&&!p.evidence.some(e=>isAnalysisBody(e)))rows.push({code:'originals',message:'至少需要一条可分析的真实正文；只有标题、已排除或虚构资料不能启动复核。',action:'sources',label:'去补充原文'});
  if(options.providerLoading)rows.push({code:'provider_loading',message:'正在读取研究服务状态，请等待完成。',action:'provider',label:'刷新服务状态'});
  else if(options.providerError||!options.providerReady)rows.push({code:'provider',message:options.providerError||'研究服务暂不可用，请刷新服务状态后重试。',action:'provider',label:'刷新服务状态'});
  return rows;

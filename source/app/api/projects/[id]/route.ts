@@ -1,3 +1,4 @@
+import {saveExperiment} from '@/lib/research/experiment';
 import {isStorageFailure,storageFailureMessage} from '@/lib/research/storage-errors';
 import {NextResponse} from 'next/server';
 import {z} from 'zod';
@@ -10,8 +11,8 @@ import {activeWorkflow,controlWorkflow,unfinishedResearch,researchHasLease} from
 import {controlRun} from '@/lib/research/execution-controls';
 import {saveConfirmedOpportunity,removeOpportunity} from '@/lib/research/opportunity-actions';
 const text=z.string().max(8000);
-const bodySchema=z.object({version:z.number().int().positive(),callId:z.string().uuid(),action:z.enum(['brief','confirm','step','pause','resume','cancel','archive','evidence','removeEvidence','import','opportunity','removeOpportunity','report','finish','memory','confirmMemory','removeMemory','reflection','scanReflections','resolveReflection','removeReflection']),data:z.any().optional()});
-const imported=z.object({title:z.string().trim().min(1).max(200),text:z.string().trim().min(1).max(8000),source:z.string().trim().min(1).max(200),date:z.string().max(30),author:z.string().max(100).default(''),thread:z.string().max(200).default(''),url:z.string().max(1000).default(''),stance:z.enum(['support','counter','context']).default('context'),applicationNote:z.string().max(500).optional(),sourceState:z.enum(['open','closed']).optional(),truncated:z.boolean().optional(),authorization:z.literal('user-attested')});
+const bodySchema=z.object({version:z.number().int().positive(),callId:z.string().uuid(),action:z.enum(['experiment','brief','confirm','step','pause','resume','cancel','archive','evidence','removeEvidence','import','opportunity','removeOpportunity','report','finish','memory','confirmMemory','removeMemory','reflection','scanReflections','resolveReflection','removeReflection']),data:z.any().optional()});
+const imported=z.object({title:z.string().trim().min(1).max(200),text:z.string().trim().min(1).max(8000),source:z.string().trim().min(1).max(200),date:z.string().max(30),author:z.string().max(100).default(''),thread:z.string().max(200).default(''),url:z.string().max(1000).default(''),stance:z.enum(['support','counter','context']).default('context'),applicationNote:z.string().max(500).optional(),sourceState:z.enum(['open','closed']).optional(),contentBasis:z.enum(['full','excerpt']).optional(),truncated:z.boolean().optional(),authorization:z.literal('user-attested')});
 export async function GET(_request:Request,ctx:{params:Promise<{id:string}>}){try{const p=await get((await ctx.params).id);return p?NextResponse.json({project:p},{headers:{'Cache-Control':'private, no-store'}}):NextResponse.json({error:'项目不存在'},{status:404})}catch(e){return NextResponse.json({error:isStorageFailure(e)?storageFailureMessage(e,false):'读取项目详情失败，请重试。'},{status:503})}}
 export async function PATCH(req:Request,ctx:{params:Promise<{id:string}>}){try{
 if(req.headers.get('sec-fetch-site')==='cross-site')return NextResponse.json({error:'请求来源不正确'},{status:403});
@@ -26,6 +27,7 @@ if(b.action==='archive'){p.archived=!p.archived;log(p,p.archived?'归档项目':
 if(b.action==='import'){if(p.mode==='replay')throw new Error('演示项目仅保留虚构资料，请新建真实研究项目导入。');if(p.evidence.length>=100)throw new Error('本版每个项目最多 100 条资料。');const rows=z.array(imported).min(1).max(30).parse(d);for(const r of rows){if(p.evidence.length>=100)break;if(r.url&&!/^https?:\/\//i.test(r.url))throw new Error('来源链接只支持 http 或 https。');if(p.evidence.some(e=>e.text.trim()===r.text.trim()&&e.source===r.source))continue;const eid=crypto.randomUUID().slice(0,8);p.evidence.push({...r,id:eid,thread:r.thread||eid,kind:'imported',excluded:false,truncated:r.truncated||false,fetched:new Date().toISOString()});}invalidate(p);log(p,'导入用户声明已获授权的资料；授权声明不是人群或采集方式已核实，旧判断待复核');}
 if(b.action==='evidence'){const v=z.object({id:z.string(),excluded:z.boolean(),stance:z.enum(['support','counter','context'])}).parse(d);const e=p.evidence.find(x=>x.id===v.id);if(!e)throw new Error('证据不存在');Object.assign(e,v);invalidate(p);log(p,'更新证据采纳或正反证标记，结论待复核');}
 if(b.action==='removeEvidence'){const eid=z.string().parse(d);p.evidence=p.evidence.filter(e=>e.id!==eid);invalidate(p);log(p,'删除资料，关联结论待复核');}
+if(b.action==='experiment')saveExperiment(p,d);
 if(b.action==='opportunity')opportunityId=saveConfirmedOpportunity(p,d);
 if(b.action==='removeOpportunity')removeOpportunity(p,d);
 if(b.action==='finish'){if(unfinishedResearch(p))throw new Error('还有研究或结论复核尚未结束，请先完成或结束检查点；已有阶段成果仍可导出。');if(!p.confirmed||!p.opportunities.length||p.opportunities.some(o=>o.status==='draft'||o.stale||!o.plan.trim()))throw new Error('请先确认范围、复核机会判断并补齐验证计划。');p.status='completed';log(p,'人工确认本次研究交付完成；不代表商业机会成立');}

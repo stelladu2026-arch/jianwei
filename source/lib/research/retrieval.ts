@@ -1,3 +1,4 @@
+import {isAnalysisBody} from './evidence-eligibility';
 import type {Evidence} from './domain';
 
 export type RetrievalHit={id:string;title:string;text:string;mode?:'hybrid';score?:number;coverage?:{indexed:number;eligible:number};truncated?:boolean};
@@ -7,7 +8,7 @@ const placeholder=/^该(帖子|条目)只有标题/;
 export function retrieveProjectEvidence(evidence:Evidence[],question:string):RetrievalHit[]{
   const tokens=question.toLowerCase().split(/[\s,，。；;]+/).map(token=>token.trim()).filter(token=>token.length>=2);
   if(!tokens.length)return [];
-  return evidence.filter(item=>!item.excluded&&item.kind!=='synthetic'&&item.text.length>=40&&!placeholder.test(item.text)).map(item=>{
+  return evidence.filter(item=>isAnalysisBody(item)).map(item=>{
     const hay=`${item.title}\n${item.text}`.toLowerCase();
     return {item,score:tokens.reduce((n,token)=>n+(hay.includes(token)?1:0),0)};
   }).filter(row=>row.score>0).sort((a,b)=>b.score-a.score||a.item.id.localeCompare(b.item.id)).slice(0,4).map(row=>({id:row.item.id,title:row.item.title.slice(0,150),text:row.item.text.slice(0,400)}));

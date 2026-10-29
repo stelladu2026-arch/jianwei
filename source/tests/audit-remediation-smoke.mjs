@@ -1,0 +1,24 @@
+import {releaseReadiness} from '../scripts/vercel-storage-check.mjs';
+import assert from 'node:assert/strict';
+import {newProject} from '../lib/research/domain.ts';
+import {isAnalysisBody,evidenceReadiness} from '../lib/research/evidence-eligibility.ts';
+import {existingAnalysisSources,mergeCollected,makeWorkflow} from '../lib/research/workflow.ts';
+import {matchingCommunities} from '../lib/research/configured-sources.ts';
+import {saveExperiment} from '../lib/research/experiment.ts';
+import {retrieveProjectEvidence} from '../lib/research/retrieval.ts';
+import {canReadDiscovered,readDiscoveredOriginal} from '../lib/research/additional-channels.ts';
+const original={id:'body',title:'n8n retry',text:'n8n retry caused duplicate records in an actual workflow. '.repeat(3),source:'GitHub Issues',date:'2026-10-01',fetched:'',author:'',thread:'thread',url:'https://github.com/n8n-io/n8n/issues/1',kind:'public',stance:'context',excluded:false,truncated:true,contentBasis:'full'};
+const summary={...original,id:'summary',source:'博查网页搜索',contentBasis:'excerpt'};
+assert.equal(isAnalysisBody(original),true);assert.equal(isAnalysisBody(summary),false);assert.deepEqual(evidenceReadiness([original,summary]),{bodies:1,summaries:1});
+let p=newProject({title:'n8n retry',audience:'builders',decision:'verify'});p.confirmed=true;p.evidence=[summary];assert.equal(existingAnalysisSources(p).length,0);assert.equal(retrieveProjectEvidence(p.evidence,'retry').length,0);
+p.evidence.push(original);assert.equal(existingAnalysisSources(p).length,1);
+console.log('PASS summaries cannot qualify as bodies in existing analysis or retrieval');
+assert.deepEqual(matchingCommunities('Dify citation','',['n8n','cloudflare','discourse']),[]);assert.deepEqual(matchingCommunities('n8n retry','',['n8n','cloudflare']),['n8n']);
+console.log('PASS communities match product rather than configuration order');
+assert.equal(canReadDiscovered('https://127.0.0.1/secret'),false);assert.equal(canReadDiscovered('https://community.n8n.io/t/slug/123'),true);let calls=0;const read=await readDiscoveredOriginal({...summary,url:'https://community.n8n.io/t/slug/123'},async url=>{calls++;assert.equal(url,'https://community.n8n.io/t/123.json');return Response.json({id:123,title:'n8n retry',post_stream:{posts:[{post_number:1,user_id:2,cooked:original.text,created_at:'2026-10-01'}]}})});assert.equal(read.contentBasis,'full');assert.equal(calls,1);assert.ok(!read.text.includes('undefined'));
+console.log('PASS allowed discovery URLs resolve one original without following arbitrary links');
+p.opportunities=[{id:'o1',title:'test',refs:['body'],plan:'test',stale:false}];const data={opportunityId:'o1',hypothesis:'duplicates',audience:'builders',action:'reproduce safely',metric:'duplicate row count',criteria:'continue if reproduced; otherwise investigate',result:'',refs:[]};saveExperiment(p,data);assert.equal(p.experiments[0].state,'planned');assert.equal(p.opportunities[0].stale,false);
+assert.throws(()=>saveExperiment(p,{...data,result:'reproduced'}),/引用/);assert.throws(()=>saveExperiment(p,{...data,result:'reproduced',refs:['summary']}),/引用/);saveExperiment(p,{...data,result:'reproduced',refs:['body']});assert.equal(p.experiments.length,1);assert.equal(p.experiments[0].state,'recorded');assert.equal(p.opportunities[0].stale,true);assert.ok(p.opportunities[0].reviewReason.includes('待复核')||p.opportunities[0].reviewReason.includes('复核'));
+console.log('PASS experimental outcomes require original references and trigger human review, never automatic validation');
+
+const ready=releaseReadiness({code:'DATABASE_READY'},{DASHSCOPE_API_KEY:'fixture-key',QWEN_FREE_TIER_ONLY_CONFIRMED:'true',JIANWEI_ACCESS_PASSWORD:'fixture-password'});assert.ok(Object.values(ready).every(Boolean));assert.ok(!JSON.stringify(ready).includes('fixture'));assert.equal(releaseReadiness({code:'DATABASE_READY'},{}).freeTierProtection,false);assert.equal(releaseReadiness({code:'DATABASE_URL_MISSING'},{}).database,false);console.log('PASS release readiness rejects missing environment configuration without logging secrets or calling a model');

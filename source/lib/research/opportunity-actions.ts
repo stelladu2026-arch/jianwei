@@ -33,6 +33,7 @@ export function saveConfirmedOpportunity(p:Project,data:unknown){
 export function removeOpportunity(p:Project,data:unknown){
  const id=z.string().min(1).max(200).parse(data),item=p.opportunities.find(x=>x.id===id);
  if(item?.sourceRunId)p.removedOpportunityRunIds=[...new Set([...(p.removedOpportunityRunIds||[]),item.sourceRunId])];
+ p.experiments=p.experiments?.filter(x=>x.opportunityId!==id);
  p.opportunities=p.opportunities.filter(x=>x.id!==id);
  log(p,'删除机会卡；原文与历史报告快照保留');
 }

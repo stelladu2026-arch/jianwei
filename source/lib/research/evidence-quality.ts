@@ -1,5 +1,5 @@
 // Deterministic risk hints; these never verify relevance, truth or customer identity.
-export const QUALITY_POLICY_VERSION='evidence-boundary/2';
+export const QUALITY_POLICY_VERSION='evidence-boundary/3';
 export type QualitySource={id:string;title:string;text:string;source?:string};
 export function evidenceUseHint(input:unknown){
  const item=input&&typeof input==='object'?input as Record<string,unknown>:{};
@@ -8,6 +8,8 @@ export function evidenceUseHint(input:unknown){
  if(/(?:##?\s*(?:acceptance criteria|required behavior|required scenarios|primary owner)|\[(?:P\d+[-–]\d+|Server Submission)\]|验收标准|开发任务)/i.test(value))return {id:s.id,label:'开发任务或提交说明',use:'仅作实现或方案线索，不能直接证明目标客户经历或购买需求'};
  if(/(?:show hn\s*:|we (?:built|launched)|our product|产品发布|产品宣传)/i.test(value))return {id:s.id,label:'产品展示或推广线索',use:'可用于了解替代方案，不能直接当作客户证言或成交证据'};
  if(/GitHub 文档|docs\.dify\.ai|dify\.ai.*网页抽取/i.test(s.source||''))return {id:s.id,label:'功能文档或产品说明',use:'仅说明已有能力或配置方式，不直接证明用户痛点、功能缺失或购买意愿'};
+ if(/GitHub Discussions|产品社区/i.test(s.source||''))return {id:s.id,label:'公开讨论与解决建议',use:'区分提问者经历、其他用户建议和已采纳答案；同线程不代表独立客户，已采纳不等于核实'};
+ if(/博查|网页搜索发现/i.test(s.source||''))return {id:s.id,label:'搜索发现线索',use:'先核查是否取得原文，搜索摘要不作为独立需求证据'};
  if(/GitHub Issue/i.test(s.source||'')||/(?:bug report|steps to reproduce|expected behavior|actual behavior)/i.test(value))return {id:s.id,label:'公开问题或需求线索',use:'作者自述，需核查版本、部署条件、复现情况和当前修复状态，不能外推发生频率或付费'};
  if(/维基百科|Wikipedia|中国新闻网|国家统计局/i.test(s.source||''))return {id:s.id,label:'背景或统计资料',use:'仅用于背景或统计口径核查，不能直接证明具体目标客户经历或交易'};
  return {id:s.id,label:'资料用途待人工核查',use:'需核对作者身份、目标人群、场景和原文语境，不自动认定为用户经历或交易'};

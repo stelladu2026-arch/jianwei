@@ -22,3 +22,5 @@ export async function readModelConfiguration(fetcher:typeof fetch=fetch):Promise
     throw error;
   }finally{clearTimeout(timer)}
 }
+
+export function modelConfigurationMessage(status:ModelConfiguration|null){if(!status)return '尚未取得研究服务状态，请刷新服务状态。';if(!status.keyConfigured)return '当前部署未配置有效的模型密钥，请检查该部署环境的服务端配置。';if(!status.freeTierOnlyConfirmed)return '当前部署缺少免费额度保护确认，研究尚未启动。请检查该环境的保护配置。';return status.ready?'服务端配置已就绪；尚未验证模型实际连接。':'研究服务状态不一致，请刷新服务状态。';}
