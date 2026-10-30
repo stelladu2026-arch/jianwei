@@ -2,27 +2,27 @@
   "schema": 1,
   "reviewer": "编码助手：源码阅读与静态分支核对",
   "reviewed_at": "2026-10-30",
-  "base_commit": "330083efd0e582f7be56d9c29641d3a694b8ab7e",
-  "summary": "复核公共开发任务检测与准入同源、有限业务范围的角色和动作门槛、保留人群与具体动作的检索映射、渠道回执导出，以及新生成替代字段的原句或未知协议。新请求漏标记拒绝，历史解码不改写；未新增请求预算或重试。核对架构模型适配责任及引用源码行。",
+  "base_commit": "c59a242e9653246a82a0929e9ef6a5d2edc8c0f4",
+  "summary": "复核公共 EPIC/Phase 实施清单与发票界面引用副本准入，使用经历正例保留，供给推广标记与模型提示、待验证问题展示、指标误报及未知替代提示边界。工具采集逐批标记查询，保留实际请求和重复数；未更改预算、重试、lease 或输入版本。架构组件责任与源码范围不变，固定新源码提交。",
   "sources": {
-    "source/app/api/projects/[id]/workflow/route.ts": "20071bf026c9962ee5b48d26921c9459b913488d46aff93f0412b9eb2dda6fc5",
+    "source/app/api/projects/[id]/workflow/route.ts": "5868e43b579b8ba6c6eaebdff906b8aca4f0ddfc54241577607f7f5be931fe7c",
     "source/components/research-workflow.tsx": "71a243e36064231deb693bcc74258b59538b5345ece5b55db2c3f0056730a3c9",
     "source/lib/deployment/turso-database.ts": "f2335570aceb10fd947294a7b5a0508edddf4c9a1af766155dbc20f419aea7fe",
     "source/lib/research/agent-loop.ts": "83e8d707a83bc12a30a5a6d9d06df1a6cf29d12bca1c6897296538268f94b990",
     "source/lib/research/collaboration.ts": "ae642207b9450c67560230ee678b79c6f4c2594c51a5c4c3b0adc2cb16e68778",
     "source/lib/research/collection.ts": "0490542ccdfb57a25eac86a1853af0dbaa5e1cd77a9ba26b6caf2ed1d72ce9c1",
-    "source/lib/research/configured-sources.ts": "fe1bf398bc02dfe71f3ed5b4f5a339242a6dcc4e0502d912c962dd3071226d9b",
+    "source/lib/research/configured-sources.ts": "9e8351d9de63d02952cf575c6a4fe7b43570e70baf8373e139ecee41b7272761",
     "source/lib/research/evidence-eligibility.ts": "ca7f05b9299742b2229c3f0aa5ba09eabcc29732f302472652d3f0417cf37834",
-    "source/lib/research/execution.ts": "3b9687738c1ff7fe2e33fb8f581c2ea510f19e9d990fcb72fe001c2794328ac0",
+    "source/lib/research/execution.ts": "a5cbb57602d92522f2ad5cea62703a9327c80e2d661a30794793005b95ac779a",
     "source/lib/research/harness/background.ts": "8b528af780240d590cbbf1fa9d90dbc5fb92120ad77fc26ec1d5e8cd00f91e3b",
     "source/lib/research/harness/recovery.ts": "6b10c6e973e7a3a576755b9355f3bf913052f24254a22caecf902ac0dae73280",
     "source/lib/research/harness/runner.ts": "0fc8b48b53a88508ddcda2a83c5472c2762ac356c755930e5d99bd270e074bdd",
     "source/lib/research/harness/storage.ts": "15ef2a44df80fc89677e29392ad4a596da2a1c4b601d9bdecc0f4d4500a05e07",
     "source/lib/research/provider-config.ts": "d4606f198fa770cf437949adc8fe2f90d08267ce008ceb8ac864180aac6e703c",
     "source/lib/research/qwen-model.ts": "3d179a52670c59649e71358113e5f950da9d0f29dffed45cf125107eac6b9586",
-    "source/lib/research/source-fit.ts": "1b004d86f9b4d022b90b85bea770b0479964b9a0fecaf24a598ecd20a0cc53cd",
+    "source/lib/research/source-fit.ts": "5e716b5a01545bdcba24a9db10680c06feebb2b7ed73327147c278be4344fb77",
     "source/lib/research/store.ts": "910e7cd64a9a7ba37d00cb3c5a3a82985cc6daf5a0d7f8f7e92ab1dbc37d761c",
-    "source/lib/research/workflow.ts": "189bcce33b976e668c34dbb2d7ef4ed8ac54f9ede312c7e9eddd4f2010f4b97b"
+    "source/lib/research/workflow.ts": "d2ea91d5b21fccc17a1bfe231ad1229ca93b82c988c83a8a25c384d7ef7f0fe8"
   },
-  "archify_candidate_sha256": "ac9944a43c72d46a83954224dc96807a00a8f06d5b922352ca482c5805ff2148"
+  "archify_candidate_sha256": "0f21d2c912a2ee11f1e1c1e74b45f37f3015cabc8615f6e2dc3f44b725cb2e69"
 }
