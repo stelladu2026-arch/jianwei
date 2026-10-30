@@ -42,6 +42,7 @@ await import('./source-allocation-smoke.mjs');
 await import('./source-fit-smoke.mjs');
 await import('./research-audit-fixes-smoke.mjs');
 await import('./relevance-quality-smoke.mjs');
+await import('./proposal-basis-smoke.mjs');
 await import('./link-import-smoke.mjs');
 if(process.env.JIANWEI_TEST_SUITE==='copy'){await import('./status-copy-smoke.mjs');}
 else if(process.env.JIANWEI_TEST_SUITE==='prose'){await import('./prose-completeness-smoke.mjs');}

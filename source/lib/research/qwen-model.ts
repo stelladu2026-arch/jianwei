@@ -1,3 +1,4 @@
+import {bindProposalBasisSchema,decodeProposalBasis,proposalBasisInstructions} from './proposal-basis';
 import {ALTERNATIVE_FORMAT,alternativeInstructions,bindAlternativeSchema,decodeAlternativeSelection} from './alternative-selection';
 import {qualityInstructions,evidenceUseHint} from './evidence-quality';
 import {CITATION_SELECTION_FORMAT,decodeCitationSelections,citationSelectionInstructions} from './citation-selections';
@@ -148,7 +149,7 @@ export function researchSystemInstructions(task:ModelTask,schema:unknown){
  const concise='只给一个候选机会，每项文本用一至两句说明；notes 最多两条，gaps 最多三条。保留必要引用、反证及未知，不重复资料全文。验证计划写清对象、动作、指标与继续或停止条件。';
  const hints='资料用途提示（规则提示）：'+JSON.stringify(task.evidence.map(evidenceUseHint));
  const contract=task.review?selectionReviewInstructions(task.role,schema):`你是产品机会研究的${task.role}角色。${roleRules[task.role]} ${citationSelectionInstructions()} ${task.allow_tools===false?'这是固定资料分析，tool_calls 必须为 []，不得请求工具。':''} ${format}`;
- return prefix+' '+concise+' '+qualityInstructions+' '+hints+' '+contract+(task.role==='coordinator'?' '+alternativeInstructions:'');
+ return prefix+' '+concise+' '+qualityInstructions+' '+hints+' '+contract+(task.role==='coordinator'?' '+alternativeInstructions:'')+(task.role==='coordinator'&&!task.review?' '+proposalBasisInstructions:'');
 }
 // There is exactly one HTTP request per execute. No automatic retry or provider fallback.
 export class QwenModel implements ResearchModelAdapter{
@@ -159,6 +160,7 @@ export class QwenModel implements ResearchModelAdapter{
   async execute(task:ModelTask,signal:AbortSignal):Promise<ModelResult>{
     this.receipt={};const catalog=sourceQuoteCatalog(task.evidence,quoteChoices,task.evidence_ids);let response:Response;const schema=task.purpose==='conclusion_review'?auditResponseSchema(task):!task.review&&!task.purpose?singleCitationResponseSchema(task.role,task.evidence_ids,task.evidence,task.allow_tools!==false):responseSchema(task.role,task.evidence_ids,!!task.review,undefined,task.evidence,task.purpose,task.allow_tools!==false);
     if(task.role==='coordinator'&&!task.purpose)bindAlternativeSchema(schema,catalog);
+    if(task.role==='coordinator'&&!task.purpose&&!task.review)bindProposalBasisSchema(schema,catalog);
     const schemaIssues=providerSchemaIssues(schema);if(schemaIssues.length){this.receipt.outputIssues=schemaIssues;throw new ProviderError('PROVIDER_SCHEMA_UNSUPPORTED',this.receipt);}
     try{response=await this.fetcher(QWEN_BASE_URL+'/chat/completions',{method:'POST',redirect:'manual',signal,headers:{'Content-Type':'application/json',Authorization:'Bearer '+this.key},body:JSON.stringify({model:QWEN_MODEL,stream:false,enable_thinking:false,max_tokens:QWEN_MAX_OUTPUT_TOKENS,temperature:0.2,response_format:{type:'json_schema',json_schema:{name:(task.review?'review_v8_':'research_')+(task.purpose||task.role),strict:true,schema:schema}},messages:[{role:'system',content:researchSystemInstructions(task,schema)},{role:'user',content:JSON.stringify({...task,...(!task.purpose&&catalog.length?{source_quote_options:catalog}:{})})}]})});}
     catch(error){
@@ -186,6 +188,7 @@ export class QwenModel implements ResearchModelAdapter{
     let parsed:any;try{parsed=JSON.parse(choice.message.content);}catch{this.receipt.outputIssues=['root:invalid_json'];throw new ProviderError('INVALID_MODEL_OUTPUT',this.receipt);}
     let alternativeRef:string|undefined;
     try{const selected=parsed?.alternative_format===ALTERNATIVE_FORMAT;const alternative=decodeAlternativeSelection(parsed,catalog,task.role==='coordinator'&&!task.purpose);parsed=alternative.value;alternativeRef=alternative.ref;if(selected)this.receipt.normalizations=[alternativeRef?'alternative_quote_expanded':'alternative_unknown_preserved'];}catch(error){this.receipt.outputIssues=['data.proposal.alternative_quote_id:invalid_selection'];throw new ProviderError((error as Error).message,this.receipt);}
+    if(!task.review&&!task.purpose&&task.role==='coordinator'){try{parsed=decodeProposalBasis(parsed,catalog,true);}catch(error){this.receipt.outputIssues=['data.proposal.basis_quote_ids:invalid_selection'];throw new ProviderError((error as Error).message,this.receipt);}}
     const optional=omitBlankOptionalOutput(parsed);parsed=optional.value;
     if(optional.normalizations.length)this.receipt.normalizations=[...(this.receipt.normalizations||[]),...optional.normalizations];
     if(task.purpose==='conclusion_review'){
