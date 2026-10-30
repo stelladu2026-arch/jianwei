@@ -1,11 +1,12 @@
 {
   "schema": 1,
   "reviewer": "编码助手：源码阅读与静态分支核对",
-  "reviewed_at": "2026-10-30",
-  "base_commit": "b263ca65761811daa76009b42188e873015d1b9d",
-  "summary": "复核检查点按钮分组，仅推进、暂停/结束及更多选项的布局变化，保留原状态/禁用条件与事件；无可用操作终态不显示空栏。真实组件与编译CSS在1280/390宽度几何检查及中文截图核对通过，无溢出、主按钮展开前后高度一致。导航或time saved分项依据只加有限风险提示，不改模型结果或请求。架构工作台源码行更新并纳入新布局组件引用，关系不变。",
+  "reviewed_at": "2026-10-31",
+  "base_commit": "9a21f2301c23d7510385fb8cbffe71b46a589735",
+  "summary": "单角色显式结论复核使用当时协调任务输入快照，按问题、判断、反证自身basis限制支持性引用；缺少basis不借统一refs。四角色冻结输入及旧源指纹保持兼容；预算、CAS、lease、手动重试、取消与迟到保护不变。不自动调用模型或改写报告；复合主张尚待原子化。架构主路径不变，在工作台来源和说明卡记录可选复核入口。",
   "sources": {
     "source/app/api/projects/[id]/workflow/route.ts": "5868e43b579b8ba6c6eaebdff906b8aca4f0ddfc54241577607f7f5be931fe7c",
+    "source/components/conclusion-audit.tsx": "5d55cf248c5db5666fd804e827f534a4d49121e0eb55f81cd66d39c1dad9bd2e",
     "source/components/research-workflow.tsx": "6c5c0cd4841244128a16ca61f10a64d8e7a58ef0fa284f5f6868301919cc769c",
     "source/components/workflow-action-bar.tsx": "8756f899cee0ca815f8be094c883d0dcd69f162ad55e211cfd41e85c1ec057e9",
     "source/lib/deployment/turso-database.ts": "f2335570aceb10fd947294a7b5a0508edddf4c9a1af766155dbc20f419aea7fe",
@@ -21,10 +22,10 @@
     "source/lib/research/harness/storage.ts": "15ef2a44df80fc89677e29392ad4a596da2a1c4b601d9bdecc0f4d4500a05e07",
     "source/lib/research/proposal-basis.ts": "1b861d4db42ba4f8a4bea6f57dd296c37befc9fa205ce94618a30518068dde79",
     "source/lib/research/provider-config.ts": "d4606f198fa770cf437949adc8fe2f90d08267ce008ceb8ac864180aac6e703c",
-    "source/lib/research/qwen-model.ts": "82f39d3f50ccee26285d601c86758cf25db9b93f3bd87602f1f47493bc611e87",
+    "source/lib/research/qwen-model.ts": "1223bed1d1ec7068874d9031b5d041f07f6ddbd7543066b9834ef3e0a150a2ff",
     "source/lib/research/source-fit.ts": "d44e55b3c4edd752b9111960cf5caa8c50252cc2cb84a1fc86963ee9ca77b5a3",
     "source/lib/research/store.ts": "910e7cd64a9a7ba37d00cb3c5a3a82985cc6daf5a0d7f8f7e92ab1dbc37d761c",
     "source/lib/research/workflow.ts": "d2ea91d5b21fccc17a1bfe231ad1229ca93b82c988c83a8a25c384d7ef7f0fe8"
   },
-  "archify_candidate_sha256": "a18a0905aa34ef8f83bcebba24e09c75239a9c4cc262ec4b1428122fa532a9f9"
+  "archify_candidate_sha256": "4b2c9a2dd376bada45ca7d1d0e206cdad3cc8f95afc604e66982bb67868fbe82"
 }
