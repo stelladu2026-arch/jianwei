@@ -2,8 +2,8 @@
   "schema": 1,
   "reviewer": "编码助手：源码阅读与静态分支核对",
   "reviewed_at": "2026-10-30",
-  "base_commit": "33f272ae71a2ac51b5258efbbd0ed39f7de30444",
-  "summary": "复核排除项混合正向限定导致目标产品全部误排除的路径。按分句有限限定识别，裸列表和明确排除仍生效，非X/除X以外不反向排除X；开发任务及跨仓库边界不改。已有正文动态重算，历史轮次和用量不改写，不自动采集或模型调用。架构关系与引用行范围未变，固定新源码提交。",
+  "base_commit": "1df9761a38b92b4c478f9f427a2dd3eb09944ad6",
+  "summary": "复核单角色 proposal-basis/1 必需标记、问题/结论/反证分别选择最多两个当前输入Q、原句与来源展开、总引用合并及二次输入绑定。空依据显示缺口，不自动修补无效或历史结果；四角色原主张核查不改。技术语义与建议强度仅提示/有限风险规则，不称语义已验证；阈值明确待校准。边界版本7防旧线程混用。架构模型适配引用更新并纳入新解码模块，关系保持不变。",
   "sources": {
     "source/app/api/projects/[id]/workflow/route.ts": "5868e43b579b8ba6c6eaebdff906b8aca4f0ddfc54241577607f7f5be931fe7c",
     "source/components/research-workflow.tsx": "f83c290742327c67f23dc76bbd85ba8498be21661b53339cad9d400cb8a53b09",
@@ -13,16 +13,17 @@
     "source/lib/research/collection.ts": "0490542ccdfb57a25eac86a1853af0dbaa5e1cd77a9ba26b6caf2ed1d72ce9c1",
     "source/lib/research/configured-sources.ts": "98273d5355602f956e0ae5340705901410029204f2ad1429559b693d418e829c",
     "source/lib/research/evidence-eligibility.ts": "ca7f05b9299742b2229c3f0aa5ba09eabcc29732f302472652d3f0417cf37834",
-    "source/lib/research/execution.ts": "a5cbb57602d92522f2ad5cea62703a9327c80e2d661a30794793005b95ac779a",
+    "source/lib/research/execution.ts": "808dc39169040005ac3626be570cf1ad5c3298919cae4b9ae177a1761147cd5d",
     "source/lib/research/harness/background.ts": "8b528af780240d590cbbf1fa9d90dbc5fb92120ad77fc26ec1d5e8cd00f91e3b",
     "source/lib/research/harness/recovery.ts": "6b10c6e973e7a3a576755b9355f3bf913052f24254a22caecf902ac0dae73280",
     "source/lib/research/harness/runner.ts": "0fc8b48b53a88508ddcda2a83c5472c2762ac356c755930e5d99bd270e074bdd",
     "source/lib/research/harness/storage.ts": "15ef2a44df80fc89677e29392ad4a596da2a1c4b601d9bdecc0f4d4500a05e07",
+    "source/lib/research/proposal-basis.ts": "1b861d4db42ba4f8a4bea6f57dd296c37befc9fa205ce94618a30518068dde79",
     "source/lib/research/provider-config.ts": "d4606f198fa770cf437949adc8fe2f90d08267ce008ceb8ac864180aac6e703c",
-    "source/lib/research/qwen-model.ts": "3d179a52670c59649e71358113e5f950da9d0f29dffed45cf125107eac6b9586",
+    "source/lib/research/qwen-model.ts": "82f39d3f50ccee26285d601c86758cf25db9b93f3bd87602f1f47493bc611e87",
     "source/lib/research/source-fit.ts": "d44e55b3c4edd752b9111960cf5caa8c50252cc2cb84a1fc86963ee9ca77b5a3",
     "source/lib/research/store.ts": "910e7cd64a9a7ba37d00cb3c5a3a82985cc6daf5a0d7f8f7e92ab1dbc37d761c",
     "source/lib/research/workflow.ts": "d2ea91d5b21fccc17a1bfe231ad1229ca93b82c988c83a8a25c384d7ef7f0fe8"
   },
-  "archify_candidate_sha256": "2da3a7cbc62c5af4d7d9232a34b607d64e71cc6615bfd464e27427fbb8793804"
+  "archify_candidate_sha256": "13ecffd08d2f77bf46354a88b0652f41cdba82a5ba0d90872253d35a9b527582"
 }
