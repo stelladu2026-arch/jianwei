@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "fingerprint": "509457c336847c443e75d1e1a726a61a0a45b9c7732310b131f7b7417876768c",
+  "fingerprint": "06d9df64b8f30024db50746245ca07c097ce92678b6064609280cd62f773c2a7",
   "typescript": "5.9.3",
   "scope": [
     "source/app",
@@ -47,7 +47,7 @@
     "source/components/research-overview-pulse.tsx": "38f8a624cc054f26c4a906da1cb318ef59b5bb3a5256328eb2ffee51c88faacd",
     "source/components/research-showcase.tsx": "ad6ff8bd39bf93f2805a2872fef5123e1634802f566745dfdbcfb0a6778838cf",
     "source/components/research-stage-outcome.tsx": "0a629ffdcf748b9c96878d2f66ef871e0a25a8f2f1ac17469f55b9ee9153c5d0",
-    "source/components/research-workflow.tsx": "f83c290742327c67f23dc76bbd85ba8498be21661b53339cad9d400cb8a53b09",
+    "source/components/research-workflow.tsx": "6c5c0cd4841244128a16ca61f10a64d8e7a58ef0fa284f5f6868301919cc769c",
     "source/components/scope-confirmation-actions.tsx": "a5d84f3d3f8e004863a667f941b5e937d5a1b76b7bd99d3e5270ae76a8c3fc3f",
     "source/components/ui/accordion.tsx": "a4f153089ba886dfcf73fac26b5c01ca933fa12fbe88df6fb723912bfffdfbb0",
     "source/components/ui/alert-dialog.tsx": "9a8d950f2b9b4352d5ebb762fb44d5c28c2d353aa29712071973656a8736e311",
@@ -110,6 +110,7 @@
     "source/components/ui/toggle-group.tsx": "69f643e889e933f05c1439084480d8646f66a161c7d1cf0730ee926382ade35e",
     "source/components/ui/toggle.tsx": "ba4d0b0a2b2fee75dc36dfc19e32082e721024b919050c97fd5dc70faa924e16",
     "source/components/ui/tooltip.tsx": "a0784eb77831a799fad7991df4f1b666f876201565a80175e1aa68733574a2e4",
+    "source/components/workflow-action-bar.tsx": "8756f899cee0ca815f8be094c883d0dcd69f162ad55e211cfd41e85c1ec057e9",
     "source/components/workflow-start-help.tsx": "766dedf6604a0a6c42bef78278b84c970df6b3257ab718459c372f2f85e31082",
     "source/components/workspace-atmosphere.tsx": "9e69cda53a1c08f8eb6cd79659d228e200a2638432670d87f65da79791e59c82",
     "source/components/workspace-notice.tsx": "6da68f646899d02af93b08111d46d9c0a5022112c59675482cfa97f255ef3c7e",
@@ -146,7 +147,7 @@
     "source/lib/research/evidence-citations.ts": "a5ad72ecbecfeeb2ebd0f8e6ab7c7cd30d334d5fce04ac96992ebdcf269e97d5",
     "source/lib/research/evidence-eligibility.ts": "ca7f05b9299742b2229c3f0aa5ba09eabcc29732f302472652d3f0417cf37834",
     "source/lib/research/evidence-file.ts": "d87acf4e2c59043344dcd5bef37211f32d35271443230c317d6c79f01f7c784b",
-    "source/lib/research/evidence-quality.ts": "cdedce693b4eaa047223daa5cc7d9ef8d9001aeaf7d359ddf071764606dd6b18",
+    "source/lib/research/evidence-quality.ts": "752bad40a306bbd50a555969fe6bc363554052177ff87e719344baf0214c4125",
     "source/lib/research/evidence-scope.ts": "5456378a7e6303c56c6b3353a22eb785c0ca70b42accda8ccae9c135dc832a58",
     "source/lib/research/execution-controls.ts": "5388a39a19d861c794915c8620ef14ed8688fcd66a167598d2a9d114d8a5a838",
     "source/lib/research/execution-start.ts": "6fc5ae4266164918a42860690ead205e217332500ae7f308ce54832a8d3c1c04",

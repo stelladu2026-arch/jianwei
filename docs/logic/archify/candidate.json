@@ -8,7 +8,7 @@
     "quality_profile": "showcase",
     "repository": {
       "url": "https://github.com/stelladu2026-arch/jianwei.git",
-      "revision": "1df9761a38b92b4c478f9f427a2dd3eb09944ad6",
+      "revision": "b263ca65761811daa76009b42188e873015d1b9d",
       "link_mode": "web"
     }
   },
@@ -29,8 +29,13 @@
       "sources": [
         {
           "path": "source/components/research-workflow.tsx",
-          "line": 49,
-          "end_line": 54
+          "line": 50,
+          "end_line": 55
+        },
+        {
+          "path": "source/components/workflow-action-bar.tsx",
+          "line": 3,
+          "end_line": 8
         }
       ]
     },

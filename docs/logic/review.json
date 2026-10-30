@@ -2,11 +2,12 @@
   "schema": 1,
   "reviewer": "编码助手：源码阅读与静态分支核对",
   "reviewed_at": "2026-10-30",
-  "base_commit": "1df9761a38b92b4c478f9f427a2dd3eb09944ad6",
-  "summary": "复核单角色 proposal-basis/1 必需标记、问题/结论/反证分别选择最多两个当前输入Q、原句与来源展开、总引用合并及二次输入绑定。空依据显示缺口，不自动修补无效或历史结果；四角色原主张核查不改。技术语义与建议强度仅提示/有限风险规则，不称语义已验证；阈值明确待校准。边界版本7防旧线程混用。架构模型适配引用更新并纳入新解码模块，关系保持不变。",
+  "base_commit": "b263ca65761811daa76009b42188e873015d1b9d",
+  "summary": "复核检查点按钮分组，仅推进、暂停/结束及更多选项的布局变化，保留原状态/禁用条件与事件；无可用操作终态不显示空栏。真实组件与编译CSS在1280/390宽度几何检查及中文截图核对通过，无溢出、主按钮展开前后高度一致。导航或time saved分项依据只加有限风险提示，不改模型结果或请求。架构工作台源码行更新并纳入新布局组件引用，关系不变。",
   "sources": {
     "source/app/api/projects/[id]/workflow/route.ts": "5868e43b579b8ba6c6eaebdff906b8aca4f0ddfc54241577607f7f5be931fe7c",
-    "source/components/research-workflow.tsx": "f83c290742327c67f23dc76bbd85ba8498be21661b53339cad9d400cb8a53b09",
+    "source/components/research-workflow.tsx": "6c5c0cd4841244128a16ca61f10a64d8e7a58ef0fa284f5f6868301919cc769c",
+    "source/components/workflow-action-bar.tsx": "8756f899cee0ca815f8be094c883d0dcd69f162ad55e211cfd41e85c1ec057e9",
     "source/lib/deployment/turso-database.ts": "f2335570aceb10fd947294a7b5a0508edddf4c9a1af766155dbc20f419aea7fe",
     "source/lib/research/agent-loop.ts": "83e8d707a83bc12a30a5a6d9d06df1a6cf29d12bca1c6897296538268f94b990",
     "source/lib/research/collaboration.ts": "ae642207b9450c67560230ee678b79c6f4c2594c51a5c4c3b0adc2cb16e68778",
@@ -25,5 +26,5 @@
     "source/lib/research/store.ts": "910e7cd64a9a7ba37d00cb3c5a3a82985cc6daf5a0d7f8f7e92ab1dbc37d761c",
     "source/lib/research/workflow.ts": "d2ea91d5b21fccc17a1bfe231ad1229ca93b82c988c83a8a25c384d7ef7f0fe8"
   },
-  "archify_candidate_sha256": "13ecffd08d2f77bf46354a88b0652f41cdba82a5ba0d90872253d35a9b527582"
+  "archify_candidate_sha256": "a18a0905aa34ef8f83bcebba24e09c75239a9c4cc262ec4b1428122fa532a9f9"
 }
