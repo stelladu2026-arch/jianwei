@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "fingerprint": "9832504fe522a386399c4d11f3590a969cfe851f90639a1bc2c8e37291786157",
+  "fingerprint": "e265a96587826f1dec9a427b2a7c51779cc7a3bbb1eab1195b34b8c7daccb40a",
   "typescript": "5.9.3",
   "scope": [
     "source/app",
@@ -38,7 +38,7 @@
     "source/components/model-request-summary.tsx": "9ba40c6a25320f269721c342681218d4734ca73f7e16598b7802710053d400c2",
     "source/components/opportunity-next-step.tsx": "e96fe9d16e63c187c6e509f99fc767eb661ec68a29579a2934e95aacf9a11323",
     "source/components/public-source-summary.tsx": "f3a055a1b5eb80a92ec9e951571876f3c007a1aa90c429f786308556c3daf0a5",
-    "source/components/research-activity.tsx": "2f29a70b8a48ab0a979804d9939b60230959014cd9e2f05787305290d6c0a3ce",
+    "source/components/research-activity.tsx": "ba43606c8feafc5655cbb6cdd92bda4954b82d2a4254d1f7c9f1dcee75adcc65",
     "source/components/research-collaboration.tsx": "37d61fc0c2473f1c1b4ea54d634bb86d5a8c8b29b0f0d9e2f9a0f52af1a3af94",
     "source/components/research-desk.tsx": "fba584aeeadcdf2495bf233cbb3e644d43d87a621f829fe6ea9edb091b8d8494",
     "source/components/research-execution.tsx": "a9116a4ea401f1c1b1d9660c7f5e3a0ef3ee301ca6ea45337704ee644cb6b2af",
@@ -47,7 +47,7 @@
     "source/components/research-overview-pulse.tsx": "38f8a624cc054f26c4a906da1cb318ef59b5bb3a5256328eb2ffee51c88faacd",
     "source/components/research-showcase.tsx": "ad6ff8bd39bf93f2805a2872fef5123e1634802f566745dfdbcfb0a6778838cf",
     "source/components/research-stage-outcome.tsx": "0a629ffdcf748b9c96878d2f66ef871e0a25a8f2f1ac17469f55b9ee9153c5d0",
-    "source/components/research-workflow.tsx": "71a243e36064231deb693bcc74258b59538b5345ece5b55db2c3f0056730a3c9",
+    "source/components/research-workflow.tsx": "f83c290742327c67f23dc76bbd85ba8498be21661b53339cad9d400cb8a53b09",
     "source/components/scope-confirmation-actions.tsx": "a5d84f3d3f8e004863a667f941b5e937d5a1b76b7bd99d3e5270ae76a8c3fc3f",
     "source/components/ui/accordion.tsx": "a4f153089ba886dfcf73fac26b5c01ca933fa12fbe88df6fb723912bfffdfbb0",
     "source/components/ui/alert-dialog.tsx": "9a8d950f2b9b4352d5ebb762fb44d5c28c2d353aa29712071973656a8736e311",
