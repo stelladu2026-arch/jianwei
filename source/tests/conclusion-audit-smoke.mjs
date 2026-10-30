@@ -23,11 +23,12 @@ globalThis.fetch=async(url,init)=>{
  assert.equal(url,QWEN_BASE_URL+'/chat/completions');assert.equal(init.redirect,'manual');calls++;
  const body=JSON.parse(init.body),task=JSON.parse(body.messages[1].content),schema=body.response_format.json_schema.schema;
  if(task.purpose==='conclusion_review'){
-  lastTask=task;lastSchema=schema;assert.ok(!body.messages[0].content.includes('tool_calls'));assert.deepEqual(task.context.memories,[]);assert.equal(task.context.prior_results.length,4);
+  lastTask=task;lastSchema=schema;assert.ok(!body.messages[0].content.includes('tool_calls'));assert.deepEqual(task.context.memories,[]);assert.equal(task.context.prior_results.length,task.review_claims.length===3?1:4);
   if(scenario==='pending')await new Promise(resolve=>{release=resolve;startedResolve?.();});
   if(scenario==='quota')return Response.json({error:{code:'AllocationQuota.FreeTierOnly',message:key}},{status:403});
   if(scenario==='auth')return Response.json({error:{message:key}},{status:401});
-  const wire=auditWire(task),checks=wire.data.checks;
+  const wire=scenario==='single_unknown'?{review_format:AUDIT_FORMAT,status:'partial',data:{checks:task.review_claims.map(t=>({target:t.target,judgment:'insufficient',reason:'Synthetic only',anchors:[]}))},gaps:[]}:auditWire(task),checks=wire.data.checks;
+  if(scenario==='single_unknown')for(const c of checks){c.judgment='insufficient';c.anchors=[];}
   if(scenario==='missing')checks.pop();
   if(scenario==='duplicate')checks[0]=structuredClone(checks[1]);
   if(scenario==='unknown')checks[0].target='unknown:target';
@@ -94,8 +95,21 @@ try{
  scenario='normal';p=await ready();p=(await action(p,'advance')).data.project;const audit=structuredClone(p.workflow.conclusionAudit),spent=p.budget.modelCalls;
  r=await api(`/api/projects/${p.id}/workflow`,'POST',{version:p.version,callId:crypto.randomUUID(),action:'start',mode:'four',freeTierOnlyConfirmed:true});p=r.data.project;
  await check('explicit fresh workflow archives prior audit and preserves cumulative spend',()=>{assert.equal(r.status,200);assert.deepEqual(p.workflowHistory[0].conclusionAudit,audit);assert.equal(p.budget.modelCalls,spent);assert.equal(p.workflow.budget.modelAttempts,0);assert.equal(p.workflow.conclusionAudit,undefined)});
- await check('single, simulation, incomplete, outdated and cross-site audits cannot start',async()=>{
-  for(const edit of [q=>q.workflow.mode='single',q=>q.workflow.analysisRun.simulation=true,q=>q.workflow.status='failed',q=>q.workflow.revision=2,q=>q.confirmed=false]){const q=await fixture();edit(q);await save(q,q.version);assert.equal((await action(await get(q.id),'start')).status,400)}
+ await check('single report audits three field-specific claims without changing original report',async()=>{
+  scenario='normal';let q=await fixture();const w=q.workflow,r=w.analysisRun,t=r.tasks.find(t=>t.role==='coordinator');
+  w.mode='single';r.mode='single';r.tasks=[t];delete w.frozen;
+  t.output.data.proposal.basis={problem:[{evidence_id:'E1',quote:quoteChoices([q.evidence[0]])[0]}],conclusion:[],counter:[{evidence_id:'E2',quote:quoteChoices([q.evidence[1]])[0]}]};
+  q=await save(q,q.version);const original=structuredClone(q.workflow.analysisRun),report=q.workflow.report,n=calls;
+  let res=await action(q,'start');assert.equal(res.status,200,JSON.stringify(res.data));q=res.data.project;
+  const targets=q.workflow.conclusionAudit.input.review_claims;assert.equal(targets.length,3);assert.deepEqual(targets.map(c=>c.refs),[['E1'],[],['E2']]);assert.equal(calls,n);
+  const task=q.workflow.conclusionAudit.input,bad={review_format:AUDIT_FORMAT,status:'partial',data:{checks:targets.map(t=>({target:t.target,judgment:'insufficient',reason:'Synthetic only',anchors:[]}))},gaps:[]};
+  bad.data.checks[1]={target:targets[1].target,judgment:'supports',reason:'Synthetic wrong source',anchors:[{evidence_id:'E1',quote:quoteChoices([q.evidence[0]])[0]}]};
+  assert.throws(()=>locateAudit(bad,task),/INVALID_MODEL_REFERENCE/);
+  scenario='single_unknown';res=await action(q,'advance');scenario='normal';q=res.data.project;
+  assert.equal(res.status,200);assert.equal(q.workflow.conclusionAudit.status,'completed');assert.equal(calls,n+1);assert.deepEqual(q.workflow.analysisRun,original);assert.equal(q.workflow.report,report);assert.equal(q.workflow.conclusionAudit.budget.modelAttempts,1);
+ });
+ await check('simulation, incomplete, outdated and cross-site audits cannot start',async()=>{
+  for(const edit of [q=>q.workflow.analysisRun.simulation=true,q=>q.workflow.status='failed',q=>q.workflow.revision=2,q=>q.confirmed=false]){const q=await fixture();edit(q);await save(q,q.version);assert.equal((await action(await get(q.id),'start')).status,400)}
   const q=await fixture(),res=await globalThis.__apiTestFetch(`http://test.local/api/projects/${q.id}/conclusion-review`,{method:'POST',headers:{'sec-fetch-site':'cross-site'},body:JSON.stringify({version:q.version,callId:crypto.randomUUID(),action:'start',freeTierOnlyConfirmed:true})});assert.equal(res.status,403);
  });
  console.log(JSON.stringify({conclusion_audit_checks:passed,actual_model_calls:0,scope:'real routes and SQLite; synthetic HTTP, no live Qwen or semantic quality measurement'}));
