@@ -24,3 +24,9 @@ check('partial closeout is terminal with no active or resumable stage and truthf
 check('late browser pending state cannot override a terminal checkpoint',()=>{
  for(const status of ['partial','completed','cancelled']){const html=renderToStaticMarkup(React.createElement(ResearchActivity,{workflow:{...base,status},stages,now,pending:{id:'old-request',stage:'plan',startedAt:now-1000}}));assert.ok(!html.includes('正在提交'));assert.ok(!html.includes('is-submitting'));assert.ok(!html.includes('aria-current="step"'));}
 });
+const {WorkflowActionBar}=await import(componentURL(new URL('../components/workflow-action-bar.tsx',import.meta.url)));
+check('checkpoint action groups keep single-step controls outside the primary row',()=>{
+ const html=renderToStaticMarkup(React.createElement(WorkflowActionBar,{primary:React.createElement('button',null,'继续自动流程'),stop:React.createElement('button',null,'暂停研究'),more:React.createElement('button',null,'只执行下一阶段')}));
+ assert.ok(html.includes('aria-label="推进当前流程"'));assert.ok(html.includes('aria-label="暂停或结束本轮"'));assert.ok(html.indexOf('checkpoint-more-actions')>html.indexOf('暂停研究'));assert.ok(html.includes('<summary>更多执行选项</summary>'));
+ const basic=renderToStaticMarkup(React.createElement(WorkflowActionBar,{primary:React.createElement('button',null,'恢复并继续')}));assert.ok(!basic.includes('<details'));
+});

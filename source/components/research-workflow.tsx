@@ -1,4 +1,5 @@
 'use client';
+import {WorkflowActionBar} from './workflow-action-bar';
 import type {WaitingRequest} from '@/lib/research/wait-feedback';
 import {presentRecord,presentReport,presentSystemCopy} from '@/lib/research/product-presentation';
 import {workflowOpportunity} from '@/lib/research/opportunity-lifecycle';
@@ -107,15 +108,18 @@ export function ResearchWorkflowPanel({project:p,onUpdate,onBrief,onReview,onEvi
         </div>}
         {advanceReason&&<p className="warning-text">{advanceReason} 已有资料和分析见下方阶段成果。</p>}
 
-        <div className="run-actions" role="group" aria-label="本轮研究操作">
+        {(!fourModelFailure&&!['completed','partial','cancelled'].includes(w.status)||!!w.lease)&&<WorkflowActionBar primary={<>
           {w.status==='ready'&&collectionClosing&&<button className="button primary" disabled={working||busy||!realAllowed} onClick={()=>operate('advance')}>结束采集并保留已有资料</button>}
-          {w.status==='ready'&&!collectionClosing&&<><button className="button primary" disabled={working||busy||!!advanceReason||!realAllowed||(!localOnly&&!configuredResearchService(provider))} onClick={()=>operate('continue',true)}>继续自动流程</button><details className="workflow-source-details"><summary>高级执行选项</summary><button className="button secondary" disabled={working||busy||!!advanceReason||!realAllowed||(!localOnly&&!configuredResearchService(provider))} onClick={()=>operate('advance')}>只执行下一阶段</button></details></>}
-          {['ready','running'].includes(w.status)&&<button className="button secondary" disabled={busy} onClick={()=>operate('pause')}><Pause size={16}/>暂停研究</button>}
+          {w.status==='ready'&&!collectionClosing&&<button className="button primary" disabled={working||busy||!!advanceReason||!realAllowed||(!localOnly&&!configuredResearchService(provider))} onClick={()=>operate('continue',true)}>继续自动流程</button>}
           {w.status==='paused'&&<button className="button primary" disabled={busy||working||!realAllowed||(!localOnly&&!configuredResearchService(provider))} onClick={()=>operate('resume',true)}>恢复并继续</button>}
           {w.status==='failed'&&!fourModelFailure&&!retryReason&&<button className="button secondary" disabled={working||busy||!!retryReason||!realAllowed} onClick={()=>operate('retry')}>准备重试当前阶段</button>}
+        </>} stop={<>
+          {['ready','running'].includes(w.status)&&<button className="button secondary" disabled={busy} onClick={()=>operate('pause')}><Pause size={16}/>暂停研究</button>}
           {!fourModelFailure&&!['completed','partial','cancelled'].includes(w.status)&&<button className="button subtle" disabled={busy} onClick={()=>operate('cancel')}>{w.status==='failed'?'保留记录并结束本轮':'取消本轮'}</button>}
+        </>} more={((w.status==='ready'&&!collectionClosing)||!!w.lease)?<>
+          {w.status==='ready'&&!collectionClosing&&<button className="button secondary" disabled={working||busy||!!advanceReason||!realAllowed||(!localOnly&&!configuredResearchService(provider))} onClick={()=>operate('advance')}>只执行下一阶段</button>}
           {w.lease&&<button className="button secondary" disabled={working||Date.parse(w.lease.expires)>Date.now()} onClick={()=>operate('recover')}>恢复过期检查点</button>}
-        </div>
+        </>:undefined}/>}
         {w.status==='partial'&&<p className="meta">当前资料：可分析正文 {existingAnalysisSources(p).length} 条 · 搜索或订阅摘要 {evidenceReadiness(p.evidence).summaries} 条 · 暂缓纳入正文 {heldSources.length} 条。摘要和暂缓纳入资料不能充当需求证据。</p>}
         <p className="meta">{['completed','partial','cancelled','stale'].includes(w.status)?'本轮记录已保留。需要继续研究时，请核对当前资料并开始新一轮。':w.harnessVersion?'后台推进会保存阶段进度，关闭页面后可继续；如自动接力未确认，可在执行保障中继续推进。':'连续执行需要保持页面打开；重新打开后可从检查点继续。'}{!['completed','partial','cancelled','stale'].includes(w.status)&&'暂停不会撤销已发出的模型请求，未取得回执的用量按未知保留。'}</p>
       </section>

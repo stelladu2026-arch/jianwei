@@ -171,3 +171,17 @@
 .research-desk-shell .workflow-workspace .start-inline{margin:10px 0 0;padding:0;border:0;background:transparent;box-shadow:none;font-size:13px;line-height:1.7;color:var(--studio-muted)}
 .research-desk-shell .workflow-workspace .start-inline p{margin:6px 0;overflow-wrap:anywhere}
 .research-desk-shell .workflow-workspace .start-inline .button{display:inline-flex;min-height:32px;padding:3px 8px;font-size:13px;vertical-align:middle}
+
+/* Keep flow actions aligned; expanding advanced controls never stretches buttons. */
+.research-desk-shell .workflow-workspace .checkpoint-panel .run-actions.checkpoint-actions{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin:24px 0 12px;padding-top:20px;border-top:1px solid var(--studio-line)}
+.research-desk-shell .checkpoint-action-row{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
+.research-desk-shell .checkpoint-primary-actions,.research-desk-shell .checkpoint-stop-actions,.research-desk-shell .checkpoint-extra-buttons{display:flex;align-items:center;flex-wrap:wrap;gap:12px}
+.research-desk-shell .checkpoint-primary-actions{flex:1 1 240px;min-width:0}
+.research-desk-shell .checkpoint-stop-actions{margin-left:auto}
+.research-desk-shell .checkpoint-actions .button{min-height:44px;height:auto;align-self:center;margin:0;white-space:normal;line-height:1.5}
+.research-desk-shell .checkpoint-more-actions{min-width:0;margin:0;padding:0;border:0}
+.research-desk-shell .checkpoint-more-actions>summary{width:fit-content;min-height:44px;align-content:center;cursor:pointer;color:var(--studio-muted);font-size:14px;line-height:1.6}
+.research-desk-shell .checkpoint-more-actions>summary:focus-visible{outline:2px solid var(--studio-text);outline-offset:4px;border-radius:4px}
+.research-desk-shell .checkpoint-extra-buttons{padding:12px 0 4px}
+@media(max-width:640px){.research-desk-shell .checkpoint-action-row{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}.research-desk-shell .checkpoint-primary-actions{width:100%}.research-desk-shell .checkpoint-primary-actions>.button{width:100%}.research-desk-shell .checkpoint-stop-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%;margin:0}.research-desk-shell .checkpoint-stop-actions>.button:only-child{grid-column:1/-1}.research-desk-shell .checkpoint-extra-buttons>.button{width:100%}}
+.research-desk-shell .checkpoint-primary-actions:empty,.research-desk-shell .checkpoint-stop-actions:empty{display:none}
