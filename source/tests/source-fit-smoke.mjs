@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {sourceFit,developmentArtifact} from '../lib/research/source-fit.ts';
+import {sourceFit,developmentArtifact,excludedProductNames} from '../lib/research/source-fit.ts';
 import {existingAnalysisSources} from '../lib/research/workflow.ts';
 import {evidenceUseHint,validationPlanWarnings,researchClaimWarnings} from '../lib/research/evidence-quality.ts';
 import {newProject} from '../lib/research/domain.ts';
@@ -15,3 +15,16 @@ const warnings=researchClaimWarnings({problem:'缺乏发布前校验机制',alte
 console.log('PASS mirror provenance remains unverified and measured timing deviation is recognized without inventing stop criteria');
 let calls=0;const out=await collectGithubIssues('n8n schedule',null,1,async url=>{calls++;assert.ok(new URL(url).searchParams.get('q').includes('repo:n8n-io/n8n'));return Response.json({incomplete_results:false,total_count:2,items:[base,tasks[0]].map((e,i)=>({id:i+1,title:e.title,body:e.text,html_url:e.url,created_at:'2026-10-01',user:{type:'User',login:'fixture'}}))})});assert.equal(calls,1);assert.equal(out.evidence.length,1);assert.equal(out.skipped,1);
 console.log('PASS source acquisition and existing-evidence analysis enforce the same rule with no added requests');
+
+const positiveScopes=['近一年中英文；只研究 n8n，排除其他自动化产品与纯开发任务','仅限 n8n；非 n8n 产品','排除非 n8n 产品','除 n8n 外的其他自动化产品','n8n 以外的产品','only n8n; exclude non-n8n products','不排除 n8n'];
+for(const exclusions of positiveScopes){assert.deepEqual(excludedProductNames(exclusions),[],exclusions);assert.equal(sourceFit(base,{title:p.title,exclusions}).allowed,true,exclusions);}
+assert.deepEqual(excludedProductNames('只研究 n8n，不研究 Dify；Cloudflare、Discourse'),['dify','cloudflare','discourse']);
+assert.deepEqual(excludedProductNames('n8n、Dify'),['n8n','dify']);
+assert.equal(sourceFit(base,{title:p.title,exclusions:'排除 n8n'}).allowed,false);
+assert.equal(sourceFit(base,{title:p.title,exclusions:'不研究 n8n'}).allowed,false);
+const mixedScope={title:'n8n 定时任务时区与失败补跑',audience:'n8n 维护者',exclusions:'只研究 n8n，排除 Dify、Cloudflare 与纯开发任务'};
+const scopeProject=newProject(mixedScope);scopeProject.evidence=[base,...tasks];const savedScope=JSON.stringify(scopeProject);
+assert.deepEqual(existingAnalysisSources(scopeProject).map(e=>e.id),['test']);assert.equal(JSON.stringify(scopeProject),savedScope);
+assert.equal(sourceFit({...base,title:'Dify schedule bug',url:'https://github.com/langgenius/dify/issues/8'},mixedScope).allowed,false);
+assert.ok(tasks.every(e=>!sourceFit(e,mixedScope).allowed));
+console.log('PASS mixed positive/exclusion scope preserves the target product, explicit exclusions and task gates without rewriting stored inputs');

@@ -30,6 +30,19 @@ export function businessSourceMatch(title:string,text:string){
  return /外包|自由职业|freelanc|agency|agencies|contractor|client projects?|客户项目/i.test(all)&&/回款|发票|应收|催收|invoice|receivable|overdue|payment|billing/i.test(all);
 }
 export type ResearchScope={title?:string;audience?:string;exclusions?:string};
+// The exclusions field can contain positive scope qualifiers. A product mention
+// alone is not negative when it belongs to "only X" or "other than X".
+export function excludedProductNames(text:string){
+ const excluded=new Set<string>();
+ for(const clause of text.split(/[，,；;。\n]/))for(const match of clause.matchAll(/\b(n8n|dify|cloudflare|discourse)\b/gi)){
+  const before=clause.slice(0,match.index),after=clause.slice(match.index!+match[0].length);
+  const directive=[...before.matchAll(/不排除|不研究|不纳入|排除|仅研究|只研究|只保留|仅保留|仅限|只看|仅|\bnot exclude\b|\bexcluding\b|\bexclude\b|\bonly\b/gi)].at(-1)?.[0].toLowerCase();
+  const positive=directive&&/^(?:不排除|仅研究|只研究|只保留|仅保留|仅限|只看|仅|only|not exclude)$/.test(directive);
+  const exception=/非\s*$/.test(before)||/\bnon[-\s]*$/i.test(before)||/^\s*(?:以外|之外|之外的|以外的|之外其他|之外其它|以外其他|以外其它|only\b)/i.test(after)||/除\s*$/.test(before)&&/^\s*外/.test(after);
+  if(!positive&&!exception)excluded.add(match[1].toLowerCase());
+ }
+ return [...excluded];
+}
 export function sourceFit(e:Pick<Evidence,'kind'|'title'|'text'|'url'>&{source?:string},scope:string|ResearchScope){
  const topic=typeof scope==='string'?scope:[scope.title,scope.audience].filter(Boolean).join(' ');
  const excluded=typeof scope==='string'?'':scope.exclusions||'';
@@ -38,7 +51,7 @@ export function sourceFit(e:Pick<Evidence,'kind'|'title'|'text'|'url'>&{source?:
  if(developmentArtifact(e.title,e.text))return {allowed:false,reason:'开发任务、原型交付或资讯汇总，暂不纳入需求分析；不是用户使用经历。'};
  const productWords=(text:string)=>[...text.matchAll(/\b(n8n|dify|cloudflare|discourse)\b/gi)].map(m=>m[1].toLowerCase());
  let address='';try{address=new URL(e.url).pathname.toLowerCase();}catch{}
- if(productWords(excluded).some(product=>address.includes(product)||e.title.toLowerCase().includes(product)))return {allowed:false,reason:'资料属于研究范围明确排除的产品，暂不纳入分析。'};
+ if(excludedProductNames(excluded).some(product=>address.includes(product)||e.title.toLowerCase().includes(product)))return {allowed:false,reason:'资料属于研究范围明确排除的产品，暂不纳入分析。'};
  const products=productWords(topic);
  if(!products.length&&businessScope(scope)&&!/文档|官方|维基百科|统计|新闻/.test(e.source||'')&&!businessSourceMatch(e.title,e.text))return {allowed:false,reason:'未同时命中目标人群与回款／发票业务动作，暂不纳入需求分析；不代表没有需求。'};
  if(!products.length)return {allowed:true,reason:''};
