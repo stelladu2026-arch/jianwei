@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "fingerprint": "e265a96587826f1dec9a427b2a7c51779cc7a3bbb1eab1195b34b8c7daccb40a",
+  "fingerprint": "071738eb973bb5191145d11516ca859821fc43e9a41d85389aaa2db955ed9847",
   "typescript": "5.9.3",
   "scope": [
     "source/app",
@@ -138,7 +138,7 @@
     "source/lib/research/collaboration.ts": "ae642207b9450c67560230ee678b79c6f4c2594c51a5c4c3b0adc2cb16e68778",
     "source/lib/research/collection.ts": "0490542ccdfb57a25eac86a1853af0dbaa5e1cd77a9ba26b6caf2ed1d72ce9c1",
     "source/lib/research/conclusion-audit.ts": "d4673751be0ce305bedb94a80c475944837b190f7aaa686bece57bbecc4b0ed1",
-    "source/lib/research/configured-sources.ts": "9e8351d9de63d02952cf575c6a4fe7b43570e70baf8373e139ecee41b7272761",
+    "source/lib/research/configured-sources.ts": "98273d5355602f956e0ae5340705901410029204f2ad1429559b693d418e829c",
     "source/lib/research/domain.ts": "bad6ffade048eaa9a4c8ad18a6c22bdc75e1853d1536f1c54f7c362e4e269556",
     "source/lib/research/domestic-sources.ts": "1c37200823ed6de70278e700d97c9d2a4ecd140826cae7b74357687b50daa8c0",
     "source/lib/research/draft-cards.ts": "4b48a2afc2ac4a9bfde9fe6a15cbd9a1ea9bd5d650890cf7f3210e4528978165",
@@ -196,7 +196,7 @@
     "source/lib/research/source-catalog.ts": "8b8be609bb5f9c385fb7a3eb525765716ef084892141d40e9f1fb49db8ffb996",
     "source/lib/research/source-coverage.ts": "10ac1ee894d770cce1fe140424b5615e8e48edf9e0ba0f6ebdecfc038c7ed507",
     "source/lib/research/source-facts.ts": "e5906cb652b41f37d0a29d0f754c2144a960b7e9dc00a13d78ea1857aa4f3d95",
-    "source/lib/research/source-fit.ts": "5e716b5a01545bdcba24a9db10680c06feebb2b7ed73327147c278be4344fb77",
+    "source/lib/research/source-fit.ts": "d44e55b3c4edd752b9111960cf5caa8c50252cc2cb84a1fc86963ee9ca77b5a3",
     "source/lib/research/stage-budget.ts": "f39c86235e73c616dd635c877659690f547b00005a7027772f20beb484fd8cee",
     "source/lib/research/stage-outcomes.ts": "cb5f241c615613ceb79f52181bd56dd598eb0619c06396c10fc3760aab52351a",
     "source/lib/research/storage-errors.ts": "519856c9ebf23b6bd58d69e2e2f2673c9b5760384f72d9bd2a3230bc825de05f",

@@ -2,8 +2,8 @@
   "schema": 1,
   "reviewer": "编码助手：源码阅读与静态分支核对",
   "reviewed_at": "2026-10-30",
-  "base_commit": "a52dab29a5ac3f6bd36255cd8c19aa695f543b40",
-  "summary": "复核原文不足 partial 终态的前端标题、阶段标记、完成数及页脚，终态屏蔽迟到 pending 展示；已保存计数仅作资料路径提示。后端 partial 及请求预算、资格与恢复条件均未更改。架构组件关系和研究工作台引用行范围保持不变。",
+  "base_commit": "33f272ae71a2ac51b5258efbbd0ed39f7de30444",
+  "summary": "复核排除项混合正向限定导致目标产品全部误排除的路径。按分句有限限定识别，裸列表和明确排除仍生效，非X/除X以外不反向排除X；开发任务及跨仓库边界不改。已有正文动态重算，历史轮次和用量不改写，不自动采集或模型调用。架构关系与引用行范围未变，固定新源码提交。",
   "sources": {
     "source/app/api/projects/[id]/workflow/route.ts": "5868e43b579b8ba6c6eaebdff906b8aca4f0ddfc54241577607f7f5be931fe7c",
     "source/components/research-workflow.tsx": "f83c290742327c67f23dc76bbd85ba8498be21661b53339cad9d400cb8a53b09",
@@ -11,7 +11,7 @@
     "source/lib/research/agent-loop.ts": "83e8d707a83bc12a30a5a6d9d06df1a6cf29d12bca1c6897296538268f94b990",
     "source/lib/research/collaboration.ts": "ae642207b9450c67560230ee678b79c6f4c2594c51a5c4c3b0adc2cb16e68778",
     "source/lib/research/collection.ts": "0490542ccdfb57a25eac86a1853af0dbaa5e1cd77a9ba26b6caf2ed1d72ce9c1",
-    "source/lib/research/configured-sources.ts": "9e8351d9de63d02952cf575c6a4fe7b43570e70baf8373e139ecee41b7272761",
+    "source/lib/research/configured-sources.ts": "98273d5355602f956e0ae5340705901410029204f2ad1429559b693d418e829c",
     "source/lib/research/evidence-eligibility.ts": "ca7f05b9299742b2229c3f0aa5ba09eabcc29732f302472652d3f0417cf37834",
     "source/lib/research/execution.ts": "a5cbb57602d92522f2ad5cea62703a9327c80e2d661a30794793005b95ac779a",
     "source/lib/research/harness/background.ts": "8b528af780240d590cbbf1fa9d90dbc5fb92120ad77fc26ec1d5e8cd00f91e3b",
@@ -20,9 +20,9 @@
     "source/lib/research/harness/storage.ts": "15ef2a44df80fc89677e29392ad4a596da2a1c4b601d9bdecc0f4d4500a05e07",
     "source/lib/research/provider-config.ts": "d4606f198fa770cf437949adc8fe2f90d08267ce008ceb8ac864180aac6e703c",
     "source/lib/research/qwen-model.ts": "3d179a52670c59649e71358113e5f950da9d0f29dffed45cf125107eac6b9586",
-    "source/lib/research/source-fit.ts": "5e716b5a01545bdcba24a9db10680c06feebb2b7ed73327147c278be4344fb77",
+    "source/lib/research/source-fit.ts": "d44e55b3c4edd752b9111960cf5caa8c50252cc2cb84a1fc86963ee9ca77b5a3",
     "source/lib/research/store.ts": "910e7cd64a9a7ba37d00cb3c5a3a82985cc6daf5a0d7f8f7e92ab1dbc37d761c",
     "source/lib/research/workflow.ts": "d2ea91d5b21fccc17a1bfe231ad1229ca93b82c988c83a8a25c384d7ef7f0fe8"
   },
-  "archify_candidate_sha256": "2e17420de4c73dcb21f7b542407a8dee8fab68a5a566320a380ee36d2c86d7de"
+  "archify_candidate_sha256": "2da3a7cbc62c5af4d7d9232a34b607d64e71cc6615bfd464e27427fbb8793804"
 }
