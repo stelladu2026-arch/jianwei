@@ -2,10 +2,23 @@ import type {Evidence} from './domain';
 // Conservative implementation-task signals shared by hints and admission.
 export function developmentArtifact(title:string,text:string){
  const all=title+'\n'+text;
+ if(/^(?:EPIC[- #]\d+|Phase\s+\d+\s*:)/i.test(title)&&/##\s*(?:Scope|Tasks|Done when)|- \[ \]/i.test(text))return true;
+ if(/##\s*Tasks/i.test(text)&&/- \[ \]/.test(text)&&/##\s*Done when|unit tests|database aggregation|schema|migration/i.test(text))return true;
  if(/(?:server (?:execution )?mission|\[v\d+\].*(?:原型|prototype)|(?:daily|weekly) (?:tech|ecosystem|report)|bản tin|借鉴.*能力增强)/i.test(title))return true;
  if(/\[(?:P\d+[-–]\d+|Server Submission)\]|ready-for-agent|\*\*Agent:|superseding owner direction|owner instructed|\[CTP-\d+|##?\s*(?:What to build|Proposed steps|Earlier specification and evidence)/i.test(all))return true;
  if(/^(?:feat|chore|refactor)(?:\([^)]*\))?\s*:/i.test(title)&&/implementation|models\/|services?\/|schema|migration|data foundations|needs-design/i.test(text))return true;
  return /(?:##?\s*(?:目标|验收|交付|implementation|high-level design|prerequisite)|仅改.{0,30}frontend|只使用内存模拟数据|所有任务.{0,50}均为模拟数据|frontend-v\d)/i.test(all)&&/(?:原型|模拟数据|任务交付|总事项|不接后端|implementation|验收标准|必须实现)/i.test(all);
+}
+// UI exports are not a user experience, including quoted copies in comments.
+export function interfaceArtifact(title:string,text:string){
+ const body=text.replace(/^\s*>\s?/gm,'').replace(/\s+/g,' ').trim();
+ const labels=['Total Invoiced','Total Paid','Pending','Overdue','Add Invoice','Invoice #','Client','Amount','Due Date','Status','Action'];
+ const count=labels.filter(label=>body.toLowerCase().includes(label.toLowerCase())).length;
+ const experience=/\b(?:I|we|my|our)\b.{0,100}\b(?:use|used|tried|spend|spent|struggle|lost|cannot|can't|failed|paid)\b|我(?:们)?.{0,40}(?:使用|花了|遇到|无法|失败)/i.test(body);
+ return /invoice|发票/i.test(title+' '+body)&&count>=8&&!experience;
+}
+export function promotionalArtifact(title:string,text:string){
+ return /^(?:\[TOOL\]|For sale:|Show HN:)/i.test(title)||/##\s*Tool Information/i.test(text)&&/Tool Name:|Website URL:/i.test(text)||/(?:show hn\s*:|we (?:built|launched)|our product|产品发布|产品宣传)/i.test(title+'\n'+text);
 }
 // Recognized bilingual scope anchors; absence is not a universal semantic judgment.
 export function businessScope(scope:string|ResearchScope){
@@ -21,6 +34,7 @@ export function sourceFit(e:Pick<Evidence,'kind'|'title'|'text'|'url'>&{source?:
  const topic=typeof scope==='string'?scope:[scope.title,scope.audience].filter(Boolean).join(' ');
  const excluded=typeof scope==='string'?'':scope.exclusions||'';
  if(e.kind!=='public')return {allowed:true,reason:''};
+ if(interfaceArtifact(e.title,e.text))return {allowed:false,reason:'界面字段或其引用副本，暂不纳入需求分析；未提供具体使用经历。'};
  if(developmentArtifact(e.title,e.text))return {allowed:false,reason:'开发任务、原型交付或资讯汇总，暂不纳入需求分析；不是用户使用经历。'};
  const productWords=(text:string)=>[...text.matchAll(/\b(n8n|dify|cloudflare|discourse)\b/gi)].map(m=>m[1].toLowerCase());
  let address='';try{address=new URL(e.url).pathname.toLowerCase();}catch{}

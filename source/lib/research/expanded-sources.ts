@@ -3,7 +3,7 @@ import type {Evidence} from './domain';
 import type {Collection} from './collection';
 import {FEED_SOURCES,type FeedSource} from './source-catalog';
 
-export type SourceReceipt={source:string;state:'ok'|'empty'|'failed'|'skipped';requests:number;items:number;full:number;excerpts:number;code?:string};
+export type SourceReceipt={query?:string;effectiveQuery?:string;batch?:number;source:string;state:'ok'|'empty'|'failed'|'skipped';requests:number;items:number;full:number;excerpts:number;code?:string};
 export type ExpandedCollection=Collection & {sourceDetails:SourceReceipt[]};
 const FEED_BYTES=512000,ARTICLE_BYTES=1500000;
 const ERROR_CODES=new Set(['SOURCE_REDIRECT_REJECTED','SOURCE_429','SOURCE_403','SOURCE_BAD_FEED','SOURCE_TOO_LARGE','SOURCE_TIMEOUT','SOURCE_ARTICLE_UNAVAILABLE']);

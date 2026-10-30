@@ -216,8 +216,9 @@ function interrupt(w:ResearchWorkflow){
   record.state='failed';record.error='EXECUTION_INTERRUPTED';record.elapsedMs=Date.now()-Date.parse(record.started);w.error=record.error;w.needsRetry=true;
   const r=w.analysisRun;if(r?.lease){const task=r.tasks.find(t=>t.id===r.lease?.taskId);if(task)failTask(r,task,record.error,r.lease.callId,record.elapsedMs);}
 }
+export function tagCollectionReceipts(items:Collection[]){return items.flatMap((item,index)=>(item.sourceDetails||[]).map(receipt=>({...receipt,query:item.query,effectiveQuery:item.routing?.effectiveQuery,batch:index+1})));}
 function channelReceipts(c:Pick<Collection,'sourceDetails'>){
- return c.sourceDetails?.length?'\n'+c.sourceDetails.map(s=>`  - 渠道回执：${s.source}；${s.state==='skipped'?sourceSkipMessage(s.code):s.state==='failed'?'请求失败':s.state==='empty'?'未命中':'已返回'}；请求 ${s.requests} 次；正文 ${s.full} / 摘要 ${s.excerpts}。`).join('\n'):'';
+ return c.sourceDetails?.length?'\n'+c.sourceDetails.map(s=>`  - 渠道回执：${s.source}${s.query?`（采集 ${s.batch||1}；查询：${s.query}${s.effectiveQuery&&s.effectiveQuery!==s.query?`；渠道聚焦词：${s.effectiveQuery}`:''}）`:''}；${s.state==='skipped'?sourceSkipMessage(s.code):s.state==='failed'?'请求失败':s.state==='empty'?'未命中':'已返回'}；请求 ${s.requests} 次；正文 ${s.full} / 摘要 ${s.excerpts}。`).join('\n'):'';
 }
 export function workflowReport(p:Project,w:ResearchWorkflow){
   const selected=p.evidence.filter(e=>(w.usableIds.includes(e.id)||w.mode!=='four'&&e.kind==='imported')&&isResearchEvidence(e,p));

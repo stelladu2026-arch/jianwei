@@ -20,7 +20,7 @@ import {QWEN_TIMEOUT_MS,QWEN_MODEL} from '@/lib/research/provider-config';
 import {collectV2exFeed} from '@/lib/research/v2ex-feed';
 import {collectPublic,SOURCE_REQUEST_CAP,type Collection} from '@/lib/research/collection';
 import {executeModel,completeTask,failTask,localStep,reserve,errorLabels,type Analysis} from '@/lib/research/execution';
-import {restartExistingAnalysis,makeWorkflow,workflowSourceCap,closeCollectionAtLimit,currentWorkflow,controlWorkflow,workflowAdvanceBlockReason,workflowModelCeiling,plannerTask,planningQueries,analysisTask,stopWithoutEvidence,workflowReport,workflowStages,mergeCollected,skipFetchedQueries,normalizeQuery,type WorkflowRecord} from '@/lib/research/workflow';
+import {restartExistingAnalysis,makeWorkflow,workflowSourceCap,closeCollectionAtLimit,currentWorkflow,controlWorkflow,workflowAdvanceBlockReason,workflowModelCeiling,plannerTask,planningQueries,analysisTask,stopWithoutEvidence,workflowReport,workflowStages,mergeCollected,tagCollectionReceipts,skipFetchedQueries,normalizeQuery,type WorkflowRecord} from '@/lib/research/workflow';
 import {acceptAgentFinal,AgentStepFailure,AGENT_RUNTIME,runSingleRoleAgent,type AgentSpend} from '@/lib/research/agent-loop';
 import type {ModelTask,ModelResult} from '@/lib/research/model-port';
 const input=z.object({version:z.number().int().positive(),callId:z.string().uuid(),action:z.enum(['start','restart','analyze-existing','advance','recover-stage','pause','resume','cancel','retry','recover','review']),mode:z.enum(['single','four']).default('single'),review:reviewInput.optional(),freeTierOnlyConfirmed:z.boolean().default(false),allowSupplement:z.boolean().default(true),sourceProfile:z.enum(['public','v2ex']).default('public'),sourceNode:z.enum(['programmer','create','qna']).default('programmer')}).strict();
@@ -167,7 +167,7 @@ export async function POST(request:Request,context:{params:Promise<{id:string}>}
         const ids:string[]=[],usableIds:string[]=[];let added=0,duplicate=0,titleOnly=0,requests=0,failed=0,skipped=0;
         for(const item of spend.collections){const merged=mergeCollected(current,cw,item);ids.push(...merged.newIds);usableIds.push(...item.usableIds);added+=merged.added;duplicate+=merged.duplicate;titleOnly+=merged.titleOnly;requests+=item.requests;failed+=item.failed;skipped+=item.skipped;}
         if(ids.length)cw.freshIds=ids;
-        cr.collection={query:spend.fetchedQueries.join('；')||'agent',requests,failed,skipped,limited:spend.collections.some(item=>item.limited),since:cw.since,added:added+(priorCollection?.added||0),duplicate:Math.max(0,duplicate-(priorCollection?.added||0)),titleOnly,usableIds,sourceDetails:spend.collections.flatMap(item=>item.sourceDetails||[]),sourceErrors:spend.collections.flatMap(item=>item.sourceErrors||[])};
+        cr.collection={query:spend.fetchedQueries.join('；')||'agent',requests,failed,skipped,limited:spend.collections.some(item=>item.limited),since:cw.since,added:added+(priorCollection?.added||0),duplicate:Math.max(0,duplicate-(priorCollection?.added||0)),titleOnly,usableIds,sourceDetails:tagCollectionReceipts(spend.collections),sourceErrors:spend.collections.flatMap(item=>item.sourceErrors||[])};
         cw.agentFetchedQueries=[...new Set([...(cw.agentFetchedQueries||[]),...(spend.fullSourceQueries||[])])];
       }
       if(spend.retrieval.length)cw.retrieval=spend.retrieval.filter(hit=>current.evidence.some(item=>item.id===hit.id&&!item.excluded));

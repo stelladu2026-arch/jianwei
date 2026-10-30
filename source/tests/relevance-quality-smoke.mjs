@@ -32,7 +32,7 @@ const reviewed=await reviewAdapter.execute({project_id:'fixture',run_id:'fixture
 assert.deepEqual(reviewed.data.proposal.refs,['E1']);assert.deepEqual(reviewed.evidence_ids,['E1']);assert.ok(reviewed.data.proposal.alternative.includes(catalog[0].quote));
 console.log('PASS four-role selected alternative expands only its original quote and generated reference; external requests 0');
 
-import {makeWorkflow,workflowReport} from '../lib/research/workflow.ts';
+import {makeWorkflow,workflowReport,tagCollectionReceipts} from '../lib/research/workflow.ts';
 p.confirmed=true;p.workflow=makeWorkflow(p,false);p.workflow.records=[{id:'fixture',kind:'source',stage:'collect',state:'done',collection:{query:'fixture',added:0,duplicate:0,titleOnly:0,failed:0,sourceDetails:[{source:'Fixture channel',state:'empty',requests:1,items:0,full:0,excerpts:0}]}}];
 assert.ok(workflowReport(p,p.workflow).includes('渠道回执：Fixture channel；未命中；请求 1 次；正文 0 / 摘要 0。'));
 console.log('PASS export includes source execution and empty-result receipts without claiming evidence');
@@ -42,3 +42,19 @@ assert.equal(focusedSourceQuery('freelance invoice creation','receivables','自�
 const unbound=new QwenModel('sk-offline-fixture-only',async()=>Response.json({usage:{prompt_tokens:100,completion_tokens:30},choices:[{finish_reason:'stop',message:{content:JSON.stringify({status:'partial',data:{proposal:{alternative:'All teams use spreadsheets.'}}})}}]}));
 await assert.rejects(()=>unbound.execute({project_id:'fixture',run_id:'fixture',revision:1,call_id:'fixture',role:'coordinator',brief:scope,evidence:[base],evidence_ids:['E1']},new AbortController().signal),/INVALID_MODEL_OUTPUT/);
 console.log('PASS live response cannot use legacy alternative compatibility; scoped focus preserves actor and concrete action');
+
+const implementation=[{title:'EPIC-021: Freelance invoices',text:'## Scope\nInvoice data layer and overdue reminders.\n## Done when\n- [ ] Marking paid creates an entry.'},{title:'Phase 4: Revenue dashboard',text:'Give freelancers invoice totals.\n## Tasks\n- [ ] Use database aggregation.\n- [ ] Unit tests\n## Done when\nTotals are correct.'}];
+const ui='Freelancer Invoice Tracker\nTotal Invoiced\nTotal Paid\nPending\nOverdue\nAdd Invoice\nInvoice #\nClient\nAmount\nDue Date\nStatus\nAction';
+const layouts=[ui,ui.split('\n').map(s=>'> '+s).join('\n')];
+for(const item of implementation){assert.equal(sourceFit({...base,...item},scope).allowed,false);assert.equal(evidenceUseHint(item).label,'开发任务或提交说明');}
+for(const text of layouts){const item={...base,title:'Comment · Freelancer invoice tracker',text};assert.equal(sourceFit(item,scope).allowed,false);assert.equal(evidenceUseHint(item).label,'界面字段或引用副本');}
+assert.equal(sourceFit({...base,text:ui+'\nI used this tracker but cannot save my invoice.'},scope).allowed,true);
+for(const title of ['[TOOL] Invoice queue','For sale: Invoice recovery pack — €29','Show HN: Invoice reminders']){assert.equal(evidenceUseHint({...base,title}).label,'产品展示或推广线索');assert.equal(sourceFit({...base,title},scope).allowed,true);}
+assert.ok(!validationPlanWarnings('访谈5名用户，询问耗时。若手动跟进耗时超过30分钟/月则继续，否则停止。').some(x=>x.includes('未显式说明观察指标')));
+p.workflow.records[0].collection.sourceDetails[0]={source:'Fixture channel',state:'empty',requests:1,items:0,full:0,excerpts:0,query:'original actor query',effectiveQuery:'freelance invoice',batch:2};
+const tagged=workflowReport(p,p.workflow);assert.ok(tagged.includes('采集 2；查询：original actor query；渠道聚焦词：freelance invoice'));
+console.log('PASS task/UI admission, quoted layout exclusion, supply classification, time metric and per-tool query receipts');
+
+const collections=['one','two'].map(query=>({query,routing:{profile:'receivables',effectiveQuery:query+' focused'},sourceDetails:[{source:'fixture',state:'empty',requests:1,items:0,full:0,excerpts:0}]}));
+const beforeReceipts=JSON.stringify(collections),taggedReceipts=tagCollectionReceipts(collections);
+assert.deepEqual(taggedReceipts.map(r=>[r.batch,r.query,r.effectiveQuery]),[[1,'one','one focused'],[2,'two','two focused']]);assert.equal(JSON.stringify(collections),beforeReceipts);
