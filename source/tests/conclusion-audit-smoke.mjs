@@ -53,6 +53,13 @@ try{
  let seed=newProject({title:'Synthetic conclusion audit fixture',audience:'Synthetic teams',decision:'Test route contracts only'});seed.confirmed=true;seed.status='collecting';seed.evidence=[1,2].map(i=>({id:'E'+i,title:'Synthetic source '+i,text:'Synthetic source '+i+' describes repeated setup questions and different constraints. Public interest does not establish actual payment.',source:'Synthetic fixture only',date:'2026-10-01',fetched:'2026-10-01',author:'fixture'+i,thread:'t'+i,url:'',kind:'imported',stance:'context',excluded:false,truncated:false}));seed.workflow=makeWorkflow(seed,false,'four');await initializeFour(seed,seed.workflow);seed=await create(seed);owned.push(seed.id);
  for(let i=0;i<6;i++){const r=await api(`/api/projects/${seed.id}/workflow`,'POST',{version:seed.version,callId:crypto.randomUUID(),action:'advance',mode:'four',freeTierOnlyConfirmed:true});assert.equal(r.status,200,JSON.stringify(r.data));seed=r.data.project;}
  template=seed;
+ await check('large retained project can create and cancel audit checkpoint without model calls',async()=>{
+  let q=await fixture();q.reports.push({at:new Date().toISOString(),revision:q.revision,body:'Synthetic historical output. '.repeat(24000)});q=await save(q,q.version);
+  assert.ok(JSON.stringify(q).length>600000);const n=calls,original=structuredClone(q.reports),budget=structuredClone(q.budget);
+  let result=await action(q,'start');assert.equal(result.status,200,JSON.stringify(result.data));q=result.data.project;
+  assert.equal(q.workflow.conclusionAudit.budget.modelAttempts,0);assert.deepEqual(q.reports,original);assert.deepEqual(q.budget,budget);
+  result=await action(q,'cancel');assert.equal(result.status,200);assert.equal(result.data.project.workflow.conclusionAudit.status,'cancelled');assert.equal(calls,n);assert.deepEqual(result.data.project.reports,original);
+ });
  await check('original four-role loop stays blind on first verifier and capped at four calls',()=>{assert.equal(calls,4);assert.equal(seed.workflow.status,'completed');assert.equal(seed.workflow.budget.modelAttempts,4);assert.equal(seed.workflow.analysisRun.budget.limit,8)});
  let p=await fixture(),n=calls,r=await action(p,'start',{freeTierOnlyConfirmed:false});
  await check('second pass requires explicit separate confirmation before creating checkpoint',async()=>{assert.equal(r.status,400);assert.equal(calls,n);assert.equal((await get(p.id)).workflow.conclusionAudit,undefined)});
