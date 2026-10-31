@@ -8,7 +8,7 @@
     "quality_profile": "showcase",
     "repository": {
       "url": "https://github.com/stelladu2026-arch/jianwei.git",
-      "revision": "9a21f2301c23d7510385fb8cbffe71b46a589735",
+      "revision": "08823db46c36cd09a5231c180c5c4d318bac08dc",
       "link_mode": "web"
     }
   },
@@ -179,8 +179,8 @@
       "sources": [
         {
           "path": "source/lib/research/store.ts",
-          "line": 18,
-          "end_line": 20
+          "line": 19,
+          "end_line": 21
         },
         {
           "path": "source/lib/research/harness/storage.ts",
@@ -319,7 +319,8 @@
       "title": "执行边界",
       "items": [
         "模型与来源请求在调用前预留预算；暂停、取消和输入版本变更优先。",
-        "复用已确认的操作回执；结果不明时禁止自动重发。后台推进采用有界接力。"
+        "复用已确认的操作回执；结果不明时禁止自动重发。后台推进采用有界接力。",
+        "整项目有界保存；容量或版本冲突不改本地版本，写入成功后再更新。"
       ]
     },
     {

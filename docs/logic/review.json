@@ -2,8 +2,8 @@
   "schema": 1,
   "reviewer": "编码助手：源码阅读与静态分支核对",
   "reviewed_at": "2026-10-31",
-  "base_commit": "9a21f2301c23d7510385fb8cbffe71b46a589735",
-  "summary": "单角色显式结论复核使用当时协调任务输入快照，按问题、判断、反证自身basis限制支持性引用；缺少basis不借统一refs。四角色冻结输入及旧源指纹保持兼容；预算、CAS、lease、手动重试、取消与迟到保护不变。不自动调用模型或改写报告；复合主张尚待原子化。架构主路径不变，在工作台来源和说明卡记录可选复核入口。",
+  "base_commit": "08823db46c36cd09a5231c180c5c4d318bac08dc",
+  "summary": "复核整项目保存边界：旧600000字符限制调整为2,000,000 UTF-8字节，新建更新同一校验；版本和时间仅在CAS写入成功后更新。拒绝保存不删除记录、不重置预算、不重发请求。存储节点引用行与说明同步，主路径关系不变。SQLite与Turso兼容模拟HTTP全套回归、类型检查和生产构建通过，无真实模型调用。",
   "sources": {
     "source/app/api/projects/[id]/workflow/route.ts": "5868e43b579b8ba6c6eaebdff906b8aca4f0ddfc54241577607f7f5be931fe7c",
     "source/components/conclusion-audit.tsx": "5d55cf248c5db5666fd804e827f534a4d49121e0eb55f81cd66d39c1dad9bd2e",
@@ -24,8 +24,8 @@
     "source/lib/research/provider-config.ts": "d4606f198fa770cf437949adc8fe2f90d08267ce008ceb8ac864180aac6e703c",
     "source/lib/research/qwen-model.ts": "1223bed1d1ec7068874d9031b5d041f07f6ddbd7543066b9834ef3e0a150a2ff",
     "source/lib/research/source-fit.ts": "d44e55b3c4edd752b9111960cf5caa8c50252cc2cb84a1fc86963ee9ca77b5a3",
-    "source/lib/research/store.ts": "910e7cd64a9a7ba37d00cb3c5a3a82985cc6daf5a0d7f8f7e92ab1dbc37d761c",
+    "source/lib/research/store.ts": "c43968335ef28f70913c7afafa7796bd940d68c7e8871d020cacb49faca72b31",
     "source/lib/research/workflow.ts": "d2ea91d5b21fccc17a1bfe231ad1229ca93b82c988c83a8a25c384d7ef7f0fe8"
   },
-  "archify_candidate_sha256": "4b2c9a2dd376bada45ca7d1d0e206cdad3cc8f95afc604e66982bb67868fbe82"
+  "archify_candidate_sha256": "1c902fd14583d88c2ffc12ab4e85a802a65736dd8555bc6391cb3b4ab216a4f5"
 }

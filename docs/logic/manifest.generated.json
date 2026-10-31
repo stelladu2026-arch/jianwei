@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "fingerprint": "b5e3602f0865e2f06da80d1cdefe41359090d8a9d58486ae81f4d3970226eb44",
+  "fingerprint": "ebecc5d58ada64de1ef804d6bad4cd32ec349261e00e87d3f165a7ea7dd3c197",
   "typescript": "5.9.3",
   "scope": [
     "source/app",
@@ -176,6 +176,7 @@
     "source/lib/research/opportunity-lifecycle.ts": "580a4b6e82e2cada5d55c250860cfc679c4b1b1e0d52942ba31d8900debf345f",
     "source/lib/research/optional-output.ts": "2e86eee27ad7fb0bfd4e221ffcb4077ed4cc3ee01f96d5831f817ffdb03fce74",
     "source/lib/research/product-presentation.ts": "ef9446734b1d7167aacbe361d0aa4dd68cd3bd90e52bbeb2cae4adcc3d85e795",
+    "source/lib/research/project-capacity.ts": "929aef20a340e75e1ecf0b67e75ae760c1f7e07506ca2349491860564f5884bb",
     "source/lib/research/project-desk-state.ts": "0e2840481dbf306d726d1ba291751a72bec3611148f8d09bbc402d32c247bfc1",
     "source/lib/research/project-summary.ts": "020e8ee9ad2472ea3fbf58fd7dc2ab486d3368de81ac61dfbaa7163086c79473",
     "source/lib/research/project-updates.ts": "f0d012c4f5093683388e4e2b27cc4d8fe7e4abbe72d00dc0ceae27f78cefe15c",
@@ -202,7 +203,7 @@
     "source/lib/research/stage-budget.ts": "f39c86235e73c616dd635c877659690f547b00005a7027772f20beb484fd8cee",
     "source/lib/research/stage-outcomes.ts": "cb5f241c615613ceb79f52181bd56dd598eb0619c06396c10fc3760aab52351a",
     "source/lib/research/storage-errors.ts": "519856c9ebf23b6bd58d69e2e2f2673c9b5760384f72d9bd2a3230bc825de05f",
-    "source/lib/research/store.ts": "910e7cd64a9a7ba37d00cb3c5a3a82985cc6daf5a0d7f8f7e92ab1dbc37d761c",
+    "source/lib/research/store.ts": "c43968335ef28f70913c7afafa7796bd940d68c7e8871d020cacb49faca72b31",
     "source/lib/research/v2ex-feed.ts": "4d993043cb1d839bd278ed21b6142bbae6d67dc0a8c86799691d50432cb9a477",
     "source/lib/research/wait-feedback.ts": "a9a83703a6eb6961334b1ceef08eda998da88e8c539040134f0912de712018a3",
     "source/lib/research/workflow-start.ts": "5a4fc113906e37c6d2aee70484a62c383908aa4281d9bbe89b3daa1b5d97c4fd",
