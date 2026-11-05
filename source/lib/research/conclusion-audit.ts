@@ -67,6 +67,7 @@ export function locateAudit(raw:unknown,task:ModelTask,diagnose?:(issues:string[
  if(new Set(checks.map(c=>c.target)).size!==checks.length)reject('INVALID_REVIEW_COVERAGE','data.checks.target:duplicate');
  return {gaps:parsed.gaps,checks:checks.map((c,i)=>{
   const target=targets.find(t=>t.target===c.target);if(!target)reject('INVALID_REVIEW_COVERAGE',`data.checks.${i}.target:unknown_claim`);
+  if(target.parent_claim&&(c.anchors.length>1||c.reason.length>80))reject('INVALID_REVIEW_COVERAGE',`data.checks.${i}:clause_output_limit`);
   if(c.judgment!=='insufficient'&&!c.anchors.length)reject('INVALID_REVIEW_COVERAGE',`data.checks.${i}.anchors:required_for_judgment`);
   if(['supports','partial'].includes(c.judgment)&&!c.anchors.some(a=>target.refs.includes(a.evidence_id)))reject('INVALID_MODEL_REFERENCE',`data.checks.${i}.anchors.0.evidence_id:not_in_claim`);
   const anchors=c.anchors.map((a,j)=>{

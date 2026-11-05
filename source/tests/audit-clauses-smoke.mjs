@@ -10,3 +10,10 @@ const partial=rows.map((r,i)=>({target:r.target,judgment:i?'insufficient':'suppo
 assert.equal(auditFieldJudgments(rows.map(r=>({target:r.target,judgment:'supports'})),rows)[0].fullySupported,true);
 assert.throws(()=>auditClauses([{...parent,claim:'这是需要完整保留的较长研究假设，'.repeat(15)}]),/超过12项/);
 console.log('PASS partial or missing clause cannot count as whole-field support; excess claims are rejected without truncation');
+const {auditResponseSchema}=await import('../lib/research/qwen-model.ts');
+const {locateAudit,AUDIT_FORMAT}=await import('../lib/research/conclusion-audit.ts');
+const task={review_claims:rows,evidence_ids:['E1'],evidence:[{id:'E1',text:'Synthetic source for bounded quote checks only.'}]};
+const branches=auditResponseSchema(task).properties.data.properties.checks.items.anyOf;
+assert.ok(branches.every(b=>b.properties.reason.maxLength===80&&b.properties.anchors.maxItems<=1));
+const wire={review_format:AUDIT_FORMAT,status:'partial',data:{checks:rows.map(r=>({target:r.target,judgment:'insufficient',reason:'待核对',anchors:[]}))},gaps:[]};wire.data.checks[0].reason='中'.repeat(81);assert.throws(()=>locateAudit(wire,task),/INVALID_REVIEW_COVERAGE/);
+console.log('PASS clause schema and runtime both bound explanations and quote count without additional requests');
