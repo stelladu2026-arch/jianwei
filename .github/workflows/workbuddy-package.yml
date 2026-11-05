@@ -1,0 +1,39 @@
+name: WorkBuddy expert package
+
+on:
+  push:
+    branches:
+      - 'feat/workbuddy-expert-20261106'
+    paths:
+      - 'integrations/workbuddy/**'
+      - '.github/workflows/workbuddy-package.yml'
+  pull_request:
+    paths:
+      - 'integrations/workbuddy/**'
+      - '.github/workflows/workbuddy-package.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  offline-and-package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Run offline contract and packaging tests
+        run: python3 -m unittest discover -s integrations/workbuddy/tests -v
+      - name: Build upload candidate with release metadata validation
+        run: python3 integrations/workbuddy/package.py --release --output dist/jianwei-workbuddy-free-0.1.1.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: jianwei-workbuddy-free-upload
+          path: |
+            dist/jianwei-workbuddy-free-0.1.1.zip
+            dist/jianwei-workbuddy-free-0.1.1.checks.json
+            dist/jianwei-workbuddy-free-0.1.1.sha256
+          if-no-files-found: error
+          retention-days: 30

@@ -1,0 +1,61 @@
+{
+  "name": "dusihui-jianwei-research-free",
+  "version": "0.1.1",
+  "description": "Clarify product ideas, audit source-backed claims and design small validation experiments.",
+  "author": {
+    "name": "杜思慧",
+    "email": "stelladu2026@gmail.com"
+  },
+  "agents": [
+    "./agents/jianwei-research.md"
+  ],
+  "expertType": "agent",
+  "agentName": "jianwei-research",
+  "displayName": {
+    "zh": "见微免费版",
+    "en": "Jianwei Free"
+  },
+  "profession": {
+    "zh": "产品机会研究顾问",
+    "en": "Product Opportunity Researcher"
+  },
+  "displayDescription": {
+    "zh": "免费提供想法澄清、公开取证、反证核查和验证计划，模型消耗使用你自己的平台额度，结论附原文依据。",
+    "en": "A free expert for idea clarification, source audit and validation planning. Model usage draws on your own WorkBuddy account."
+  },
+  "avatar": "avatars/expert.png",
+  "categoryId": "01-ProductDesign",
+  "defaultInitPrompt": {
+    "zh": "我有一个模糊的产品想法，请帮我明确人群、场景和研究问题。",
+    "en": "Help me clarify the audience, scenario and research question for a product idea."
+  },
+  "plugin": "dusihui-jianwei-research-free",
+  "tags": [
+    {
+      "zh": "机会研究",
+      "en": "Opportunity Research"
+    },
+    {
+      "zh": "证据核查",
+      "en": "Evidence Audit"
+    },
+    {
+      "zh": "验证设计",
+      "en": "Experiment Design"
+    }
+  ],
+  "quickPrompts": [
+    {
+      "zh": "我有一个模糊的产品想法，请帮我明确人群、场景和研究问题。",
+      "en": "Help me clarify the audience, scenario and research question for a product idea."
+    },
+    {
+      "zh": "请检查这份研究中哪些判断有依据，哪些仍需补证。",
+      "en": "Audit which claims in this research have support and which need more evidence."
+    },
+    {
+      "zh": "请为这个机会设计一轮低成本验证，标明未知与停止条件。",
+      "en": "Design a small validation experiment with unknowns and stopping conditions."
+    }
+  ]
+}
