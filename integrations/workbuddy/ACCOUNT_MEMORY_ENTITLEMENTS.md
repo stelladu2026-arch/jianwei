@@ -16,6 +16,14 @@
 - https://open.workbuddy.cn/docs/buddy-app （平台记忆工程不等于本项目数据库已按账号隔离）
 - https://open.workbuddy.cn/docs/expert （系统分配工具，不自行声明tools）
 
+## 已核对的账户接入路径
+
+官方 Open API：https://open.workbuddy.cn/docs/openapi ，2026-11-06核对。
+OAuth2.1授权需要先有已创建的第三方应用（例如Buddy应用）及clientId/clientSecret；单独上传专家包不会自动给专家后端传可信用户身份。
+授权码由服务端交换，响应含open_id。后端可按(provider, client_id, open_id)建立外部身份映射，再签发受控会话；不能把昵称、客户端自报open_id或本地目录名当用户身份。
+必须校验一次性state、精确回调地址、实际授予scope、token时效和撤权；应用密钥仅保留服务端。上线前按平台实际支持核对完整OAuth2.1流程及客户端要求，不自行补造协议字段。
+以上接口可用于获得授权身份，不证明平台已开放购买订单、订阅状态或自定义长期记忆读写接口。不可将资产购买和自有服务套餐自动绑定。
+
 ## 建议的功能区分（待验证，不预设价格）
 | 功能 | 免费体验 | 专业版 |
 | --- | --- | --- |
