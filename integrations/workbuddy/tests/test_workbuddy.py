@@ -203,7 +203,7 @@ class PackageTests(unittest.TestCase):
 
     def test_review_zip_contains_hidden_root_and_flags_release_blocker(self):
         with tempfile.TemporaryDirectory() as td:
-            dest=Path(td)/"review.zip";result=package.build(dest)
+            dest=Path(td)/"review.zip";result=package.build(dest,author_email="")
             self.assertEqual(result["market_metadata"],"blocked")
             self.assertEqual(result["execution_boundary"],"platform_user_only")
             self.assertEqual(result["marketplace_free_selection"],"requires_platform_configuration")
@@ -216,8 +216,20 @@ class PackageTests(unittest.TestCase):
                 self.assertEqual(json.loads(z.read("references/runtime-policy.json")),package.RUNTIME_POLICY)
     def test_release_without_real_author_email_fails(self):
         with tempfile.TemporaryDirectory() as td:
-            with self.assertRaises(ValueError):package.build(Path(td)/"release.zip",release=True)
+            with self.assertRaises(ValueError):package.build(Path(td)/"release.zip",release=True,author_email="")
             self.assertFalse((Path(td)/"release.zip").exists())
+
+    def test_release_keeps_confirmed_author_and_platform_checks_pending(self):
+        with tempfile.TemporaryDirectory() as td:
+            dest=Path(td)/"release.zip";result=package.build(dest,release=True)
+            self.assertEqual(result["market_metadata"],"passed")
+            self.assertEqual(result["warnings"],[])
+            self.assertEqual(result["platform_install"],"not_run")
+            with zipfile.ZipFile(dest) as z:
+                m=json.loads(z.read(".codebuddy-plugin/plugin.json"))
+                source=json.loads((ROOT/"expert/.codebuddy-plugin/plugin.json").read_text())
+                self.assertEqual(m["author"],source["author"])
+                self.assertTrue(package.valid_email(m["author"]["email"]))
     def test_existing_archive_not_overwritten(self):
         with tempfile.TemporaryDirectory() as td:
             dest=Path(td)/"review.zip";dest.write_bytes(b"old")

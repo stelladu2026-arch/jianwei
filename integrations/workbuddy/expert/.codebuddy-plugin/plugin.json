@@ -4,7 +4,7 @@
   "description": "Clarify product ideas, audit source-backed claims and design small validation experiments.",
   "author": {
     "name": "杜思慧",
-    "email": ""
+    "email": "stelladu2026@gmail.com"
   },
   "agents": [
     "./agents/jianwei-research.md"

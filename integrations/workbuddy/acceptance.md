@@ -1,12 +1,12 @@
 # 见微 WorkBuddy 验收与发布门槛 · 2026-11-06
 
 本清单独立于网页版验收。不得复制旧版通过结果。没有实测的项目保留 not_run。
-当前包是审阅候选，作者邮箱为空；只可供代码审阅，不能声称可通过客户端解析。
+作者邮箱已核对GitHub关联信息并按发布者指示填写；当前是正式上传候选包，客户端解析与实测仍待执行。
 
 ## 自动检查
 执行：
 python3 -m unittest discover -s integrations/workbuddy/tests -v
-python3 integrations/workbuddy/package.py --output dist/jianwei-workbuddy-free-review-0.1.1.zip
+python3 integrations/workbuddy/package.py --release --output dist/jianwei-workbuddy-free-0.1.1.zip
 
 测试覆盖：隐藏根目录、头像、市场中英文字段、默认提示一致、未知来源、失效版本、逐字引文、Unicode偏移、未覆盖分句、部分支持不能整体晋升、无正文、虚构证据、未确认范围、重复样本、失败请求计数、报告转义、已有文件保护。
 这些结果不证明模型语义正确、平台可安装或收费版本工具可用。
