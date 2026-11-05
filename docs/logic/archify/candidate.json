@@ -8,7 +8,7 @@
     "quality_profile": "showcase",
     "repository": {
       "url": "https://github.com/stelladu2026-arch/jianwei.git",
-      "revision": "08823db46c36cd09a5231c180c5c4d318bac08dc",
+      "revision": "67120d8d24f3ca85852ff0eb45f74288a29ee21a",
       "link_mode": "web"
     }
   },
@@ -40,7 +40,7 @@
         {
           "path": "source/components/conclusion-audit.tsx",
           "line": 24,
-          "end_line": 38
+          "end_line": 43
         }
       ]
     },
@@ -330,7 +330,7 @@
         "节点可查看固定代码版本的来源；箭头表示源码支持的责任关系，未绘制每个返回响应。",
         "语义与付费仍需人工核查；图不是市场或真实全链路验收报告。",
         "Turso 对应 Node 部署；原 Cloudflare / D1 兼容路径未在此展开。",
-        "可选结论复核另计预算：单角色按问题、判断、反证各自依据核查，仍需人工确认。"
+        "可选复核另计预算：单角色按原句分句并保留上下文，各字段依据独立，仍需人工确认。"
       ]
     }
   ]

@@ -1,12 +1,12 @@
 {
   "schema": 1,
   "reviewer": "编码助手：源码阅读与静态分支核对",
-  "reviewed_at": "2026-10-31",
-  "base_commit": "08823db46c36cd09a5231c180c5c4d318bac08dc",
-  "summary": "复核整项目保存边界：旧600000字符限制调整为2,000,000 UTF-8字节，新建更新同一校验；版本和时间仅在CAS写入成功后更新。拒绝保存不删除记录、不重置预算、不重发请求。存储节点引用行与说明同步，主路径关系不变。SQLite与Turso兼容模拟HTTP全套回归、类型检查和生产构建通过，无真实模型调用。",
+  "reviewed_at": "2026-11-05",
+  "base_commit": "67120d8d24f3ca85852ff0eb45f74288a29ee21a",
+  "summary": "复核单角色结论分句：连续偏移与完整原句保留，原字段refs不串用；最多12项、每项80字符说明和1段锚点，超限不截断。旧ready且零请求检查点可显式refine，保持预算、id和报告；已请求或lease拒绝。四角色与历史结果不隐式迁移。工作台来源行号和可选复核说明同步；WorkBuddy仅设计文档，没有接入平台或改变现有共享入口。",
   "sources": {
     "source/app/api/projects/[id]/workflow/route.ts": "5868e43b579b8ba6c6eaebdff906b8aca4f0ddfc54241577607f7f5be931fe7c",
-    "source/components/conclusion-audit.tsx": "5d55cf248c5db5666fd804e827f534a4d49121e0eb55f81cd66d39c1dad9bd2e",
+    "source/components/conclusion-audit.tsx": "3dda5acaf3c829bdb962fd7b04783a0b3e286383c9b5d99c3e6c17088be8c41a",
     "source/components/research-workflow.tsx": "6c5c0cd4841244128a16ca61f10a64d8e7a58ef0fa284f5f6868301919cc769c",
     "source/components/workflow-action-bar.tsx": "8756f899cee0ca815f8be094c883d0dcd69f162ad55e211cfd41e85c1ec057e9",
     "source/lib/deployment/turso-database.ts": "f2335570aceb10fd947294a7b5a0508edddf4c9a1af766155dbc20f419aea7fe",
@@ -22,10 +22,10 @@
     "source/lib/research/harness/storage.ts": "15ef2a44df80fc89677e29392ad4a596da2a1c4b601d9bdecc0f4d4500a05e07",
     "source/lib/research/proposal-basis.ts": "1b861d4db42ba4f8a4bea6f57dd296c37befc9fa205ce94618a30518068dde79",
     "source/lib/research/provider-config.ts": "d4606f198fa770cf437949adc8fe2f90d08267ce008ceb8ac864180aac6e703c",
-    "source/lib/research/qwen-model.ts": "1223bed1d1ec7068874d9031b5d041f07f6ddbd7543066b9834ef3e0a150a2ff",
+    "source/lib/research/qwen-model.ts": "0a838748a79b2cfd454559ea49ae10b1c2cfd270a2f7543c834451024096eb41",
     "source/lib/research/source-fit.ts": "d44e55b3c4edd752b9111960cf5caa8c50252cc2cb84a1fc86963ee9ca77b5a3",
     "source/lib/research/store.ts": "c43968335ef28f70913c7afafa7796bd940d68c7e8871d020cacb49faca72b31",
     "source/lib/research/workflow.ts": "d2ea91d5b21fccc17a1bfe231ad1229ca93b82c988c83a8a25c384d7ef7f0fe8"
   },
-  "archify_candidate_sha256": "1c902fd14583d88c2ffc12ab4e85a802a65736dd8555bc6391cb3b4ab216a4f5"
+  "archify_candidate_sha256": "39807533591d837ed56672a92ecd54266203117af6f12ada3e33b0cecb4a0382"
 }
