@@ -5,10 +5,8 @@ import datetime
 import hashlib
 import html
 import json
-import os
 from pathlib import Path
 import sys
-import tempfile
 from urllib.parse import urlparse
 
 MAX_BYTES = 2_000_000
@@ -144,6 +142,7 @@ def audit(record):
         require(request.get("status") in {"success", "failed", "timeout", "unavailable"},
                 "invalid request status")
     return {"structural_check": "passed", "semantic_check": "pending_human_review",
+            "model_usage": "not_measured_by_local_audit",
             "claims": results,
             "source_groups": len({s["independence_key"] for s in real_bodies}),
             "attempted_requests": sum(r["status"] != "unavailable" for r in requests),
@@ -182,7 +181,9 @@ def render(record, result):
     for request in record["request_log"]:
         lines.append("- " + safe(request["id"]) + "：" + safe(request["tool"]) +
                      "；" + safe(request["purpose"]) + "；" + safe(request["status"]))
-    lines += ["", "## 限制", "", "来源分组不代表独立客户数；本报告不证明商业价值。",
+    lines += ["", "## 费用与限制", "", "专家免费安装；模型消耗按用户自己的WorkBuddy账号、模型及平台规则处理。",
+              "本地核查不读取平台积分或账单，不据此估算本次费用；没有作者模型服务兜底。",
+              "来源分组不代表独立客户数；本报告不证明商业价值。",
               "范围外推、因果、版本适用性和反证仍需逐项人工确认；没有自动核实用户数或付费意愿。", ""]
     return "\n".join(lines)
 

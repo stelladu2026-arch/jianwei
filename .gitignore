@@ -1,3 +1,6 @@
 
 # Generated interactive architecture artifacts
 .archify/
+
+# Python package validation caches
+integrations/workbuddy/**/__pycache__/

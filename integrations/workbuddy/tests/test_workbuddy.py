@@ -119,15 +119,101 @@ class AuditTests(unittest.TestCase):
             self.assertEqual((out/"report.md").read_bytes(),before)
 
 class PackageTests(unittest.TestCase):
+    def contents(self):
+        contents={n:(ROOT/"expert"/n).read_bytes() for n in package.TEXT_FILES}
+        contents["avatars/expert.png"]=package.avatar()
+        return contents
+
+    def test_free_policy_bills_platform_user_only(self):
+        contents=self.contents()
+        self.assertEqual(package.validate_execution_boundary(contents),[])
+        m=json.loads(contents[".codebuddy-plugin/plugin.json"])
+        self.assertEqual(m["name"],"dusihui-jianwei-research-free")
+        self.assertEqual(m["plugin"],m["name"])
+
+    def test_author_model_fallback_is_rejected(self):
+        contents=self.contents();p=json.loads(contents["references/runtime-policy.json"])
+        p["author_model_fallback"]=True
+        contents["references/runtime-policy.json"]=json.dumps(p).encode()
+        self.assertTrue(package.validate_execution_boundary(contents))
+
+    def test_author_billing_route_is_rejected(self):
+        contents=self.contents();p=json.loads(contents["references/runtime-policy.json"])
+        p["model_billing"]="author_account"
+        contents["references/runtime-policy.json"]=json.dumps(p).encode()
+        self.assertTrue(package.validate_execution_boundary(contents))
+
+    def test_own_signup_or_paid_unlock_is_rejected(self):
+        for field in ("requires_own_registration","custom_paid_unlock","author_search_fallback","author_database"):
+            with self.subTest(field=field):
+                contents=self.contents();p=json.loads(contents["references/runtime-policy.json"])
+                p[field]=True;contents["references/runtime-policy.json"]=json.dumps(p).encode()
+                self.assertTrue(package.validate_execution_boundary(contents))
+
+    def test_policy_boolean_cannot_be_replaced_by_zero(self):
+        contents=self.contents();p=json.loads(contents["references/runtime-policy.json"])
+        p["author_model_fallback"]=0
+        contents["references/runtime-policy.json"]=json.dumps(p).encode()
+        self.assertTrue(package.validate_execution_boundary(contents))
+
+    def test_missing_policy_is_rejected(self):
+        contents=self.contents();del contents["references/runtime-policy.json"]
+        self.assertTrue(package.validate_execution_boundary(contents))
+
+    def test_extra_secret_or_mcp_file_is_rejected(self):
+        for name in (".env",".mcp.json","scripts/provider.py"):
+            with self.subTest(name=name):
+                contents=self.contents();contents[name]=b"synthetic fixture only"
+                self.assertTrue(package.validate_execution_boundary(contents))
+
+    def test_provider_configuration_in_manifest_is_rejected(self):
+        contents=self.contents();m=json.loads(contents[".codebuddy-plugin/plugin.json"])
+        m["dependencies"]={"mcpServers":"./.mcp.json"}
+        errors,_=package.validate(m,contents)
+        self.assertTrue(any("extra configuration" in e for e in errors))
+
+    def test_provider_configuration_hidden_in_author_is_rejected(self):
+        contents=self.contents();m=json.loads(contents[".codebuddy-plugin/plugin.json"])
+        m["author"]["api_key"]="synthetic-not-a-key"
+        errors,_=package.validate(m,contents)
+        self.assertTrue(any("author metadata" in e for e in errors))
+
+    def test_agent_frontmatter_cannot_add_provider(self):
+        contents=self.contents();m=json.loads(contents[".codebuddy-plugin/plugin.json"])
+        name="agents/jianwei-research.md"
+        contents[name]=contents[name].replace(b"maxTurns: 30",b"maxTurns: 30\nprovider: external-test")
+        errors,_=package.validate(m,contents)
+        self.assertTrue(any("unsupported runtime" in e for e in errors))
+
+    def test_network_capability_in_local_helper_is_rejected(self):
+        contents=self.contents();contents["scripts/audit.py"]+=b"\nimport urllib.request\n"
+        self.assertTrue(package.validate_execution_boundary(contents))
+
+    def test_environment_secret_access_is_rejected(self):
+        contents=self.contents();contents["scripts/audit.py"]+=b"\nimport os\nkey=os.environ.get('SYNTHETIC_TEST_KEY')\n"
+        self.assertTrue(package.validate_execution_boundary(contents))
+
+    def test_dynamic_import_is_rejected(self):
+        contents=self.contents();contents["scripts/audit.py"]+=b"\n__import__('urllib.request')\n"
+        self.assertTrue(package.validate_execution_boundary(contents))
+
+    def test_invalid_local_helper_is_rejected(self):
+        contents=self.contents();contents["scripts/audit.py"]=b"not valid Python !"
+        self.assertTrue(package.validate_execution_boundary(contents))
+
     def test_review_zip_contains_hidden_root_and_flags_release_blocker(self):
         with tempfile.TemporaryDirectory() as td:
             dest=Path(td)/"review.zip";result=package.build(dest)
             self.assertEqual(result["market_metadata"],"blocked")
+            self.assertEqual(result["execution_boundary"],"platform_user_only")
+            self.assertEqual(result["marketplace_free_selection"],"requires_platform_configuration")
             with zipfile.ZipFile(dest) as z:
                 self.assertIn(".codebuddy-plugin/plugin.json",z.namelist())
                 self.assertNotIn("integrations/workbuddy",z.namelist())
                 self.assertLess(len(z.read("avatars/expert.png")),500*1024)
                 compile(z.read("scripts/audit.py"),"audit.py","exec")
+                self.assertEqual(set(z.namelist()),set(package.TEXT_FILES)|{"avatars/expert.png"})
+                self.assertEqual(json.loads(z.read("references/runtime-policy.json")),package.RUNTIME_POLICY)
     def test_release_without_real_author_email_fails(self):
         with tempfile.TemporaryDirectory() as td:
             with self.assertRaises(ValueError):package.build(Path(td)/"release.zip",release=True)

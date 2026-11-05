@@ -27,13 +27,13 @@ jobs:
       - name: Run offline contract and packaging tests
         run: python3 -m unittest discover -s integrations/workbuddy/tests -v
       - name: Build review candidate with explicit publication blockers
-        run: python3 integrations/workbuddy/package.py --output dist/jianwei-workbuddy-review-0.1.0.zip
+        run: python3 integrations/workbuddy/package.py --output dist/jianwei-workbuddy-free-review-0.1.1.zip
       - uses: actions/upload-artifact@v4
         with:
-          name: jianwei-workbuddy-review
+          name: jianwei-workbuddy-free-review
           path: |
-            dist/jianwei-workbuddy-review-0.1.0.zip
-            dist/jianwei-workbuddy-review-0.1.0.checks.json
-            dist/jianwei-workbuddy-review-0.1.0.sha256
+            dist/jianwei-workbuddy-free-review-0.1.1.zip
+            dist/jianwei-workbuddy-free-review-0.1.1.checks.json
+            dist/jianwei-workbuddy-free-review-0.1.1.sha256
           if-no-files-found: error
           retention-days: 30

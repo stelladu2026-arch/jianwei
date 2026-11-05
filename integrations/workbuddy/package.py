@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """Build a self-contained WorkBuddy expert ZIP; no network or model calls."""
 import argparse
+import ast
 import binascii
 import hashlib
 import json
 from pathlib import Path
 import re
 import struct
-import tempfile
 import zipfile
 import zlib
 
@@ -16,8 +16,65 @@ PACKAGE = ROOT / "expert"
 TEXT_FILES = [
     ".codebuddy-plugin/plugin.json", "agents/jianwei-research.md", "README.md",
     "references/record-format.md", "templates/report.md", "scripts/audit.py",
+    "references/runtime-policy.json",
 ]
-NAME = "dusihui-jianwei-research"
+NAME = "dusihui-jianwei-research-free"
+RUNTIME_POLICY = {
+    "schema_version": "jianwei-runtime/1", "edition": "free",
+    "asset_distribution": "free_install",
+    "model_execution": "workbuddy_user_session",
+    "model_billing": "workbuddy_user_account", "usage_metering": "platform_only",
+    "author_model_fallback": False, "author_search_fallback": False,
+    "author_database": False, "requires_own_registration": False,
+    "custom_paid_unlock": False, "provider_connections": [],
+    "quota_exhausted_action": "stop_and_preserve",
+    "tool_unavailable_action": "analyze_available_material",
+    "balance_unknown_action": "do_not_estimate",
+    "research_plan": {"search_attempts": 3, "body_read_attempts": 6,
+                      "enforcement": "agent_plan_not_account_quota"},
+    "local_helpers": ["scripts/audit.py"],
+}
+MANIFEST_FIELDS = {
+    "name", "version", "description", "author", "agents", "expertType", "agentName",
+    "displayName", "profession", "displayDescription", "avatar", "categoryId",
+    "defaultInitPrompt", "plugin", "tags", "quickPrompts",
+}
+
+def validate_execution_boundary(contents):
+    """Build-time regression guard, not a sandbox for arbitrary Python."""
+    errors = []
+    expected = set(TEXT_FILES) | {"avatars/expert.png"}
+    if set(contents) != expected:
+        errors.append("free package file allowlist mismatch")
+    try:
+        policy = json.loads(contents.get("references/runtime-policy.json", b""))
+        # JSON comparison preserves scalar types: false must not silently become 0.
+        if json.dumps(policy, sort_keys=True) != json.dumps(RUNTIME_POLICY, sort_keys=True):
+            errors.append("free runtime policy changed: platform user billing required")
+    except (ValueError, TypeError, UnicodeError):
+        errors.append("runtime policy missing or invalid")
+    allowed_imports = {"argparse", "datetime", "hashlib", "html", "json", "pathlib", "sys", "urllib.parse"}
+    blocked_calls = {"eval", "exec", "compile", "__import__", "getattr", "globals", "locals", "vars", "breakpoint"}
+    try:
+        tree = ast.parse(contents.get("scripts/audit.py", b""))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                if any(alias.name not in allowed_imports for alias in node.names):
+                    errors.append("local audit imports external execution/network capability")
+            elif isinstance(node, ast.ImportFrom):
+                if node.level or node.module not in allowed_imports:
+                    errors.append("local audit imports external execution/network capability")
+                elif node.module == "urllib.parse" and any(alias.name != "urlparse" for alias in node.names):
+                    errors.append("only URL parsing is allowed")
+            elif isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id in blocked_calls:
+                errors.append("dynamic execution is not allowed in local audit")
+            elif isinstance(node, ast.Attribute) and node.attr.startswith("__"):
+                errors.append("runtime introspection is not allowed in local audit")
+        if not tree.body:
+            errors.append("local audit helper is empty")
+    except (SyntaxError, ValueError, TypeError, UnicodeError):
+        errors.append("local audit helper is invalid Python")
+    return errors
 
 def avatar():
     # Original geometric illustration: researcher, notebook and magnifying glass.
@@ -70,6 +127,9 @@ def valid_email(value):
 
 def validate(manifest, contents, release=False):
     errors, warnings = [], []
+    errors.extend(validate_execution_boundary(contents))
+    if set(manifest) - MANIFEST_FIELDS:
+        errors.append("free expert cannot declare providers, MCP, billing hooks or other extra configuration")
     for key in ("name","version","description","author","agents","expertType","agentName",
                 "displayName","profession","displayDescription","avatar","categoryId",
                 "defaultInitPrompt","plugin","tags","quickPrompts"):
@@ -97,6 +157,8 @@ def validate(manifest, contents, release=False):
         errors.append("default prompt mismatch")
     if not manifest["author"].get("name"):
         errors.append("author name missing")
+    if set(manifest["author"]) != {"name", "email"}:
+        errors.append("author metadata cannot contain provider configuration or secrets")
     if not valid_email(manifest["author"].get("email")):
         (errors if release else warnings).append("Public author email required before platform upload")
     if manifest["agents"] != ["./agents/jianwei-research.md"] or manifest["avatar"] != "avatars/expert.png":
@@ -113,6 +175,9 @@ def validate(manifest, contents, release=False):
         errors.append("agent frontmatter missing")
     else:
         front = agent.split("\n---\n",1)[0]
+        fields = set(re.findall(r"^([A-Za-z][A-Za-z0-9_-]*)\s*:", front, re.M))
+        if fields - {"name", "description", "displayName", "profession", "maxTurns"}:
+            errors.append("free agent frontmatter contains unsupported runtime configuration")
         for token in ("name: jianwei-research","description:","displayName:","profession:","  en:","  zh:"):
             if token not in front:
                 errors.append("frontmatter missing " + token)
@@ -132,8 +197,8 @@ def build(output, release=False, author_email=None, author_name=None):
     contents = {}
     for name in TEXT_FILES:
         path = PACKAGE / name
-        if path.is_symlink():
-            raise ValueError("symlinks are not packaged")
+        if path.is_symlink() or not path.resolve().is_relative_to(PACKAGE.resolve()):
+            raise ValueError("symlinks or files outside expert package are not packaged")
         contents[name] = path.read_bytes()
     manifest = json.loads(contents[".codebuddy-plugin/plugin.json"])
     if author_email is not None:
@@ -163,6 +228,8 @@ def build(output, release=False, author_email=None, author_name=None):
     digest = hashlib.sha256(output.read_bytes()).hexdigest()
     result = {"package": output.name, "sha256":digest, "file_count":len(contents),
               "structural_checks":"passed", "market_metadata":"passed" if not warnings else "blocked",
+              "execution_boundary":"platform_user_only",
+              "marketplace_free_selection":"requires_platform_configuration",
               "platform_install":"not_run", "live_tools":"not_run", "semantic_evaluation":"not_run",
               "warnings":warnings}
     output.with_suffix(".checks.json").write_text(json.dumps(result,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")

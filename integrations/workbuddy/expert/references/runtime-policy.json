@@ -1,0 +1,23 @@
+{
+  "schema_version": "jianwei-runtime/1",
+  "edition": "free",
+  "asset_distribution": "free_install",
+  "model_execution": "workbuddy_user_session",
+  "model_billing": "workbuddy_user_account",
+  "usage_metering": "platform_only",
+  "author_model_fallback": false,
+  "author_search_fallback": false,
+  "author_database": false,
+  "requires_own_registration": false,
+  "custom_paid_unlock": false,
+  "provider_connections": [],
+  "quota_exhausted_action": "stop_and_preserve",
+  "tool_unavailable_action": "analyze_available_material",
+  "balance_unknown_action": "do_not_estimate",
+  "research_plan": {
+    "search_attempts": 3,
+    "body_read_attempts": 6,
+    "enforcement": "agent_plan_not_account_quota"
+  },
+  "local_helpers": ["scripts/audit.py"]
+}
