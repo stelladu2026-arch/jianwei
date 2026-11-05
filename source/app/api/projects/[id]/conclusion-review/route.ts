@@ -2,12 +2,12 @@ import {NextResponse} from 'next/server';
 import {z} from 'zod';
 import {get,save} from '@/lib/research/store';
 import {log,type Project} from '@/lib/research/domain';
-import {createAudit,auditTask,auditSourceHash,locateAudit,auditRetryBlockReason,AUDIT_FORMAT} from '@/lib/research/conclusion-audit';
+import {createAudit,refineAudit,auditTask,auditSourceHash,locateAudit,auditRetryBlockReason,AUDIT_FORMAT} from '@/lib/research/conclusion-audit';
 import {QwenModel} from '@/lib/research/qwen-model';
 import {qwenCredentials} from '@/lib/research/qwen-settings';
 import {executeModel,errorLabels} from '@/lib/research/execution';
 import {QWEN_TIMEOUT_MS} from '@/lib/research/provider-config';
-const input=z.object({version:z.number().int().positive(),callId:z.string().uuid(),action:z.enum(['start','advance','cancel','recover','retry']),freeTierOnlyConfirmed:z.boolean().default(false)}).strict();
+const input=z.object({version:z.number().int().positive(),callId:z.string().uuid(),action:z.enum(['start','advance','cancel','recover','retry','refine']),freeTierOnlyConfirmed:z.boolean().default(false)}).strict();
 const response=(p:Project)=>NextResponse.json({project:p});
 function remember(p:Project,id:string){p.actions=[...p.actions.slice(-49),id];}
 export const maxDuration=300;
@@ -21,6 +21,7 @@ export async function POST(request:Request,ctx:{params:Promise<{id:string}>}){tr
   const audit=await createAudit(p);p.workflow!.conclusionAudit=audit;remember(p,b.callId);log(p,'创建结论复核检查点；本阶段上限 2 次，尚未调用模型，不自动重试');return response(await save(p,b.version));
  }
  const a=p.workflow?.conclusionAudit;if(!a)throw new Error('请先创建结论复核检查点。');
+ if(b.action==='refine'){await refineAudit(p);remember(p,b.callId);log(p,'拆分零请求复核主张；原句、预算和历史保留，未调用模型');return response(await save(p,b.version));}
  if(b.action==='retry'){
   const reason=auditRetryBlockReason(p);if(reason)throw Error(reason);
   if(await auditSourceHash(p)!==a.sourceHash)throw Error('结论或输入已变更，不能重试旧复核。');

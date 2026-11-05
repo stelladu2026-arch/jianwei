@@ -23,7 +23,7 @@ globalThis.fetch=async(url,init)=>{
  assert.equal(url,QWEN_BASE_URL+'/chat/completions');assert.equal(init.redirect,'manual');calls++;
  const body=JSON.parse(init.body),task=JSON.parse(body.messages[1].content),schema=body.response_format.json_schema.schema;
  if(task.purpose==='conclusion_review'){
-  lastTask=task;lastSchema=schema;assert.ok(!body.messages[0].content.includes('tool_calls'));assert.deepEqual(task.context.memories,[]);assert.equal(task.context.prior_results.length,task.review_claims.length===3?1:4);
+  lastTask=task;lastSchema=schema;assert.ok(!body.messages[0].content.includes('tool_calls'));assert.deepEqual(task.context.memories,[]);assert.equal(task.context.prior_results.length,new Set(task.review_claims.map(t=>t.role)).size);
   if(scenario==='pending')await new Promise(resolve=>{release=resolve;startedResolve?.();});
   if(scenario==='quota')return Response.json({error:{code:'AllocationQuota.FreeTierOnly',message:key}},{status:403});
   if(scenario==='auth')return Response.json({error:{message:key}},{status:401});
@@ -114,6 +114,19 @@ try{
   assert.throws(()=>locateAudit(bad,task),/INVALID_MODEL_REFERENCE/);
   scenario='single_unknown';res=await action(q,'advance');scenario='normal';q=res.data.project;
   assert.equal(res.status,200);assert.equal(q.workflow.conclusionAudit.status,'completed');assert.equal(calls,n+1);assert.deepEqual(q.workflow.analysisRun,original);assert.equal(q.workflow.report,report);assert.equal(q.workflow.conclusionAudit.budget.modelAttempts,1);
+ });
+ await check('legacy zero-request single checkpoint refines once without resetting budget or history',async()=>{
+  let q=await fixture();const w=q.workflow,r=w.analysisRun,t=r.tasks.find(t=>t.role==='coordinator');w.mode='single';r.mode='single';r.tasks=[t];delete w.frozen;
+  t.output.data.proposal.problem='运营团队在使用自托管 n8n 同步订单和生成日报时，面临数据库连接丢失导致的静默失败，且缺乏有效的自动恢复与外部监控手段。';
+  q=await save(q,q.version);q=(await action(q,'start')).data.project;
+  assert.equal(q.workflow.conclusionAudit.claimPolicy,'audit-clauses/1');delete q.workflow.conclusionAudit.claimPolicy;
+  q.workflow.conclusionAudit.input=auditTask(q,q.workflow.conclusionAudit,crypto.randomUUID());q=await save(q,q.version);
+  const n=calls,budget=structuredClone(q.workflow.conclusionAudit.budget),report=q.workflow.report,id=q.workflow.conclusionAudit.id,callId=crypto.randomUUID(),old=q;
+  let result=await action(q,'refine',{},callId);assert.equal(result.status,200,JSON.stringify(result.data));q=result.data.project;
+  assert.equal(q.workflow.conclusionAudit.id,id);assert.deepEqual(q.workflow.conclusionAudit.budget,budget);assert.equal(q.workflow.report,report);assert.equal(calls,n);
+  const rows=q.workflow.conclusionAudit.input.review_claims;assert.ok(rows.length>3);const problem=rows.filter(c=>c.parent_target==='coordinator:proposal:problem');assert.equal(problem.map(c=>c.claim).join(''),t.output.data.proposal.problem);assert.ok(problem.every(c=>c.parent_claim===t.output.data.proposal.problem));
+  assert.equal((await action(old,'refine',{},callId)).status,200);assert.equal((await action(q,'refine')).status,400);assert.equal(calls,n);
+  scenario='single_unknown';result=await action(q,'advance');scenario='normal';q=result.data.project;assert.equal(result.status,200);assert.equal(q.workflow.conclusionAudit.status,'completed');assert.equal(q.workflow.conclusionAudit.checks.length,rows.length);assert.equal(calls,n+1);assert.equal((await action(q,'refine')).status,400);assert.equal(q.workflow.conclusionAudit.budget.modelAttempts,1);
  });
  await check('simulation, incomplete, outdated and cross-site audits cannot start',async()=>{
   for(const edit of [q=>q.workflow.analysisRun.simulation=true,q=>q.workflow.status='failed',q=>q.workflow.revision=2,q=>q.confirmed=false]){const q=await fixture();edit(q);await save(q,q.version);assert.equal((await action(await get(q.id),'start')).status,400)}
